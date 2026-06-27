@@ -941,7 +941,7 @@ function renderHeroCard(hero, selected) {
     <article class="hero-choice ${selected ? "selected" : ""}">
       <article class="tcg-card hero-preview">
         <div class="card-cost">${hero.energy}</div>
-        <img src="${cardArt}" alt="" />
+        <img src="${hero.id === 'guardiao' ? '/assets/guardiao-card.jpg' : cardArt}" alt="" />
         <div class="card-body">
           <strong>${escapeHtml(hero.name)}</strong>
           <span>${hero.life} vida | ${hero.energy} energia</span>
