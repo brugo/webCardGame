@@ -23,8 +23,9 @@ const enemyArt = "/assets/enemy-card-example.png";
 const trapArts = ["/assets/trap-card-1.png", "/assets/trap-card-2.png"];
 
 function getCardArt(card) {
-  if (card && card.heroId === "guardiao") {
-    return "/assets/guardiao-card.jpg";
+  if (card) {
+    if (card.heroId === "guardiao") return "/assets/guardiao-card.jpg";
+    if (card.heroId === "batedor") return "/assets/batedor-card.jpg";
   }
   return cardArt;
 }
@@ -898,7 +899,7 @@ function renderPlayerHud(player) {
   return `
     <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${player.id === local.playerId ? "is-you" : ""} ${player.turnEnded ? "turn-ended" : ""}">
       <div class="portrait">
-        <img src="${player.heroId === 'guardiao' ? '/assets/guardiao-card.jpg' : cardArt}" alt="" />
+        <img src="${player.heroId === 'guardiao' ? '/assets/guardiao-card.jpg' : player.heroId === 'batedor' ? '/assets/batedor-card.jpg' : cardArt}" alt="" />
       </div>
       <div class="hud-main">
         <div class="hud-title">
@@ -941,7 +942,7 @@ function renderHeroCard(hero, selected) {
     <article class="hero-choice ${selected ? "selected" : ""}">
       <article class="tcg-card hero-preview">
         <div class="card-cost">${hero.energy}</div>
-        <img src="${hero.id === 'guardiao' ? '/assets/guardiao-card.jpg' : cardArt}" alt="" />
+        <img src="${hero.id === 'guardiao' ? '/assets/guardiao-card.jpg' : hero.id === 'batedor' ? '/assets/batedor-card.jpg' : cardArt}" alt="" />
         <div class="card-body">
           <strong>${escapeHtml(hero.name)}</strong>
           <span>${hero.life} vida | ${hero.energy} energia</span>
