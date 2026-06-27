@@ -362,7 +362,7 @@ const heroes = {
     name: "Guardiao Solar",
     life: 32,
     energy: 3,
-    supreme: null,
+    supreme: "bastiao-supremo",
     deck: [
       ["escudo-protetor", 2],
       ["golpe-de-escudo", 2],
@@ -846,6 +846,13 @@ const cards = {
     type: "attack",
     cost: 0,
     text: "Suprema. Cause 6 de dano em todos os inimigos. Depois cause 8 de dano a um inimigo."
+  },
+  "bastiao-supremo": {
+    id: "bastiao-supremo",
+    name: "Bastiao Supremo",
+    type: "defense",
+    cost: 0,
+    text: "Suprema. Todo dano aos aliados e redirecionado a voce, e todo dano recebido por voce e reduzido pela metade ate o inicio do seu proximo turno. Receba 8 de Escudo."
   }
 };
 
@@ -1075,6 +1082,13 @@ function applyStartOfRoundEffects(session) {
 function applyDamageToHero(session, target, amount, source, sourceEnemy = null, options = {}) {
   if (!target || target.life <= 0 || amount <= 0) return 0;
   if (!options.skipRedirect) {
+    // Redirect all damage to Guardian if Bastião Supremo is active
+    const guardian = session.players.find((player) => player.life > 0 && player.bastiaoSupremoActive && player.id !== target.id);
+    if (guardian) {
+      session.log.unshift(`Bastiao Supremo: todo o dano a ${target.name} e redirecionado para ${guardian.name}.`);
+      return applyDamageToHero(session, guardian, amount, source, sourceEnemy, { skipRedirect: true });
+    }
+
     const protector = session.players.find(
       (player) => player.life > 0 && player.protectingId === target.id && player.id !== target.id
     );
@@ -1091,6 +1105,12 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
       session.log.unshift(`${interceptor.name} interceptou o dano que iria atingir ${target.name}.`);
       return applyDamageToHero(session, interceptor, amount, source, sourceEnemy, { skipRedirect: true });
     }
+  }
+
+  if (target.bastiaoSupremoActive) {
+    const halved = Math.max(1, Math.ceil(amount / 2));
+    session.log.unshift(`Bastiao Supremo: o dano recebido por ${target.name} foi reduzido pela metade de ${amount} para ${halved}.`);
+    amount = halved;
   }
 
   const reduction = target.reduceDamage || 0;
@@ -1325,6 +1345,7 @@ function startGame(session) {
     player.reflectDamage = 0;
     player.reduceDamage = 0;
     player.nextAttackBonus = 0;
+    player.bastiaoSupremoActive = false;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
     player.deck = makeDeck(player.heroId);
@@ -1376,6 +1397,7 @@ function startNextRound(session) {
     player.reflectDamage = 0;
     player.reduceDamage = 0;
     player.nextAttackBonus = 0;
+    player.bastiaoSupremoActive = false;
     player.turnEnded = player.life <= 0;
     player.roundStats = makeRoundStats();
     const cardsToDraw = getRoundDrawCount(session);
@@ -2242,6 +2264,11 @@ async function handleApi(req, res) {
               applyDamageToEnemy(session, singleTarget, Math.max(0, 8 - getHeroAttackPenalty(session)), sc.name, false, player);
             }
             session.log.unshift(`${player.name} usou ${sc.name}! Causou 6 de dano em todos os inimigos e 8 de dano adicional em ${singleTarget ? singleTarget.name : "nenhum inimigo"}.`);
+          } else if (sc.id === "bastiao-supremo") {
+            player.shield += 8;
+            player.bastiaoSupremoActive = true;
+            pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: player.id, amount: 8, source: sc.name });
+            session.log.unshift(`${player.name} usou ${sc.name}! Recebeu 8 de Escudo, redirecionara todo o dano aliado a si mesmo e reduzira todo o dano sofrido pela metade ate a proxima rodada.`);
           }
         } else if (body.type === "discardCard") {
           // Resolve a pending discard (from planejamento)
