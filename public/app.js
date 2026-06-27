@@ -22,6 +22,13 @@ const cardArt = "/assets/hero-card-example.png";
 const enemyArt = "/assets/enemy-card-example.png";
 const trapArts = ["/assets/trap-card-1.png", "/assets/trap-card-2.png"];
 
+function getCardArt(card) {
+  if (card && card.heroId === "guardiao") {
+    return "/assets/guardiao-card.jpg";
+  }
+  return cardArt;
+}
+
 const glossaryEntries = [
   ["Vida", "Quantidade de dano que um personagem pode sofrer antes de ser derrotado."],
   ["Escudo X", "Receba X pontos de Escudo. O Escudo absorve dano antes da Vida e e removido quando chega a zero."],
@@ -609,7 +616,7 @@ function renderReactionPrompt(state, me) {
                     (card) => `
                       <article class="tcg-card reaction-choice ${me.energy < card.cost ? "unplayable" : ""}">
                         <div class="card-cost">${card.cost}</div>
-                        <img src="${cardArt}" alt="" />
+                        <img src="${getCardArt(card)}" alt="" />
                         <div class="card-body">
                           <strong>${escapeHtml(card.name)}</strong>
                           <p>${escapeHtml(card.text)}</p>
@@ -675,7 +682,7 @@ function renderHandDock(me, state) {
             <div class="supreme-hover-preview">
               <article class="tcg-card play-card ${me.supremeCard.type} supreme-preview-card">
                 <div class="card-cost">${me.supremeCard.cost}</div>
-                <img src="${cardArt}" alt="" />
+                <img src="${getCardArt(me.supremeCard)}" alt="" />
                 <div class="card-body">
                   <strong>${escapeHtml(me.supremeCard.name)}</strong>
                   <p>${escapeHtml(me.supremeCard.text)}</p>
@@ -750,7 +757,7 @@ function renderSelectedCardModal(state, me) {
       <article class="tcg-card selected-card-detail ${card.type}">
         <button id="closeCardDetail" class="card-close secondary" aria-label="Fechar carta">Fechar</button>
         <div class="card-cost">${card.cost}</div>
-        <img src="${cardArt}" alt="" />
+        <img src="${getCardArt(card)}" alt="" />
         <div class="card-body">
           <strong id="selectedCardName">${escapeHtml(card.name)}</strong>
           <p>${escapeHtml(card.text)}</p>
@@ -891,7 +898,7 @@ function renderPlayerHud(player) {
   return `
     <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${player.id === local.playerId ? "is-you" : ""} ${player.turnEnded ? "turn-ended" : ""}">
       <div class="portrait">
-        <img src="${cardArt}" alt="" />
+        <img src="${player.heroId === 'guardiao' ? '/assets/guardiao-card.jpg' : cardArt}" alt="" />
       </div>
       <div class="hud-main">
         <div class="hud-title">
@@ -983,7 +990,7 @@ function renderHandCard(card, state, index = 0, total = 1) {
       style="--hand-offset: ${offset}px; --hand-rotate: ${rotation}deg;"
     >
       <div class="card-cost">${card.cost}</div>
-      <img src="${cardArt}" alt="" />
+      <img src="${getCardArt(card)}" alt="" />
       <div class="card-body">
         <strong>${escapeHtml(card.name)}</strong>
         <p>${escapeHtml(card.text)}</p>
@@ -997,7 +1004,7 @@ function renderArenaCard(card) {
   return `
     <article class="table-card ${card.type} ${card.uid === local.justPlayedUid ? "just-played" : ""}" tabindex="0">
       <div class="table-card-face">
-        <img src="${cardArt}" alt="" />
+        <img src="${getCardArt(card)}" alt="" />
         <div>
           <strong>${escapeHtml(card.name)}</strong>
           <span>${escapeHtml(card.playedBy)}</span>

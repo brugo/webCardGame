@@ -861,7 +861,9 @@ const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
-  ".png": "image/png"
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg"
 };
 
 function makeCode() {
@@ -897,6 +899,7 @@ function makeDeck(heroId) {
     heroes[heroId].deck.flatMap(([cardId, amount]) =>
       Array.from({ length: amount }, () => ({
         uid: randomUUID(),
+        heroId,
         ...cards[cardId]
       }))
     )
@@ -1357,7 +1360,7 @@ function startGame(session) {
     // Give player their supreme card if their hero has one
     const supremeId = hero.supreme;
     player.supremeCard = supremeId && cards[supremeId]
-      ? { uid: randomUUID(), ...cards[supremeId] }
+      ? { uid: randomUUID(), heroId: player.heroId, ...cards[supremeId] }
       : null;
     drawCards(player, 5);
   });
@@ -1446,6 +1449,8 @@ function playCard(session, player, payload) {
 
   const arenaCard = {
     uid: card.uid,
+    id: card.id,
+    heroId: card.heroId,
     name: card.name,
     type: card.type,
     cost: card.cost,
@@ -1882,6 +1887,7 @@ function playReaction(session, player, payload) {
   player.played.push(card);
   session.arena.unshift({
     uid: card.uid,
+    heroId: card.heroId,
     name: card.name,
     type: card.type,
     cost: card.cost,
@@ -2238,7 +2244,7 @@ async function handleApi(req, res) {
           const sc = player.supremeCard;
           player.supremeUsed = true;
           player.roundStats.cardsPlayed += 1;
-          session.arena.unshift({ uid: sc.uid, name: sc.name, type: sc.type, cost: sc.cost, text: sc.text, playedBy: player.name + " (Suprema)" });
+          session.arena.unshift({ uid: sc.uid, heroId: player.heroId, name: sc.name, type: sc.type, cost: sc.cost, text: sc.text, playedBy: player.name + " (Suprema)" });
           // Execute supreme effects directly
           if (sc.supremeEffects) {
             session.players.filter((ally) => ally.life > 0).forEach((ally) => {
