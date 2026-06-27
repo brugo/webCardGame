@@ -2239,8 +2239,16 @@ body.is-game-screen .right-rail {
 }
 
 /* ── Supreme Card Button ── */
+.supreme-container {
+  position: relative;
+  display: grid;
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
 .supreme-btn {
   grid-column: 1 / -1;
+  width: 100%;
   background: linear-gradient(135deg, #a8720a 0%, #f5c200 45%, #e88a00 100%);
   color: #1a1000;
   font-weight: 900;
@@ -2265,6 +2273,44 @@ body.is-game-screen .right-rail {
   opacity: 0.4;
   animation: none;
   cursor: not-allowed;
+}
+
+.supreme-hover-preview {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 9999;
+}
+
+.supreme-container:hover .supreme-hover-preview {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-20px);
+}
+
+.supreme-preview-card {
+  width: 220px !important;
+  min-width: 220px !important;
+  max-width: 220px !important;
+  min-height: 330px !important;
+  background: linear-gradient(145deg, #ffd785, #3a2503 12%, #181002 16%, #0b0700 72%, #ffd785) !important;
+  border-color: #ffd785 !important;
+  box-shadow: 0 20px 48px rgba(255, 215, 133, 0.4), 0 0 16px rgba(255, 215, 133, 0.2) !important;
+  transform: none !important;
+}
+
+.supreme-preview-card:hover {
+  transform: none !important;
+  box-shadow: 0 20px 48px rgba(255, 215, 133, 0.4), 0 0 16px rgba(255, 215, 133, 0.2) !important;
+  filter: none !important;
+  z-index: 9999 !important;
+}
+
+.supreme-preview-card::before {
+  border-color: rgba(255, 215, 133, 0.5) !important;
 }
 
 /* ── Buy Card Button ── */

@@ -668,9 +668,22 @@ function renderHandDock(me, state) {
           🎴 Comprar (1⚡)
         </button>
         ${hasSupreme ? `
-          <button id="useSupreme" class="supreme-btn" title="${escapeHtml(me.supremeCard.text)}" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
-            ✨ ${escapeHtml(me.supremeCard.name)}
-          </button>
+          <div class="supreme-container">
+            <button id="useSupreme" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
+              ✨ ${escapeHtml(me.supremeCard.name)}
+            </button>
+            <div class="supreme-hover-preview">
+              <article class="tcg-card play-card ${me.supremeCard.type} supreme-preview-card">
+                <div class="card-cost">${me.supremeCard.cost}</div>
+                <img src="${cardArt}" alt="" />
+                <div class="card-body">
+                  <strong>${escapeHtml(me.supremeCard.name)}</strong>
+                  <p>${escapeHtml(me.supremeCard.text)}</p>
+                  ${renderCardTags(me.supremeCard)}
+                </div>
+              </article>
+            </div>
+          </div>
         ` : me.supremeUsed ? `<span class="supreme-used muted">Suprema usada</span>` : ""}
       </div>
       <div class="hand-fan" role="list" aria-label="Cartas na sua mao">
