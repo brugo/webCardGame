@@ -996,13 +996,20 @@ function createEnemy(session, templateId) {
     (session.activeTrap?.effect === "brutalLifeTrapBonus" && template.category === "brutal" ? 4 : 0);
   const shieldBonus = session.activeTrap?.effect === "enemyShieldBonus" ? 2 : 0;
 
+  const roomNum = session.roomNumber || 1;
+  const lifeMultiplier = 0.7 + (roomNum - 1) * 0.3;
+  const baseLifeWithBonus = template.maxLife + lifeBonus;
+  const finalLife = Math.max(1, Math.floor(baseLifeWithBonus * lifeMultiplier));
+  const finalAttack = Math.max(1, template.attack * roomNum);
+
   return {
     uid: randomUUID(),
     ...template,
-    maxLife: template.maxLife + lifeBonus,
-    life: template.maxLife + lifeBonus,
+    maxLife: finalLife,
+    life: finalLife,
     shield: template.shield + shieldBonus,
-    maxShield: template.shield + shieldBonus
+    maxShield: template.shield + shieldBonus,
+    attack: finalAttack
   };
 }
 
@@ -1026,9 +1033,12 @@ function drawNextRoom(session) {
   session.room = session.roomDeck.shift() || roomCards[0];
   session.roomRound = 1;
   session.roomRewardClaimed = false;
+  session.roomNumber = (session.roomNumber || 1) + 1;
   drawTrap(session);
   session.enemies = createEnemiesForRoom(session);
-  session.log.unshift(`Sala revelada: ${session.room.name}. ${session.room.objective}`);
+  const roomNum = session.roomNumber;
+  const lifePct = Math.round((0.7 + (roomNum - 1) * 0.3) * 100);
+  session.log.unshift(`[Sala ${roomNum}] Sala revelada: ${session.room.name}. Vida Inimiga: ${lifePct}%, Dano Inimigo: x${roomNum}. ${session.room.objective}`);
 }
 
 function setupCurrentRoom(session) {
@@ -1036,7 +1046,9 @@ function setupCurrentRoom(session) {
   session.roomRewardClaimed = false;
   drawTrap(session);
   session.enemies = createEnemiesForRoom(session);
-  session.log.unshift(`Sala revelada: ${session.room.name}. ${session.room.objective}`);
+  const roomNum = session.roomNumber || 1;
+  const lifePct = Math.round((0.7 + (roomNum - 1) * 0.3) * 100);
+  session.log.unshift(`[Sala ${roomNum}] Sala revelada: ${session.room.name}. Vida Inimiga: ${lifePct}%, Dano Inimigo: x${roomNum}. ${session.room.objective}`);
 }
 
 function isRoomComplete(session) {
@@ -1319,6 +1331,7 @@ function startGame(session) {
   session.dungeonResolved = false;
   session.round = 1;
   session.roomRound = 1;
+  session.roomNumber = 1;
   session.arena = [];
   session.commonEnemyDeck = makeEnemyDeck("common");
   session.commonEnemyDiscard = [];
@@ -2057,6 +2070,7 @@ function sanitizeSession(session, viewerId) {
     dungeonResolved: session.dungeonResolved,
     round: session.round,
     roomRound: session.roomRound,
+    roomNumber: session.roomNumber || 1,
     roomComplete: isRoomComplete(session),
     heroes: Object.values(heroes).map(({ deck, ...hero }) => hero),
     heroCards: Object.keys(heroes).reduce((acc, heroId) => {

@@ -834,7 +834,7 @@ function renderRoomCard(state) {
   const room = state.room;
   return `
     <article class="room-card glass-panel">
-      <span class="eyebrow">Sala ${state.roomDeckCount !== undefined ? 10 - state.roomDeckCount : state.round} | Rodada ${state.roomRound}</span>
+      <span class="eyebrow">Sala ${state.roomNumber || 1} | Rodada ${state.roomRound}</span>
       <h2>${escapeHtml(room?.name || "Sala desconhecida")}</h2>
       <p>${escapeHtml(room?.subtitle || "")}</p>
       <div class="room-objective">${escapeHtml(room?.objective || "Derrote todos os inimigos.")}</div>
