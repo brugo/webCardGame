@@ -1292,8 +1292,10 @@ function getPlayer(session, playerId, token) {
 }
 
 function drawCards(player, amount) {
+  const maxDrawn = Math.max(0, 5 - player.hand.length);
+  const targetAmount = Math.min(amount, maxDrawn);
   const drawn = [];
-  while (drawn.length < amount) {
+  while (drawn.length < targetAmount) {
     if (player.deck.length === 0) {
       if (player.discard.length === 0) break;
       player.deck = shuffle(player.discard);
@@ -2238,6 +2240,7 @@ async function handleApi(req, res) {
           if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
           if (session.turn !== "players") throw new Error("Agora e o turno da dungeon.");
           if (player.turnEnded) throw new Error("Voce ja finalizou seu turno.");
+          if (player.hand.length >= 5) throw new Error("Mao cheia! O limite maximo e de 5 cartas.");
           if (player.energy < 1) throw new Error("Energia insuficiente para comprar carta.");
 
           player.energy -= 1;

@@ -674,7 +674,7 @@ function renderHandDock(me, state) {
         <div class="resource-strip">
           ${renderEnergyPips(me.energy, me.maxEnergy)}
         </div>
-        <button id="buyCard" class="buy-card-btn" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 ? 'disabled' : ''}>
+        <button id="buyCard" class="buy-card-btn" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || me.hand.length >= 5 ? 'disabled' : ''}>
           🎴 Comprar (1⚡)
         </button>
         ${hasSupreme ? `
