@@ -656,7 +656,7 @@ const cards = {
     name: "Inspiracao",
     type: "energy",
     target: "ally",
-    cost: 1,
+    cost: 2,
     energy: 2,
     text: "Um aliado recupera 2 de Energia."
   },
@@ -690,7 +690,7 @@ const cards = {
     name: "Renovacao",
     type: "heal",
     target: "ally",
-    cost: 2,
+    cost: 3,
     heal: 6,
     text: "Cura 6 de vida de um aliado."
   },
@@ -723,7 +723,7 @@ const cards = {
     name: "reanimar",
     type: "heal",
     target: "ally",
-    cost: 2,
+    cost: 4,
     revive: 5,
     text: "Reviva um aliado derrotado com 5 de Vida."
   },
@@ -755,7 +755,7 @@ const cards = {
     id: "disparo-poderoso",
     name: "Disparo Poderoso",
     type: "attack",
-    cost: 2,
+    cost: 3,
     damage: 7,
     text: "Cause 7 de dano a um inimigo."
   },
@@ -771,7 +771,7 @@ const cards = {
     id: "tiro-perfurante",
     name: "Tiro Perfurante",
     type: "attack",
-    cost: 2,
+    cost: 3,
     damage: 5,
     ignoreShield: true,
     text: "Cause 5 de dano, ignorando Escudo."
@@ -822,7 +822,7 @@ const cards = {
     id: "execucao",
     name: "Execucao",
     type: "attack",
-    cost: 2,
+    cost: 4,
     text: "Derrote imediatamente um Inimigo Comum. Contra Brutais, cause 5 de dano."
   },
   "cacada": {
@@ -836,7 +836,7 @@ const cards = {
     id: "ultima-flecha",
     name: "Ultima Flecha",
     type: "attack",
-    cost: 2,
+    cost: 3,
     damage: 10,
     text: "Causa 10 de dano. Depois descarte toda sua mao."
   },
