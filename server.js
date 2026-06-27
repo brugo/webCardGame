@@ -124,7 +124,7 @@ const roomCards = [
 
 const trapCards = [
   { id: "TRAP_001", name: "Espinhos no Piso", text: "No final de cada turno da dungeon, todos os herois sofrem 1 de dano.", effect: "endDungeonAllDamage" },
-  { id: "TRAP_002", name: "Fome Arcana", text: "No inicio da rodada, herois compram apenas 2 cartas.", effect: "drawTwo" },
+  { id: "TRAP_002", name: "Fome Arcana", text: "No inicio da rodada, herois compram apenas 1 carta.", effect: "drawTwo" },
   { id: "TRAP_003", name: "Selo Anticura", text: "Herois nao podem ser curados enquanto esta armadilha estiver ativa.", effect: "noHealing" },
   { id: "TRAP_004", name: "Dreno de Vigor", text: "No inicio da rodada, cada heroi comeca com -1 de Energia.", effect: "energyPenalty" },
   { id: "TRAP_005", name: "Neblina Cortante", text: "Ataques dos herois causam -1 de dano.", effect: "heroAttackPenalty" },
@@ -1041,7 +1041,7 @@ function archiveCurrentEnemies(session) {
 }
 
 function getRoundDrawCount(session) {
-  return session.activeTrap?.effect === "drawTwo" ? 2 : 5;
+  return session.activeTrap?.effect === "drawTwo" ? 1 : 2;
 }
 
 function applyStartOfRoundEffects(session) {
@@ -1367,8 +1367,7 @@ function startNextRound(session) {
     enemy.isStunned = false;
   });
   session.players.forEach((player) => {
-    player.discard.push(...player.hand, ...player.played);
-    player.hand = [];
+    player.discard.push(...player.played);
     player.played = [];
     player.energy = player.maxEnergy;
     player.shield = 0;
@@ -2188,6 +2187,19 @@ async function handleApi(req, res) {
           startNextRound(session);
         } else if (body.type === "playCard") {
           playCard(session, player, body);
+        } else if (body.type === "buyCard") {
+          if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
+          if (session.turn !== "players") throw new Error("Agora e o turno da dungeon.");
+          if (player.turnEnded) throw new Error("Voce ja finalizou seu turno.");
+          if (player.energy < 1) throw new Error("Energia insuficiente para comprar carta.");
+
+          player.energy -= 1;
+          const drawn = drawCards(player, 1);
+          if (drawn === 0) {
+            player.energy += 1;
+            throw new Error("Nao ha cartas restantes no deck ou descarte.");
+          }
+          session.log.unshift(`${player.name} pagou 1 de Energia para comprar 1 carta.`);
         } else if (body.type === "playReaction") {
           playReaction(session, player, body);
         } else if (body.type === "skipReaction") {

@@ -484,6 +484,7 @@ function renderGame() {
     button.addEventListener("click", () => action({ type: "playReaction", cardUid: button.dataset.reactionCard }));
   });
   document.querySelector("#useSupreme")?.addEventListener("click", () => action({ type: "useSupreme" }));
+  document.querySelector("#buyCard")?.addEventListener("click", () => action({ type: "buyCard" }));
   // pending discard: clicking a card in discard-mode selects it for discard
   document.querySelectorAll("[data-discard-card]").forEach((el) => {
     el.addEventListener("click", () => action({ type: "discardCard", cardUid: el.dataset.discardCard }));
@@ -663,6 +664,9 @@ function renderHandDock(me, state) {
         <div class="resource-strip">
           ${renderEnergyPips(me.energy, me.maxEnergy)}
         </div>
+        <button id="buyCard" class="buy-card-btn" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 ? 'disabled' : ''}>
+          🎴 Comprar (1⚡)
+        </button>
         ${hasSupreme ? `
           <button id="useSupreme" class="supreme-btn" title="${escapeHtml(me.supremeCard.text)}" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
             ✨ ${escapeHtml(me.supremeCard.name)}
