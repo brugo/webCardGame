@@ -687,7 +687,7 @@ function renderSelectedCardModal(state, me) {
   const canTargetMonster = (card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge;
   const needsReviveTarget = Boolean(card.revive);
   const canTargetDefeated = needsReviveTarget;
-  const canTargetPlayer = (card.type === "heal" && !card.allHeal && !card.revive) || card.target === "ally" || card.provoke || card.planning;
+  const canTargetPlayer = (card.type === "heal" && !card.allHeal && !card.revive) || card.target === "ally" || card.provoke || (card.planning && card.target === "ally");
   const needsMoveShield = Boolean(card.moveShield);
 
   let targetSelect = "";

@@ -405,14 +405,20 @@ const heroes = {
     name: "Batedor Verde",
     life: 28,
     energy: 3,
-    supreme: null,
+    supreme: "tempestade-de-flechas",
     deck: [
-      ["flecha-dupla", 5],
-      ["armadilha", 4],
-      ["investida", 3],
-      ["cura-breve", 3],
-      ["sombra-rapida", 3],
-      ["golpe-radiante", 2]
+      ["flecha-precisa", 2],
+      ["disparo-poderoso", 2],
+      ["chuva-de-flechas", 2],
+      ["tiro-perfurante", 2],
+      ["mira-perfeita", 2],
+      ["companheiro-animal", 2],
+      ["flecha-explosiva", 1],
+      ["disparo-rapido", 1],
+      ["flecha-atordoante", 1],
+      ["execucao", 1],
+      ["cacada", 1],
+      ["ultima-flecha", 1]
     ]
   }
 };
@@ -736,6 +742,110 @@ const cards = {
     cost: 0,
     supremeEffects: true,
     text: "Suprema. Todos os aliados recebem Cura 5, Escudo 5, Energia +2 e Compra 1."
+  },
+  "flecha-precisa": {
+    id: "flecha-precisa",
+    name: "Flecha Precisa",
+    type: "attack",
+    cost: 1,
+    damage: 4,
+    text: "Cause 4 de dano a um inimigo."
+  },
+  "disparo-poderoso": {
+    id: "disparo-poderoso",
+    name: "Disparo Poderoso",
+    type: "attack",
+    cost: 2,
+    damage: 7,
+    text: "Cause 7 de dano a um inimigo."
+  },
+  "chuva-de-flechas": {
+    id: "chuva-de-flechas",
+    name: "Chuva de Flechas",
+    type: "attack",
+    cost: 2,
+    areaDamage: 2,
+    text: "Cause 2 de dano em todos os inimigos."
+  },
+  "tiro-perfurante": {
+    id: "tiro-perfurante",
+    name: "Tiro Perfurante",
+    type: "attack",
+    cost: 2,
+    damage: 5,
+    ignoreShield: true,
+    text: "Cause 5 de dano, ignorando Escudo."
+  },
+  "mira-perfeita": {
+    id: "mira-perfeita",
+    name: "Mira Perfeita",
+    type: "draw",
+    cost: 1,
+    draw: 2,
+    planning: true,
+    text: "Compre 2 cartas e depois descarte 1."
+  },
+  "companheiro-animal": {
+    id: "companheiro-animal",
+    name: "Companheiro Animal",
+    type: "permanent",
+    cost: 2,
+    nextAttackBonus: 2,
+    text: "Na proxima carta de ataque que voce jogar nesta rodada, cause +2 de dano."
+  },
+  "flecha-explosiva": {
+    id: "flecha-explosiva",
+    name: "Flecha Explosiva",
+    type: "attack",
+    cost: 2,
+    text: "Cause 4 de dano a um inimigo. Depois cause 2 de dano em todos os outros inimigos."
+  },
+  "disparo-rapido": {
+    id: "disparo-rapido",
+    name: "Disparo Rapido",
+    type: "energy",
+    cost: 1,
+    energy: 1,
+    draw: 1,
+    text: "Recupere 1 de Energia. Compre 1 carta."
+  },
+  "flecha-atordoante": {
+    id: "flecha-atordoante",
+    name: "Flecha Atordoante",
+    type: "attack",
+    cost: 2,
+    damage: 4,
+    stun: true,
+    text: "Causa 4 de dano. O alvo nao ataca nesta rodada."
+  },
+  "execucao": {
+    id: "execucao",
+    name: "Execucao",
+    type: "attack",
+    cost: 2,
+    text: "Derrote imediatamente um Inimigo Comum. Contra Brutais, cause 5 de dano."
+  },
+  "cacada": {
+    id: "cacada",
+    name: "Cacada",
+    type: "draw",
+    cost: 1,
+    text: "Se um inimigo foi derrotado nesta rodada, compre 2 cartas. Se nao, compre 1."
+  },
+  "ultima-flecha": {
+    id: "ultima-flecha",
+    name: "Ultima Flecha",
+    type: "attack",
+    cost: 2,
+    damage: 10,
+    text: "Causa 10 de dano. Depois descarte toda sua mao."
+  },
+  "tempestade-de-flechas": {
+    id: "tempestade-de-flechas",
+    name: "Tempestade de Flechas",
+    type: "attack",
+    cost: 0,
+    text: "Suprema. Cause 6 de dano em todos os inimigos. Depois cause 8 de dano a um inimigo."
   }
 };
 
@@ -1214,6 +1324,7 @@ function startGame(session) {
     player.interceptReady = false;
     player.reflectDamage = 0;
     player.reduceDamage = 0;
+    player.nextAttackBonus = 0;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
     player.deck = makeDeck(player.heroId);
@@ -1252,6 +1363,9 @@ function startNextRound(session) {
     session.roomRound += 1;
   }
   session.arena = [];
+  session.enemies.forEach((enemy) => {
+    enemy.isStunned = false;
+  });
   session.players.forEach((player) => {
     player.discard.push(...player.hand, ...player.played);
     player.hand = [];
@@ -1262,6 +1376,7 @@ function startNextRound(session) {
     player.interceptReady = false;
     player.reflectDamage = 0;
     player.reduceDamage = 0;
+    player.nextAttackBonus = 0;
     player.turnEnded = player.life <= 0;
     player.roundStats = makeRoundStats();
     const cardsToDraw = getRoundDrawCount(session);
@@ -1333,15 +1448,22 @@ function playCard(session, player, payload) {
   };
   session.arena.unshift(arenaCard);
 
+  // Consume next attack bonus if it's an attack card
+  let attackBuff = 0;
+  if (player.nextAttackBonus && (card.damage || card.areaDamage || card.id === "flecha-explosiva" || card.id === "execucao")) {
+    attackBuff = player.nextAttackBonus;
+    player.nextAttackBonus = 0;
+  }
+
   if (card.areaDamage) {
     const targets = session.enemies.filter((enemy) => enemy.life > 0);
     targets.forEach((enemy) =>
-      applyDamageToEnemy(session, enemy, Math.max(0, card.areaDamage - getHeroAttackPenalty(session)), card.name, false, player)
+      applyDamageToEnemy(session, enemy, Math.max(0, card.areaDamage + attackBuff - getHeroAttackPenalty(session)), card.name, false, player)
     );
   }
 
   if (card.damage) {
-    resolveHeroAttack(session, player, card, payload.targetId);
+    resolveHeroAttack(session, player, card, payload.targetId, attackBuff);
   }
 
   if (card.selfBlock) {
@@ -1517,6 +1639,61 @@ function playCard(session, player, payload) {
     target.forcedTargetId = player.id;
     session.log.unshift(`${target.name} foi desafiado e so pode atacar ${player.name} ate o fim da rodada.`);
   }
+
+  // Batedor (Archer) custom cards
+  if (card.nextAttackBonus) {
+    player.nextAttackBonus = (player.nextAttackBonus || 0) + card.nextAttackBonus;
+    session.log.unshift(`${player.name} jogou ${card.name}. Proxima carta de ataque causara +${card.nextAttackBonus} de dano.`);
+  }
+
+  if (card.id === "flecha-explosiva") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      applyDamageToEnemy(session, target, Math.max(0, 4 + attackBuff - getHeroAttackPenalty(session)), card.name, false, player);
+      session.enemies.filter((enemy) => enemy.uid !== target.uid && enemy.life > 0).forEach((other) => {
+        applyDamageToEnemy(session, other, Math.max(0, 2 - getHeroAttackPenalty(session)), card.name, false, player);
+      });
+      session.log.unshift(`${player.name} jogou Flecha Explosiva! 4 de dano (modificado para ${Math.max(0, 4 + attackBuff - getHeroAttackPenalty(session))}) em ${target.name} e 2 de dano em area nos demais.`);
+    }
+  }
+
+  if (card.stun) {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      target.isStunned = true;
+      session.log.unshift(`${player.name} atordoou ${target.name} com ${card.name}. Ele nao atacara nesta rodada.`);
+    }
+  }
+
+  if (card.id === "execucao") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      if (target.category === "common") {
+        const damageNeeded = target.life;
+        applyDamageToEnemy(session, target, damageNeeded, card.name, true, player);
+        session.log.unshift(`${player.name} executou ${target.name} instantaneamente!`);
+      } else {
+        applyDamageToEnemy(session, target, Math.max(0, 5 + attackBuff - getHeroAttackPenalty(session)), card.name, false, player);
+        session.log.unshift(`${player.name} usou Execucao em ${target.name} (Brutal) e causou ${Math.max(0, 5 + attackBuff - getHeroAttackPenalty(session))} de dano.`);
+      }
+    }
+  }
+
+  if (card.id === "cacada") {
+    const enemyDefeatedThisRound = session.players.some((p) => (p.roundStats?.enemiesDefeated || 0) > 0);
+    const count = enemyDefeatedThisRound ? 2 : 1;
+    const drawn = drawCards(player, count);
+    session.log.unshift(`${player.name} jogou Cacada. Como ${enemyDefeatedThisRound ? "um" : "nenhum"} inimigo foi derrotado nesta rodada, comprou ${drawn} carta(s).`);
+  }
+
+  if (card.id === "ultima-flecha") {
+    const count = player.hand.length;
+    if (count > 0) {
+      player.discard.push(...player.hand);
+      player.hand = [];
+      session.log.unshift(`${player.name} descartou toda a mao (${count} cartas) devido ao efeito de Ultima Flecha.`);
+    }
+  }
 }
 
 function applyHealToHero(session, target, amount, source) {
@@ -1530,13 +1707,13 @@ function applyHealToHero(session, target, amount, source) {
   }
 }
 
-function resolveHeroAttack(session, player, card, targetId) {
+function resolveHeroAttack(session, player, card, targetId, attackBuff = 0) {
   const target =
     session.enemies.find((enemy) => enemy.uid === targetId && enemy.life > 0) ||
     session.enemies.find((enemy) => enemy.life > 0);
   if (!target) throw new Error("Nao ha monstros vivos para atacar.");
 
-  const totalDamage = Math.max(0, card.damage - getHeroAttackPenalty(session));
+  const totalDamage = Math.max(0, card.damage + attackBuff - getHeroAttackPenalty(session));
   applyDamageToEnemy(session, target, totalDamage, `${player.name} jogou ${card.name}`, Boolean(card.ignoreShield), player);
 }
 
@@ -1586,7 +1763,7 @@ function startDungeonTurn(session) {
 }
 
 function queueEnemyGroup(session, category, targetCriterion, ruleText) {
-  const enemies = session.enemies.filter((enemy) => enemy.category === category && enemy.life > 0);
+  const enemies = session.enemies.filter((enemy) => enemy.category === category && enemy.life > 0 && !enemy.isStunned);
   enemies.forEach((enemy) => {
     session.dungeonQueue.push({
       type: "enemyAttack",
@@ -2038,6 +2215,21 @@ async function handleApi(req, res) {
               drawCards(ally, 1);
             });
             session.log.unshift(`${player.name} usou ${sc.name}! Todos receberam Cura 5, Escudo 5, Energia +2 e compraram 1 carta.`);
+          } else if (sc.id === "tempestade-de-flechas") {
+            const targets = session.enemies.filter((enemy) => enemy.life > 0);
+            // 6 area damage
+            targets.forEach((enemy) =>
+              applyDamageToEnemy(session, enemy, Math.max(0, 6 - getHeroAttackPenalty(session)), sc.name, false, player)
+            );
+            // 8 single target damage to highest current life enemy
+            const aliveTargets = session.enemies.filter((enemy) => enemy.life > 0);
+            let singleTarget = null;
+            if (aliveTargets.length > 0) {
+              aliveTargets.sort((a, b) => b.life - a.life);
+              singleTarget = aliveTargets[0];
+              applyDamageToEnemy(session, singleTarget, Math.max(0, 8 - getHeroAttackPenalty(session)), sc.name, false, player);
+            }
+            session.log.unshift(`${player.name} usou ${sc.name}! Causou 6 de dano em todos os inimigos e 8 de dano adicional em ${singleTarget ? singleTarget.name : "nenhum inimigo"}.`);
           }
         } else if (body.type === "discardCard") {
           // Resolve a pending discard (from planejamento)
