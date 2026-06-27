@@ -2057,6 +2057,25 @@ function sanitizeSession(session, viewerId) {
     roomRound: session.roomRound,
     roomComplete: isRoomComplete(session),
     heroes: Object.values(heroes).map(({ deck, ...hero }) => hero),
+    heroCards: Object.keys(heroes).reduce((acc, heroId) => {
+      const hero = heroes[heroId];
+      const deckCards = hero.deck.map(([cardId]) => cards[cardId]);
+      const supremeCard = hero.supreme ? cards[hero.supreme] : null;
+      const allUniqueCards = [];
+      const seen = new Set();
+      if (supremeCard) {
+        allUniqueCards.push(supremeCard);
+        seen.add(supremeCard.id);
+      }
+      deckCards.forEach(card => {
+        if (card && !seen.has(card.id)) {
+          allUniqueCards.push(card);
+          seen.add(card.id);
+        }
+      });
+      acc[heroId] = allUniqueCards;
+      return acc;
+    }, {}),
     room: session.room,
     enemies: session.enemies,
     activeTrap: session.activeTrap,

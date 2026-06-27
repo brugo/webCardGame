@@ -10,6 +10,8 @@ const local = {
   toastTone: "warning",
   rulesOpen: false,
   rulesQuery: "",
+  rulesTab: "glossary",
+  rulesSelectedHero: "guardiao",
   state: null,
   events: null,
   justPlayedUid: "",
@@ -1141,40 +1143,91 @@ function normalizeSearch(value) {
 
 function renderRulesModal() {
   if (!local.rulesOpen) return "";
+  
+  const isGlossary = local.rulesTab === "glossary";
+  const isCards = local.rulesTab === "cards";
+  
   const query = normalizeSearch(local.rulesQuery);
   const entries = glossaryEntries.filter(([term, description]) =>
     normalizeSearch(`${term} ${description}`).includes(query)
   );
+  
+  let tabContent = "";
+  if (isGlossary) {
+    tabContent = `
+      <label class="rules-search">
+        Buscar termo
+        <input id="rulesSearch" autocomplete="off" placeholder="Provocar, Escudo, Intencao..." value="${escapeHtml(local.rulesQuery)}" />
+      </label>
+      <div class="rules-results">
+        ${
+          entries.length
+            ? entries
+                .map(
+                  ([term, description]) => `
+                    <article class="rule-entry">
+                      <strong>${escapeHtml(term)}</strong>
+                      <p>${escapeHtml(description)}</p>
+                    </article>
+                  `
+                )
+                .join("")
+            : `<p class="muted">Nenhuma regra encontrada para essa busca.</p>`
+        }
+      </div>
+    `;
+  } else if (isCards) {
+    const state = local.state;
+    const heroesList = state?.heroes || [];
+    const heroCardsMap = state?.heroCards || {};
+    const selectedHeroId = local.rulesSelectedHero || (heroesList[0]?.id || "guardiao");
+    const cards = heroCardsMap[selectedHeroId] || [];
+    
+    tabContent = `
+      <div class="hero-tab-selectors">
+        ${heroesList.map(h => `
+          <button class="hero-tab-btn ${selectedHeroId === h.id ? "active" : ""}" data-hero-tab="${h.id}">
+            ${escapeHtml(h.name)}
+          </button>
+        `).join("")}
+      </div>
+      <div class="rules-results cards-list-rules">
+        ${cards.length ? cards.map(card => {
+          const isSupreme = card.id === "bastiao-supremo" || card.id === "luz-da-esperanca" || card.id === "tempestade-de-flechas";
+          return `
+            <div class="rules-card-entry ${isSupreme ? "supreme-entry" : ""}">
+              <div class="card-entry-header">
+                <span class="card-entry-cost">${card.cost}⚡</span>
+                <strong class="card-entry-name">${escapeHtml(card.name)}</strong>
+                <span class="card-entry-type badge-${card.type}">${escapeHtml(card.type)}</span>
+                ${isSupreme ? `<span class="supreme-badge">Suprema</span>` : ""}
+              </div>
+              <p class="card-entry-text">${escapeHtml(card.text)}</p>
+            </div>
+          `;
+        }).join("") : `<p class="muted">Nenhum dado de carta disponível. Conecte-se a uma partida primeiro.</p>`}
+      </div>
+    `;
+  }
 
   return `
     <div class="rules-modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
       <div class="rules-panel glass-panel">
         <div class="rules-header">
           <div>
-            <span class="eyebrow">Glossario oficial</span>
-            <h2 id="rulesTitle">Regras rapidas</h2>
+            <span class="eyebrow">Manual do Jogo</span>
+            <h2 id="rulesTitle">Regras e Biblioteca</h2>
           </div>
           <button id="rulesClose" class="secondary" aria-label="Fechar regras">Fechar</button>
         </div>
-        <label class="rules-search">
-          Buscar termo
-          <input id="rulesSearch" autocomplete="off" placeholder="Provocar, Escudo, Intencao..." value="${escapeHtml(local.rulesQuery)}" />
-        </label>
-        <div class="rules-results">
-          ${
-            entries.length
-              ? entries
-                  .map(
-                    ([term, description]) => `
-                      <article class="rule-entry">
-                        <strong>${escapeHtml(term)}</strong>
-                        <p>${escapeHtml(description)}</p>
-                      </article>
-                    `
-                  )
-                  .join("")
-              : `<p class="muted">Nenhuma regra encontrada para essa busca.</p>`
-          }
+        
+        <div class="rules-tabs">
+          <button id="tabGlossary" class="tab-nav ${isGlossary ? "active" : ""}">Glossário</button>
+          <button id="tabCards" class="tab-nav ${isCards ? "active" : ""}">Cartas dos Heróis</button>
+        </div>
+        
+        <div class="rules-body">
+          ${tabContent}
         </div>
       </div>
     </div>
@@ -1204,6 +1257,25 @@ function bindGlobalControls() {
     const input = document.querySelector("#rulesSearch");
     input?.focus();
     input?.setSelectionRange(input.value.length, input.value.length);
+  });
+  
+  // Tab switching listeners
+  document.querySelector("#tabGlossary")?.addEventListener("click", () => {
+    local.rulesTab = "glossary";
+    render();
+    window.setTimeout(() => document.querySelector("#rulesSearch")?.focus(), 0);
+  });
+  document.querySelector("#tabCards")?.addEventListener("click", () => {
+    local.rulesTab = "cards";
+    render();
+  });
+  
+  // Hero tabs selection listeners
+  document.querySelectorAll(".hero-tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      local.rulesSelectedHero = btn.dataset.heroTab;
+      render();
+    });
   });
 }
 

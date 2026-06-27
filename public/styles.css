@@ -1963,6 +1963,190 @@ body.is-game-screen .hand-fan .play-card.reaction-ready {
   line-height: 1.35;
 }
 
+/* ── Rules Modal Tabs & Body ── */
+.rules-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.tab-nav {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 6px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.tab-nav.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.tab-nav:hover:not(.active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rules-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ── Hero Selectors inside Library ── */
+.hero-tab-selectors {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hero-tab-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.hero-tab-btn.active {
+  background: linear-gradient(135deg, rgba(62, 142, 181, 0.2), rgba(62, 142, 181, 0.4));
+  border-color: rgba(102, 231, 255, 0.4);
+  color: #d1f2ff;
+  box-shadow: 0 0 12px rgba(62, 142, 181, 0.3);
+}
+
+.hero-tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* ── Library Card Entries ── */
+.rules-card-entry {
+  background: rgba(20, 20, 20, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.rules-card-entry:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
+}
+
+.rules-card-entry.supreme-entry {
+  border-color: rgba(245, 194, 0, 0.3);
+  background: linear-gradient(145deg, rgba(20, 15, 5, 0.7), rgba(10, 8, 2, 0.75));
+  box-shadow: 0 0 10px rgba(245, 194, 0, 0.1);
+}
+
+.rules-card-entry.supreme-entry:hover {
+  border-color: rgba(245, 194, 0, 0.6);
+  box-shadow: 0 0 15px rgba(245, 194, 0, 0.2);
+}
+
+.card-entry-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.card-entry-cost {
+  background: rgba(0, 191, 255, 0.15);
+  color: #66e7ff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 191, 255, 0.25);
+}
+
+.supreme-entry .card-entry-cost {
+  background: rgba(245, 194, 0, 0.15);
+  color: #ffd785;
+  border-color: rgba(245, 194, 0, 0.25);
+}
+
+.card-entry-name {
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.card-entry-type {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.card-entry-type.badge-attack {
+  background: rgba(255, 75, 75, 0.15);
+  color: #ff8585;
+  border: 1px solid rgba(255, 75, 75, 0.25);
+}
+
+.card-entry-type.badge-defense {
+  background: rgba(75, 255, 75, 0.15);
+  color: #85ff85;
+  border: 1px solid rgba(75, 255, 75, 0.25);
+}
+
+.card-entry-type.badge-planning {
+  background: rgba(255, 255, 75, 0.12);
+  color: #ffff85;
+  border: 1px solid rgba(255, 255, 75, 0.22);
+}
+
+.card-entry-type.badge-reaction {
+  background: rgba(180, 75, 255, 0.15);
+  color: #d885ff;
+  border: 1px solid rgba(180, 75, 255, 0.25);
+}
+
+.supreme-badge {
+  background: linear-gradient(135deg, #a8720a, #f5c200);
+  color: #1a1000;
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.card-entry-text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.cards-list-rules {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .loading {
   width: min(460px, calc(100% - 32px));
   margin: auto;
