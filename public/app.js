@@ -33,6 +33,22 @@ function getCardArt(card) {
   return cardArt;
 }
 
+function getHeroCardArt(heroId) {
+  if (heroId === "guardiao") return "/assets/guardiao-card.jpg";
+  if (heroId === "batedor") return "/assets/batedor-card.jpg";
+  if (heroId === "mago") return "/assets/mago-card.jpg";
+  return "/assets/hero-card-example.png";
+}
+
+function getEnemyArt(enemy) {
+  if (enemy) {
+    if (enemy.id === "sentinela") return "/assets/sentinela-oco.jpg";
+    if (enemy.id === "salteador") return "/assets/salteador-cinzento.jpg";
+    if (enemy.id === "bruxa") return "/assets/bruxa-do-breu.jpg";
+  }
+  return enemyArt;
+}
+
 const glossaryEntries = [
   ["Vida", "Quantidade de dano que um personagem pode sofrer antes de ser derrotado."],
   ["Escudo X", "Receba X pontos de Escudo. O Escudo absorve dano antes da Vida e e removido quando chega a zero."],
@@ -71,7 +87,7 @@ const glossaryEntries = [
   ["Carta de Intencao", "Define o comportamento dos inimigos da rodada."],
   ["Descanso", "Apos concluir uma sala, o grupo escolhe um beneficio."],
   ["Recompensa", "Beneficio recebido ao concluir uma sala."],
-  ["Energia", "Cada heroi inicia o turno com 3 de Energia. Ela retorna para 3 a cada turno e nao acumula."],
+  ["Energia", "Recurso usado para jogar cartas. Cada heroi inicia o turno com sua Energia maxima (Guardiao: 4, Oraculo: 5, Batedor: 4, Arcanista: 6). Ela e restaurada a cada rodada e nao acumula."],
   ["Custos", "0 Energia: Reacoes. 1 Energia: acoes simples. 2 Energias: acoes poderosas."]
 ];
 
@@ -408,6 +424,15 @@ function renderGame() {
   const state = local.state;
   const me = getMe();
   const roomTheme = state.room?.theme || "forest";
+  const recentLogs = state.log ? state.log.slice(0, 3) : [];
+  const recentActionsHtml = recentLogs.length
+    ? recentLogs.map((log) => `
+      <div class="recent-action-item">
+        <span class="action-bullet"></span>
+        <span class="action-text">${escapeHtml(log)}</span>
+      </div>
+    `).join("")
+    : `<div class="recent-action-item muted">Nenhuma ação registrada ainda.</div>`;
 
   app.innerHTML = `
     <section class="game-board room-${roomTheme}">
@@ -422,6 +447,15 @@ function renderGame() {
         </aside>
 
         <section class="battlefield">
+          <div class="recent-actions-panel glass-panel">
+            <div class="recent-actions-header">
+              <span class="eyebrow">Ações Recentes</span>
+            </div>
+            <div class="recent-actions-list">
+              ${recentActionsHtml}
+            </div>
+          </div>
+
           <div class="monster-row">
             ${state.enemies.map(renderMonsterCard).join("")}
           </div>
@@ -438,13 +472,14 @@ function renderGame() {
         </section>
 
         <aside class="right-rail">
-          ${renderGameStatusPanel(state, me)}
-          ${renderRoomCard(state)}
+          ${renderSummaryCard(state)}
           <div class="glass-panel compact-panel">
             <span class="eyebrow">Controle de turno</span>
             ${renderTurnControls(state, me)}
             <p class="notice">${escapeHtml(local.error)}</p>
           </div>
+          ${renderGameStatusPanel(state, me)}
+          ${renderRoomCard(state)}
           ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
           ${renderIntentionCard(state.activeIntention)}
 
@@ -464,6 +499,7 @@ function renderGame() {
       ${renderEnergyAllocationModal(state, me)}
       ${renderEcoArcanoModal(state, me)}
       ${renderDistorcaoTemporalModal(state, me)}
+      ${renderRewardSelectionModal(state, me)}
     </section>
   `;
 
@@ -510,6 +546,35 @@ function renderGame() {
       allocation[input.dataset.pid] = Number(input.value) || 0;
     });
     action({ type: "confirmShieldAllocation", allocation });
+  });
+
+  // claim reward click: opens modal
+  document.querySelector("#claimRewardBtn")?.addEventListener("click", () => {
+    local.rewardModalOpen = true;
+    local.selectedRewardId = null;
+    render();
+  });
+
+  // reward card choice click
+  document.querySelectorAll(".reward-card-choice").forEach((card) => {
+    if (!card.classList.contains("reward-disabled")) {
+      card.addEventListener("click", () => {
+        local.selectedRewardId = card.dataset.rewardId;
+        render();
+      });
+    }
+  });
+
+  // confirm reward click
+  document.querySelector("#confirmRewardBtn")?.addEventListener("click", () => {
+    action({ type: "selectRoomReward", rewardId: local.selectedRewardId });
+    local.rewardModalOpen = false;
+    local.selectedRewardId = null;
+  });
+
+  // use redraw click
+  document.querySelector("#useRedraw")?.addEventListener("click", () => {
+    action({ type: "useRedraw" });
   });
 }
 
@@ -678,13 +743,13 @@ function renderHandDock(me, state) {
         <div class="resource-strip">
           ${renderEnergyPips(me.energy, me.maxEnergy)}
         </div>
-        <button id="buyCard" class="buy-card-btn" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || me.hand.length >= 5 ? 'disabled' : ''}>
+        <button id="buyCard" class="buy-card-btn" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || me.hand.length >= (me.maxHandSize || 5) ? 'disabled' : ''}>
           🎴 Comprar (1⚡)
         </button>
         ${hasSupreme ? `
           <div class="supreme-container">
             <button id="useSupreme" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
-              ✨ ${escapeHtml(me.supremeCard.name)}
+              ✨ Suprema
             </button>
             <div class="supreme-hover-preview">
               <article class="tcg-card play-card ${me.supremeCard.type} supreme-preview-card">
@@ -699,6 +764,13 @@ function renderHandDock(me, state) {
             </div>
           </div>
         ` : me.supremeUsed ? `<span class="supreme-used muted">Suprema usada</span>` : ""}
+        ${me.hasRedrawAvailable ? `
+          <div class="supreme-container" style="margin-top: 6px;">
+            <button id="useRedraw" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''} style="background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 0 14px rgba(168, 85, 247, 0.5); color: #fff; animation: none;">
+              🔄 Trocar Mão
+            </button>
+          </div>
+        ` : ""}
       </div>
       <div class="hand-fan" role="list" aria-label="Cartas na sua mao">
         ${
@@ -812,6 +884,23 @@ function renderTurnControls(state, me) {
     `;
   }
 
+  if (state.roomComplete) {
+    if (!me.hasClaimedRoomReward) {
+      return `
+        <p class="muted">Sala concluida! Escolha sua recompensa antes de prosseguir.</p>
+        <button id="claimRewardBtn" style="background: linear-gradient(135deg, #ffd785, #a8720a); color: #1a1000; font-weight: 900; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(245, 194, 0, 0.4);">
+          🎁 Receber Recompensas
+        </button>
+      `;
+    }
+    if (!state.allRewardsClaimed) {
+      return `
+        <p class="muted">Voce ja escolheu sua recompensa. Aguardando os aliados escolherem...</p>
+        <button disabled class="secondary" style="opacity: 0.6; cursor: not-allowed;">Aguardando Grupo...</button>
+      `;
+    }
+  }
+
   return `
     <p class="muted">A dungeon atacou seguindo a intencao ativa. Inicie a proxima rodada para revelar uma nova carta.</p>
     <button id="startNextRound">${state.roomComplete ? "Avancar para proxima sala" : "Iniciar proxima rodada"}</button>
@@ -901,6 +990,49 @@ function renderIntentionCard(intention) {
   `;
 }
 
+function renderSummaryCard(state) {
+  const roomRule = state.room?.rule ? state.room.rule : "Nenhuma regra especial ativa.";
+
+  let trapText = "Sem armadilha ativa.";
+  if (state.activeTrap) {
+    const isTrapDisabled = state.activeTrapDisabledRounds && state.activeTrapDisabledRounds > 0;
+    if (isTrapDisabled) {
+      trapText = `<strong>${escapeHtml(state.activeTrap.name)} (Desativada por ${state.activeTrapDisabledRounds} rod.):</strong> ${escapeHtml(state.activeTrap.text)}`;
+    } else {
+      trapText = `<strong>${escapeHtml(state.activeTrap.name)}:</strong> ${escapeHtml(state.activeTrap.text)}`;
+    }
+  }
+
+  let intentionText = "Nenhuma intenção revelada.";
+  if (state.activeIntention) {
+    intentionText = `
+      <div><strong>Comuns:</strong> ${escapeHtml(state.activeIntention.commonText || "Sem ação.")}</div>
+      <div><strong>Brutais:</strong> ${escapeHtml(state.activeIntention.brutalText || "Sem ação.")}</div>
+    `;
+  }
+
+  return `
+    <article class="summary-card glass-panel">
+      <span class="eyebrow">Resumo do Combate</span>
+      
+      <div class="summary-section summary-intention">
+        <h3>Intenções dos Inimigos</h3>
+        <div class="summary-content">${intentionText}</div>
+      </div>
+
+      <div class="summary-section summary-trap">
+        <h3>Armadilha Ativa</h3>
+        <div class="summary-content">${trapText}</div>
+      </div>
+
+      <div class="summary-section summary-room">
+        <h3>Regras da Sala</h3>
+        <div class="summary-content">${escapeHtml(roomRule)}</div>
+      </div>
+    </article>
+  `;
+}
+
 function renderPlayerHud(player) {
   const hasResources = local.state?.status === "playing" && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
   return `
@@ -965,7 +1097,7 @@ function renderMonsterCard(enemy) {
   return `
     <article id="card-enemy-${enemy.uid}" class="monster-card ${enemy.category} ${defeated ? "defeated" : ""}">
       <div class="monster-art">
-        <img src="${enemyArt}" alt="" />
+        <img src="${getEnemyArt(enemy)}" alt="" />
       </div>
       <div class="monster-info">
         <span>${escapeHtml(enemy.role)}</span>
@@ -1079,6 +1211,88 @@ function renderPendingDiscardModal(state, me) {
             </article>
           `).join("")}
         </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRewardSelectionModal(state, me) {
+  if (!local.rewardModalOpen) return "";
+  
+  const chosen = me.chosenRewards || [];
+  const heroArt = getHeroCardArt(me.heroId);
+  
+  const options = [
+    {
+      id: "energy",
+      name: "Energia Maxima",
+      cost: "+1⚡",
+      desc: "Aumenta permanentemente sua Energia maxima em +1."
+    },
+    {
+      id: "handSize",
+      name: "Tamanho da Mao",
+      cost: "+1🎴",
+      desc: "Aumenta permanentemente o limite maximo de cartas na mao em +1."
+    },
+    {
+      id: "redraw",
+      name: "Troca de Mao",
+      cost: "1x",
+      desc: "Ganha a opcao de trocar todas as cartas da mao uma vez em qualquer momento da proxima sala."
+    }
+  ];
+  
+  const allExhausted = options.every(opt => chosen.includes(opt.id));
+  
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+      <div class="glass-panel reaction-panel reward-selection-modal" style="max-width: 800px; padding: 24px; text-align: center;">
+        <span class="eyebrow">Conclusao de Sala</span>
+        <h2 id="rewardTitle">Escolha sua Recompensa</h2>
+        <p class="muted" style="margin-bottom: 20px;">Cada recompensa so pode ser escolhida uma unica vez por partida.</p>
+        
+        ${allExhausted ? `
+          <div class="all-rewards-obtained" style="margin: 32px 0;">
+            <h3 style="color: #ffd785; font-size: 1.4rem; margin-bottom: 8px;">✨ Todas as Recompensas Obtidas!</h3>
+            <p class="muted">Voce ja resgatou todas as melhorias disponiveis para esta partida.</p>
+          </div>
+          <button id="confirmRewardBtn" class="reward-confirm-btn" style="background: linear-gradient(135deg, #ffd785, #a8720a); color: #1a1000; font-weight: 900; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%;">
+            Confirmar e Continuar
+          </button>
+        ` : `
+          <div class="reward-cards-container" style="display: flex; gap: 16px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap;">
+            ${options.map(opt => {
+              const isAlreadyChosen = chosen.includes(opt.id);
+              const isSelected = local.selectedRewardId === opt.id;
+              
+              return `
+                <article class="tcg-card reward-card-choice ${opt.id} ${isAlreadyChosen ? 'reward-disabled' : ''} ${isSelected ? 'reward-selected' : ''}" 
+                         data-reward-id="${opt.id}">
+                  <div class="card-cost">${opt.cost}</div>
+                  <img src="${heroArt}" alt="" />
+                  <div class="card-body">
+                    <strong>${escapeHtml(opt.name)}</strong>
+                    <p>${escapeHtml(opt.desc)}</p>
+                  </div>
+                  ${isAlreadyChosen ? `
+                    <div class="already-chosen-badge">
+                      JÁ ESCOLHIDA
+                    </div>
+                  ` : ""}
+                </article>
+              `;
+            }).join("")}
+          </div>
+          
+          <button id="confirmRewardBtn" class="reward-confirm-btn" ${!local.selectedRewardId ? 'disabled' : ''} 
+                  style="background: ${local.selectedRewardId ? 'linear-gradient(135deg, #ffd785, #a8720a)' : '#444'}; 
+                         color: ${local.selectedRewardId ? '#1a1000' : '#888'}; 
+                         font-weight: 900; border: none; padding: 12px 24px; border-radius: 8px; 
+                         cursor: ${local.selectedRewardId ? 'pointer' : 'not-allowed'}; font-size: 1rem; width: 100%; transition: all 0.2s;">
+            Escolher Recompensa
+          </button>
+        `}
       </div>
     </div>
   `;

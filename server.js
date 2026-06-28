@@ -18,7 +18,7 @@ const roomCards = [
     setup: { common: 2, brutal: 1 },
     objective: "Derrote todos os inimigos.",
     rule: "O primeiro heroi que sofrer dano de inimigo em cada rodada sofre +1 de dano adicional.",
-    reward: "Ao vencer, todos os herois compram 1 carta.",
+    reward: "",
     effect: "firstEnemyDamageBonus"
   },
   {
@@ -29,7 +29,7 @@ const roomCards = [
     setup: { common: 3, brutal: 0 },
     objective: "Derrote todos os inimigos.",
     rule: "Enquanto houver 3 ou mais inimigos vivos, todos os Inimigos Comuns causam +1 de dano.",
-    reward: "Ao vencer, um heroi recupera 2 de Vida.",
+    reward: "",
     effect: "commonBonusAtThreeEnemies"
   },
   {
@@ -40,7 +40,7 @@ const roomCards = [
     setup: { common: 1, brutal: 2 },
     objective: "Derrote todos os inimigos.",
     rule: "Inimigos Brutais causam +1 de dano contra herois sem Escudo.",
-    reward: "Ao vencer, todos os herois recuperam 1 de Vida.",
+    reward: "",
     effect: "brutalBonusVsNoShield"
   },
   {
@@ -51,7 +51,7 @@ const roomCards = [
     setup: { common: 2, brutal: 2 },
     objective: "Derrote todos os inimigos.",
     rule: "No final de cada rodada, se houver 2 ou mais inimigos vivos, todos os herois sofrem 1 de dano.",
-    reward: "Ao vencer, reduza o Perigo em 1.",
+    reward: "",
     effect: "endRoundDamageIfTwoEnemies"
   },
   {
@@ -62,7 +62,7 @@ const roomCards = [
     setup: { common: 1, brutal: 1 },
     objective: "Derrote todos os inimigos.",
     rule: "Na primeira rodada desta sala, cada heroi comeca com -1 de Energia.",
-    reward: "Ao vencer, cada heroi compra 1 carta e depois descarta 1 carta.",
+    reward: "",
     effect: "firstRoomRoundEnergyPenalty"
   },
   {
@@ -72,8 +72,8 @@ const roomCards = [
     theme: "crypt",
     setup: { common: 2, brutal: 1 },
     objective: "Derrote todos os inimigos.",
-    rule: "Enquanto a Armadilha estiver ativa, herois nao podem comprar cartas extras usando Perigo.",
-    reward: "Ao vencer, todos os herois podem descartar 1 carta e comprar 1 carta.",
+    rule: "Enquanto a Armadilha estiver ativa, herois nao podem comprar cartas extras usando Energia.",
+    reward: "",
     effect: "noDangerDrawWhileTrap"
   },
   {
@@ -84,7 +84,7 @@ const roomCards = [
     setup: { common: 4, brutal: 0 },
     objective: "Derrote todos os inimigos.",
     rule: "No final de cada rodada, o heroi com menos Vida sofre 1 de dano.",
-    reward: "Ao vencer, todos os herois recuperam 2 de Vida.",
+    reward: "",
     effect: "endRoundLowestLifeDamage"
   },
   {
@@ -95,7 +95,7 @@ const roomCards = [
     setup: { common: 0, brutal: 1 },
     objective: "Derrote todos os inimigos.",
     rule: "O Inimigo Brutal desta sala recebe +3 de Vida maxima e atual.",
-    reward: "Ao vencer, compre 1 Tesouro menor.",
+    reward: "",
     effect: "brutalLifeBonus"
   },
   {
@@ -106,7 +106,7 @@ const roomCards = [
     setup: { common: 3, brutal: 1 },
     objective: "Derrote todos os inimigos.",
     rule: "Na fase inimiga, resolva os Inimigos Brutais antes dos Inimigos Comuns.",
-    reward: "Ao vencer, todos os herois compram 1 carta.",
+    reward: "",
     effect: "brutalsFirst"
   },
   {
@@ -117,14 +117,14 @@ const roomCards = [
     setup: { common: 2, brutal: 1 },
     objective: "Derrote todos os inimigos.",
     rule: "No inicio de cada rodada, todos sofrem 1 de dano no prototipo.",
-    reward: "Ao vencer, todos recuperam 2 de Vida.",
+    reward: "",
     effect: "ritualStartDamage"
   }
 ];
 
 const trapCards = [
   { id: "TRAP_001", name: "Espinhos no Piso", text: "No final de cada turno da dungeon, todos os herois sofrem 1 de dano.", effect: "endDungeonAllDamage" },
-  { id: "TRAP_002", name: "Fome Arcana", text: "No inicio da rodada, herois compram apenas 1 carta.", effect: "drawTwo" },
+  { id: "TRAP_002", name: "Fome Arcana", text: "No inicio da rodada, herois compram 0 cartas.", effect: "drawTwo" },
   { id: "TRAP_003", name: "Selo Anticura", text: "Herois nao podem ser curados enquanto esta armadilha estiver ativa.", effect: "noHealing" },
   { id: "TRAP_004", name: "Dreno de Vigor", text: "No inicio da rodada, cada heroi comeca com -1 de Energia.", effect: "energyPenalty" },
   { id: "TRAP_005", name: "Neblina Cortante", text: "Ataques dos herois causam -1 de dano.", effect: "heroAttackPenalty" },
@@ -361,7 +361,7 @@ const heroes = {
     id: "guardiao",
     name: "Guardiao Solar",
     life: 32,
-    energy: 3,
+    energy: 4,
     supreme: "bastiao-supremo",
     deck: [
       ["escudo-protetor", 2],
@@ -383,7 +383,7 @@ const heroes = {
     id: "oraculo",
     name: "Oraculo Lunar",
     life: 24,
-    energy: 4,
+    energy: 5,
     supreme: "luz-da-esperanca",
     deck: [
       ["cura-menor", 2],
@@ -404,7 +404,7 @@ const heroes = {
     id: "batedor",
     name: "Batedor Verde",
     life: 28,
-    energy: 3,
+    energy: 4,
     supreme: "tempestade-de-flechas",
     deck: [
       ["flecha-precisa", 2],
@@ -425,7 +425,7 @@ const heroes = {
     id: "mago",
     name: "Arcanista Vince",
     life: 26,
-    energy: 3,
+    energy: 6,
     supreme: "cataclismo-arcano",
     deck: [
       ["raio-arcano", 2],
@@ -735,9 +735,9 @@ const cards = {
     id: "purificar",
     name: "Purificar",
     type: "control",
-    cost: 1,
+    cost: 5,
     removeTrap: true,
-    text: "Remova a armadilha ativa."
+    text: "Remova a armadilha ativa. Todos os herois da mesa devem escolher e descartar 1 carta."
   },
   "reanimar": {
     id: "reanimar",
@@ -1188,7 +1188,8 @@ function archiveCurrentEnemies(session) {
 }
 
 function getRoundDrawCount(session) {
-  return session.activeTrap?.effect === "drawTwo" ? 1 : 2;
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  return (isTrapActive && session.activeTrap.effect === "drawTwo") ? 0 : 1;
 }
 
 function applyStartOfRoundEffects(session) {
@@ -1313,63 +1314,7 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
 function applyRoomReward(session) {
   if (session.roomRewardClaimed || !isRoomComplete(session)) return;
   session.roomRewardClaimed = true;
-  const activePlayers = session.players.filter((player) => player.life > 0);
-
-  if (["SALA_001", "SALA_009"].includes(session.room.id)) {
-    activePlayers.forEach((player) => drawCards(player, 1));
-    session.log.unshift("Recompensa da sala: todos os herois compraram 1 carta.");
-    return;
-  }
-  if (session.room.id === "SALA_002") {
-    const target = selectTarget(session.players, "minLife");
-    if (target) {
-      const before = target.life;
-      target.life = Math.min(target.maxLife, target.life + 2);
-      const healed = target.life - before;
-      if (healed > 0) {
-        pushVisualEvent(session, {
-          type: "heal",
-          targetType: "hero",
-          targetId: target.id,
-          amount: healed,
-          source: "Recompensa da sala"
-        });
-      }
-    }
-    session.log.unshift(`Recompensa da sala: ${target?.name || "um heroi"} recuperou 2 de Vida.`);
-    return;
-  }
-  if (session.room.id === "SALA_003") {
-    activePlayers.forEach((player) => {
-      const before = player.life;
-      player.life = Math.min(player.maxLife, player.life + 1);
-      const healed = player.life - before;
-      if (healed > 0) {
-        pushVisualEvent(session, {
-          type: "heal",
-          targetType: "hero",
-          targetId: player.id,
-          amount: healed,
-          source: "Recompensa da sala"
-        });
-      }
-    });
-    session.log.unshift("Recompensa da sala: todos recuperaram 1 de Vida.");
-    return;
-  }
-  if (session.room.id === "SALA_007" || session.room.id === "SALA_010") {
-    activePlayers.forEach((player) => {
-      player.life = Math.min(player.maxLife, player.life + 2);
-    });
-    session.log.unshift("Recompensa da sala: todos recuperaram 2 de Vida.");
-    return;
-  }
-  if (session.room.id === "SALA_005" || session.room.id === "SALA_006") {
-    activePlayers.forEach((player) => drawCards(player, 1));
-    session.log.unshift("Recompensa da sala: cada heroi comprou 1 carta. O descarte opcional fica para uma acao futura.");
-    return;
-  }
-  session.log.unshift(`Recompensa da sala registrada: ${session.room.reward}`);
+  session.log.unshift("Sala concluida!");
 }
 
 function drawIntention(session) {
@@ -1410,7 +1355,12 @@ function addPlayer(session, name) {
     discard: [],
     supremeCard: null,
     supremeUsed: false,
-    pendingDiscard: 0
+    pendingDiscard: 0,
+    maxHandSize: 5,
+    chosenRewards: [],
+    hasClaimedRoomReward: false,
+    hasRedrawAvailable: false,
+    justChoseRedraw: false
   };
   session.players.push(player);
   session.log.unshift(`${player.name} entrou na sala.`);
@@ -1429,7 +1379,7 @@ function getPlayer(session, playerId, token) {
 }
 
 function drawCards(player, amount) {
-  const maxDrawn = Math.max(0, 5 - player.hand.length);
+  const maxDrawn = Math.max(0, (player.maxHandSize || 5) - player.hand.length);
   const targetAmount = Math.min(amount, maxDrawn);
   const drawn = [];
   while (drawn.length < targetAmount) {
@@ -1529,6 +1479,19 @@ function startNextRound(session) {
   session.pendingReaction = null;
   const completedRoom = isRoomComplete(session);
   if (completedRoom) {
+    const allRewardsClaimed = session.players.every((p) => p.life <= 0 || p.hasClaimedRoomReward);
+    if (!allRewardsClaimed) {
+      throw new Error("Todos os jogadores ativos devem escolher suas recompensas antes de iniciar a proxima sala.");
+    }
+    session.players.forEach((player) => {
+      player.hasClaimedRoomReward = false;
+      if (player.justChoseRedraw) {
+        player.hasRedrawAvailable = true;
+        player.justChoseRedraw = false;
+      } else {
+        player.hasRedrawAvailable = false;
+      }
+    });
     archiveCurrentEnemies(session);
     drawNextRoom(session);
   } else {
@@ -1542,7 +1505,6 @@ function startNextRound(session) {
     player.discard.push(...player.played);
     player.played = [];
     player.energy = player.maxEnergy;
-    player.shield = 0;
     player.protectingId = null;
     player.interceptReady = false;
     player.reflectDamage = 0;
@@ -1587,6 +1549,22 @@ function playCard(session, player, payload) {
 
   const finalCost = isFreePlay ? 0 : card.cost;
   if (player.energy < finalCost) throw new Error("Energia insuficiente.");
+
+  if (card.id === "purificar") {
+    if (!session.activeTrap) {
+      throw new Error("Nao ha armadilha ativa para purificar.");
+    }
+    // Caster needs at least 1 other card to discard (since Purificar is in hand, total size must be >= 2)
+    if (player.hand.length < 2) {
+      throw new Error("Voce precisa de pelo menos mais uma carta na mao para descartar.");
+    }
+    // Other players need at least 1 card to discard
+    const unablePlayers = session.players.filter(p => p.id !== player.id && p.life > 0 && p.hand.length < 1);
+    if (unablePlayers.length > 0) {
+      const names = unablePlayers.map(p => p.name).join(", ");
+      throw new Error(`Nem todos os aliados possuem cartas na mao para descartar: ${names} estao sem cartas.`);
+    }
+  }
   if (card.lowLifeMax && player.life > card.lowLifeMax) {
     throw new Error(`${card.name} so pode ser usada com ${card.lowLifeMax} de Vida ou menos.`);
   }
@@ -1790,7 +1768,15 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     const trapName = session.activeTrap.name;
     session.trapDiscard.push(session.activeTrap);
     session.activeTrap = null;
-    session.log.unshift(`${player.name} purificou a armadilha ${trapName}!`);
+    
+    // Each active player must discard 1 card
+    session.players.forEach((p) => {
+      if (p.life > 0) {
+        p.pendingDiscard = (p.pendingDiscard || 0) + 1;
+      }
+    });
+
+    session.log.unshift(`${player.name} purificou a armadilha ${trapName}! Todos os herois da mesa devem escolher e descartar 1 carta.`);
   }
 
   // suprema: luz-da-esperanca
@@ -2277,6 +2263,7 @@ function sanitizeSession(session, viewerId) {
     roomRound: session.roomRound,
     roomNumber: session.roomNumber || 1,
     roomComplete: isRoomComplete(session),
+    allRewardsClaimed: session.players.every((p) => p.life <= 0 || p.hasClaimedRoomReward),
     heroes: Object.values(heroes).map(({ deck, ...hero }) => hero),
     heroCards: Object.keys(heroes).reduce((acc, heroId) => {
       const hero = heroes[heroId];
@@ -2334,6 +2321,10 @@ function sanitizeSession(session, viewerId) {
       supremeCard: player.id === viewerId ? player.supremeCard : null,
       supremeUsed: player.supremeUsed,
       pendingDiscard: player.id === viewerId ? (player.pendingDiscard || 0) : 0,
+      maxHandSize: player.maxHandSize || 5,
+      chosenRewards: player.chosenRewards || [],
+      hasClaimedRoomReward: player.hasClaimedRoomReward || false,
+      hasRedrawAvailable: player.hasRedrawAvailable || false,
       hand: player.id === viewerId ? player.hand : []
     }))
   };
@@ -2464,8 +2455,14 @@ async function handleApi(req, res) {
           if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
           if (session.turn !== "players") throw new Error("Agora e o turno da dungeon.");
           if (player.turnEnded) throw new Error("Voce ja finalizou seu turno.");
-          if (player.hand.length >= 5) throw new Error("Mao cheia! O limite maximo e de 5 cartas.");
+          const maxHand = player.maxHandSize || 5;
+          if (player.hand.length >= maxHand) throw new Error("Mao cheia! O limite maximo e de " + maxHand + " cartas.");
           if (player.energy < 1) throw new Error("Energia insuficiente para comprar carta.");
+
+          const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+          if (session.room.effect === "noDangerDrawWhileTrap" && isTrapActive) {
+            throw new Error("Regra da Sala: Herois nao podem comprar cartas usando Energia enquanto a Armadilha estiver ativa.");
+          }
 
           player.energy -= 1;
           const drawn = drawCards(player, 1);
@@ -2608,6 +2605,47 @@ async function handleApi(req, res) {
           if (session.pendingDistorcaoTemporal.targetId !== player.id) throw new Error("Apenas o alvo da Distorcao Temporal pode pular.");
           session.pendingDistorcaoTemporal = null;
           session.log.unshift(`${player.name} decidiu pular a acao extra da Distorcao Temporal.`);
+        } else if (body.type === "selectRoomReward") {
+          if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
+          if (!isRoomComplete(session)) throw new Error("A sala ainda nao foi concluida.");
+          if (player.hasClaimedRoomReward) throw new Error("Voce ja escolheu sua recompensa para esta sala.");
+
+          const rewardId = body.rewardId;
+          if (rewardId) {
+            if (!["energy", "handSize", "redraw"].includes(rewardId)) throw new Error("Recompensa invalida.");
+            if (!player.chosenRewards) player.chosenRewards = [];
+            if (player.chosenRewards.includes(rewardId)) throw new Error("Recompensa ja escolhida anteriormente.");
+            
+            player.chosenRewards.push(rewardId);
+            if (rewardId === "energy") {
+              player.maxEnergy += 1;
+              player.energy = player.maxEnergy;
+            } else if (rewardId === "handSize") {
+              player.maxHandSize = (player.maxHandSize || 5) + 1;
+            } else if (rewardId === "redraw") {
+              player.justChoseRedraw = true;
+            }
+            session.log.unshift(`${player.name} escolheu a recompensa: ${rewardId === "energy" ? "Energia Maxima +1" : rewardId === "handSize" ? "Tamanho da Mao +1" : "Troca de Mao"}.`);
+          } else {
+            session.log.unshift(`${player.name} concluiu a escolha de recompensas.`);
+          }
+          player.hasClaimedRoomReward = true;
+        } else if (body.type === "useRedraw") {
+          if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
+          if (session.turn !== "players") throw new Error("Agora e o turno da dungeon.");
+          if (player.turnEnded) throw new Error("Voce ja finalizou seu turno.");
+          if (!player.hasRedrawAvailable) throw new Error("Voce nao possui Troca de Mao disponivel.");
+
+          const handSizeBefore = player.hand.length;
+          if (handSizeBefore > 0) {
+            player.discard.push(...player.hand);
+            player.hand = [];
+            const drawn = drawCards(player, handSizeBefore);
+            session.log.unshift(`${player.name} usou a Troca de Mao! Descartou sua mao e comprou ${drawn} novas cartas.`);
+          } else {
+            session.log.unshift(`${player.name} usou a Troca de Mao, mas nao tinha cartas na mao.`);
+          }
+          player.hasRedrawAvailable = false;
         } else {
           throw new Error("Acao desconhecida.");
         }
