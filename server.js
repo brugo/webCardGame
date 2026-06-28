@@ -420,6 +420,27 @@ const heroes = {
       ["cacada", 1],
       ["ultima-flecha", 1]
     ]
+  },
+  mago: {
+    id: "mago",
+    name: "Arcanista Vince",
+    life: 26,
+    energy: 3,
+    supreme: "cataclismo-arcano",
+    deck: [
+      ["raio-arcano", 2],
+      ["bola-de-fogo", 2],
+      ["raio-congelante", 2],
+      ["tempestade-eletrica", 2],
+      ["fluxo-arcano", 2],
+      ["manipular-energia", 2],
+      ["prisao-de-gelo", 1],
+      ["campo-antimagia", 1],
+      ["teleporte-arcano", 1],
+      ["explosao-de-mana", 1],
+      ["eco-arcano", 1],
+      ["distorcao-temporal", 1]
+    ]
   }
 };
 
@@ -853,6 +874,110 @@ const cards = {
     type: "defense",
     cost: 0,
     text: "Suprema. Todo dano aos aliados e redirecionado a voce, e todo dano recebido por voce e reduzido pela metade ate o inicio do seu proximo turno. Receba 8 de Escudo."
+  },
+  "raio-arcano": {
+    id: "raio-arcano",
+    name: "Raio Arcano",
+    type: "attack",
+    cost: 2,
+    damage: 5,
+    text: "Cause 5 de dano a um inimigo."
+  },
+  "bola-de-fogo": {
+    id: "bola-de-fogo",
+    name: "Bola de Fogo",
+    type: "attack",
+    cost: 3,
+    areaDamage: 3,
+    text: "Cause 3 de dano em todos os inimigos."
+  },
+  "raio-congelante": {
+    id: "raio-congelante",
+    name: "Raio Congelante",
+    type: "attack",
+    cost: 3,
+    damage: 4,
+    stun: true,
+    text: "Cause 4 de dano. O alvo nao ataca nesta rodada."
+  },
+  "tempestade-eletrica": {
+    id: "tempestade-eletrica",
+    name: "Tempestade Eletrica",
+    type: "attack",
+    cost: 3,
+    text: "Cause 6 de dano. Depois cause 2 de dano em outro inimigo."
+  },
+  "fluxo-arcano": {
+    id: "fluxo-arcano",
+    name: "Fluxo Arcano",
+    type: "energy",
+    target: "ally",
+    cost: 2,
+    energy: 2,
+    text: "Um aliado recupera 2 de Energia."
+  },
+  "manipular-energia": {
+    id: "manipular-energia",
+    name: "Manipular Energia",
+    type: "control",
+    cost: 2,
+    text: "Transfira ate 2 de Energia de um aliado para outro."
+  },
+  "prisao-de-gelo": {
+    id: "prisao-de-gelo",
+    name: "Prisao de Gelo",
+    type: "attack",
+    cost: 4,
+    target: "brutal",
+    stun: true,
+    text: "Escolha um Inimigo Brutal. Ele nao pode atacar durante esta rodada."
+  },
+  "campo-antimagia": {
+    id: "campo-antimagia",
+    name: "Campo Antimagia",
+    type: "control",
+    cost: 3,
+    disableTrap: 2,
+    text: "Desative uma Armadilha por 2 rodadas. Depois ela volta normalmente."
+  },
+  "teleporte-arcano": {
+    id: "teleporte-arcano",
+    name: "Teleporte Arcano",
+    type: "control",
+    target: "ally",
+    cost: 2,
+    text: "Escolha um aliado. Ele recupera 1 Energia e compra 1 carta."
+  },
+  "explosao-de-mana": {
+    id: "explosao-de-mana",
+    name: "Explosao de Mana",
+    type: "attack",
+    cost: 4,
+    damage: 8,
+    ignoreShield: true,
+    text: "Cause 8 de dano, ignorando Escudo."
+  },
+  "eco-arcano": {
+    id: "eco-arcano",
+    name: "Eco Arcano",
+    type: "control",
+    cost: 3,
+    text: "Escolha uma carta que voce jogou nesta rodada. Resolva novamente seus efeitos. (Nao copia Cartas Supremas.)"
+  },
+  "distorcao-temporal": {
+    id: "distorcao-temporal",
+    name: "Distorcao Temporal",
+    type: "control",
+    target: "ally",
+    cost: 4,
+    text: "Escolha um aliado. Ele pode jogar imediatamente uma carta de custo 2 ou menos sem gastar Energia."
+  },
+  "cataclismo-arcano": {
+    id: "cataclismo-arcano",
+    name: "Cataclismo Arcano",
+    type: "attack",
+    cost: 0,
+    text: "Suprema. Cause 6 de dano em todos os inimigos. Todos os aliados recuperam 2 de Energia. Desative todas as Armadilhas ate o fim da rodada. O Inimigo Brutal nao pode atacar nesta rodada."
   }
 };
 
@@ -1389,6 +1514,14 @@ function startNextRound(session) {
   if (session.turn !== "dungeon" || !session.dungeonResolved) {
     throw new Error("A proxima rodada so comeca depois do turno da dungeon.");
   }
+  
+  if (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) {
+    session.activeTrapDisabledRounds -= 1;
+    if (session.activeTrapDisabledRounds === 0) {
+      session.log.unshift(`A armadilha ${session.activeTrap ? session.activeTrap.name : ""} voltou a ficar ativa.`);
+    }
+  }
+
   session.round += 1;
   session.turn = "players";
   session.dungeonResolved = false;
@@ -1444,20 +1577,33 @@ function playCard(session, player, payload) {
 
   const card = player.hand[cardIndex];
   if (card.type === "reaction") throw new Error("Cartas de Reacao so podem ser usadas na janela de reacao da dungeon.");
-  if (player.energy < card.cost) throw new Error("Energia insuficiente.");
+
+  const isFreePlay = session.pendingDistorcaoTemporal && session.pendingDistorcaoTemporal.targetId === player.id;
+  if (isFreePlay) {
+    if (card.cost > 2) {
+      throw new Error("Apenas cartas de custo 2 ou menos podem ser jogadas com Distorcao Temporal.");
+    }
+  }
+
+  const finalCost = isFreePlay ? 0 : card.cost;
+  if (player.energy < finalCost) throw new Error("Energia insuficiente.");
   if (card.lowLifeMax && player.life > card.lowLifeMax) {
     throw new Error(`${card.name} so pode ser usada com ${card.lowLifeMax} de Vida ou menos.`);
   }
-  if (card.type === "heal" && session.activeTrap?.effect === "noHealing") {
+
+  const isNoHealing = (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) ? false : (session.activeTrap?.effect === "noHealing");
+  if (card.type === "heal" && isNoHealing) {
     throw new Error(`Cura bloqueada pela armadilha ${session.activeTrap.name}.`);
   }
-  if (card.type === "draw" && session.activeTrap?.effect === "noExtraDraw") {
+
+  const isNoExtraDraw = (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) ? false : (session.activeTrap?.effect === "noExtraDraw");
+  if (card.type === "draw" && isNoExtraDraw) {
     throw new Error(`Compra extra bloqueada pela armadilha ${session.activeTrap.name}.`);
   }
 
   player.hand.splice(cardIndex, 1);
-  player.energy -= card.cost;
-  player.roundStats.energySpent += card.cost;
+  player.energy -= finalCost;
+  player.roundStats.energySpent += finalCost;
   player.roundStats.cardsPlayed += 1;
   if (card.type === "attack") player.roundStats.attackCardsPlayed += 1;
   player.played.push(card);
@@ -1468,7 +1614,7 @@ function playCard(session, player, payload) {
     heroId: card.heroId,
     name: card.name,
     type: card.type,
-    cost: card.cost,
+    cost: finalCost,
     damage: card.damage,
     areaDamage: card.areaDamage,
     ignoreShield: card.ignoreShield,
@@ -1485,17 +1631,26 @@ function playCard(session, player, payload) {
     enemyChallenge: card.enemyChallenge,
     lowLifeMax: card.lowLifeMax,
     text: card.text,
-    playedBy: player.name
+    playedBy: isFreePlay ? `${player.name} (Gratis)` : player.name
   };
   session.arena.unshift(arenaCard);
 
+  if (isFreePlay) {
+    session.pendingDistorcaoTemporal = null;
+    session.log.unshift(`${player.name} jogou ${card.name} gratuitamente via Distorcao Temporal.`);
+  }
+
   // Consume next attack bonus if it's an attack card
   let attackBuff = 0;
-  if (player.nextAttackBonus && (card.damage || card.areaDamage || card.id === "flecha-explosiva" || card.id === "execucao")) {
+  if (player.nextAttackBonus && (card.damage || card.areaDamage || card.id === "flecha-explosiva" || card.id === "execucao" || card.id === "tempestade-eletrica")) {
     attackBuff = player.nextAttackBonus;
     player.nextAttackBonus = 0;
   }
 
+  executeCardEffects(session, player, card, payload, attackBuff);
+}
+
+function executeCardEffects(session, player, card, payload, attackBuff) {
   if (card.areaDamage) {
     const targets = session.enemies.filter((enemy) => enemy.life > 0);
     targets.forEach((enemy) =>
@@ -1552,7 +1707,7 @@ function playCard(session, player, payload) {
     session.log.unshift(`${player.name} recuperou ${card.energy} de energia com ${card.name}.`);
   }
 
-  // energy to an ally (inspiracao)
+  // energy to an ally (inspiracao or fluxo-arcano)
   if (card.energy && card.target === "ally") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
     target.energy = Math.min(target.maxEnergy + 2, target.energy + card.energy); // allow slight overflow for combos
@@ -1701,6 +1856,9 @@ function playCard(session, player, payload) {
   if (card.stun) {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
+      if (card.target === "brutal" && target.category !== "brutal") {
+        throw new Error("Esta carta so pode visar Inimigos Brutais.");
+      }
       target.isStunned = true;
       session.log.unshift(`${player.name} atordoou ${target.name} com ${card.name}. Ele nao atacara nesta rodada.`);
     }
@@ -1734,6 +1892,53 @@ function playCard(session, player, payload) {
       player.hand = [];
       session.log.unshift(`${player.name} descartou toda a mao (${count} cartas) devido ao efeito de Ultima Flecha.`);
     }
+  }
+
+  // Vince (Mage) custom cards
+  if (card.id === "tempestade-eletrica") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      applyDamageToEnemy(session, target, Math.max(0, 6 + attackBuff - getHeroAttackPenalty(session)), card.name, false, player);
+      const other = session.enemies.find((enemy) => enemy.uid !== target.uid && enemy.life > 0);
+      if (other) {
+        applyDamageToEnemy(session, other, Math.max(0, 2 - getHeroAttackPenalty(session)), card.name, false, player);
+        session.log.unshift(`${player.name} jogou Tempestade Eletrica! 6 de dano (modificado para ${Math.max(0, 6 + attackBuff - getHeroAttackPenalty(session))}) em ${target.name} e 2 de dano em ${other.name}.`);
+      } else {
+        session.log.unshift(`${player.name} jogou Tempestade Eletrica! 6 de dano (modificado para ${Math.max(0, 6 + attackBuff - getHeroAttackPenalty(session))}) em ${target.name}.`);
+      }
+    }
+  }
+
+  if (card.id === "manipular-energia") {
+    session.pendingEnergyAllocation = { cardUid: card.uid, casterId: player.id };
+    session.log.unshift(`${player.name} jogou Manipular Energia. Aguardando escolha de transferencia.`);
+  }
+
+  if (card.id === "campo-antimagia") {
+    session.activeTrapDisabledRounds = (session.activeTrapDisabledRounds || 0) + 2;
+    session.log.unshift(`${player.name} jogou Campo Antimagia. A armadilha ativa ${session.activeTrap ? session.activeTrap.name : ""} foi desativada por 2 rodadas.`);
+  }
+
+  if (card.id === "teleporte-arcano") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    target.energy = Math.min(target.maxEnergy + 2, target.energy + 1);
+    const drawn = drawCards(target, 1);
+    session.log.unshift(`${player.name} usou Teleporte Arcano: ${target.name} recuperou 1 Energia e comprou ${drawn} carta(s).`);
+  }
+
+  if (card.id === "eco-arcano") {
+    const eligible = player.played.filter(c => c.id !== "eco-arcano" && c.id !== "cataclismo-arcano");
+    if (eligible.length === 0) {
+      throw new Error("Voce nao jogou nenhuma carta elegivel nesta rodada ainda.");
+    }
+    session.pendingEcoArcano = { cardUid: card.uid, casterId: player.id };
+    session.log.unshift(`${player.name} jogou Eco Arcano. Escolhendo qual carta copiar.`);
+  }
+
+  if (card.id === "distorcao-temporal") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    session.pendingDistorcaoTemporal = { casterId: player.id, targetId: target.id };
+    session.log.unshift(`${player.name} jogou Distorcao Temporal em ${target.name}. Aguardando escolha de carta gratuita.`);
   }
 }
 
@@ -2102,6 +2307,10 @@ function sanitizeSession(session, viewerId) {
     intentionDiscardCount: session.intentionDiscard.length,
     pendingReaction: session.pendingReaction,
     pendingShieldAllocation: session.pendingShieldAllocation,
+    pendingEnergyAllocation: session.pendingEnergyAllocation,
+    pendingEcoArcano: session.pendingEcoArcano,
+    pendingDistorcaoTemporal: session.pendingDistorcaoTemporal,
+    activeTrapDisabledRounds: session.activeTrapDisabledRounds || 0,
     visualEvents: session.visualEvents.slice(-30),
     arena: session.arena,
     log: session.log.slice(0, 16),
@@ -2121,6 +2330,7 @@ function sanitizeSession(session, viewerId) {
       deckCount: player.deck.length,
       handCount: player.hand.length,
       discardCount: player.discard.length,
+      played: player.played,
       supremeCard: player.id === viewerId ? player.supremeCard : null,
       supremeUsed: player.supremeUsed,
       pendingDiscard: player.id === viewerId ? (player.pendingDiscard || 0) : 0,
@@ -2311,6 +2521,22 @@ async function handleApi(req, res) {
             player.bastiaoSupremoActive = true;
             pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: player.id, amount: 8, source: sc.name });
             session.log.unshift(`${player.name} usou ${sc.name}! Recebeu 8 de Escudo, redirecionara todo o dano aliado a si mesmo e reduzira todo o dano sofrido pela metade ate a proxima rodada.`);
+          } else if (sc.id === "cataclismo-arcano") {
+            const targets = session.enemies.filter((enemy) => enemy.life > 0);
+            targets.forEach((enemy) =>
+              applyDamageToEnemy(session, enemy, Math.max(0, 6 - getHeroAttackPenalty(session)), sc.name, false, player)
+            );
+            session.players.filter((ally) => ally.life > 0).forEach((ally) => {
+              ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
+            });
+            session.activeTrapDisabledRounds = 1;
+            const brutal = session.enemies.find((enemy) => enemy.category === "brutal" && enemy.life > 0);
+            if (brutal) {
+              brutal.isStunned = true;
+              session.log.unshift(`${player.name} usou Cataclismo Arcano! Causou 6 de dano em todos os inimigos, concedeu +2 de Energia para todos os aliados, atordoou ${brutal.name} e desativou as armadilhas nesta rodada.`);
+            } else {
+              session.log.unshift(`${player.name} usou Cataclismo Arcano! Causou 6 de dano em todos os inimigos, concedeu +2 de Energia para todos os aliados e desativou as armadilhas nesta rodada.`);
+            }
           }
         } else if (body.type === "discardCard") {
           // Resolve a pending discard (from planejamento)
@@ -2340,6 +2566,48 @@ async function handleApi(req, res) {
           });
           session.pendingShieldAllocation = null;
           session.log.unshift(`${player.name} redistribuiu os escudos entre os aliados.`);
+        } else if (body.type === "confirmEnergyAllocation") {
+          if (!session.pendingEnergyAllocation) throw new Error("Nao ha transferencia de energia pendente.");
+          const alloc = body.allocation; // { fromId, toId, amount }
+          if (!alloc || !alloc.fromId || !alloc.toId || !alloc.amount) {
+            throw new Error("Dados de alocacao de energia invalidos.");
+          }
+          const fromPlayer = session.players.find(p => p.id === alloc.fromId);
+          const toPlayer = session.players.find(p => p.id === alloc.toId);
+          if (!fromPlayer || !toPlayer) throw new Error("Jogadores de origem ou destino nao encontrados.");
+          if (fromPlayer.energy < alloc.amount) throw new Error("A origem nao possui energia suficiente.");
+          if (alloc.amount > 2) throw new Error("Limite maximo de 2 de Energia para transferencia.");
+          
+          fromPlayer.energy -= alloc.amount;
+          toPlayer.energy = Math.min(toPlayer.maxEnergy + 2, toPlayer.energy + alloc.amount);
+          session.pendingEnergyAllocation = null;
+          session.log.unshift(`${player.name} transferiu ${alloc.amount}⚡ de ${fromPlayer.name} para ${toPlayer.name}.`);
+        } else if (body.type === "confirmEcoArcano") {
+          if (!session.pendingEcoArcano) throw new Error("Nao ha Eco Arcano pendente.");
+          if (session.pendingEcoArcano.casterId !== player.id) throw new Error("Apenas o conjurador do Eco Arcano pode responder.");
+          const copiedCardId = body.copiedCardId;
+          const targetId = body.targetId;
+          if (!copiedCardId) throw new Error("Selecione uma carta para copiar.");
+          
+          const copiedCard = cards[copiedCardId];
+          if (!copiedCard) throw new Error("Carta copiada nao encontrada.");
+          if (copiedCard.id === "eco-arcano" || copiedCard.id === "cataclismo-arcano") {
+            throw new Error("Eco Arcano nao pode copiar a si mesma ou cartas supremas.");
+          }
+          
+          session.pendingEcoArcano = null;
+          session.log.unshift(`${player.name} usou Eco Arcano para repetir os efeitos de ${copiedCard.name}!`);
+          executeCardEffects(session, player, copiedCard, { targetId }, 0);
+        } else if (body.type === "cancelEcoArcano") {
+          if (!session.pendingEcoArcano) throw new Error("Nao ha Eco Arcano pendente.");
+          if (session.pendingEcoArcano.casterId !== player.id) throw new Error("Apenas o conjurador pode cancelar.");
+          session.pendingEcoArcano = null;
+          session.log.unshift(`${player.name} cancelou o efeito do Eco Arcano.`);
+        } else if (body.type === "skipDistorcaoTemporal") {
+          if (!session.pendingDistorcaoTemporal) throw new Error("Nao ha Distorcao Temporal pendente.");
+          if (session.pendingDistorcaoTemporal.targetId !== player.id) throw new Error("Apenas o alvo da Distorcao Temporal pode pular.");
+          session.pendingDistorcaoTemporal = null;
+          session.log.unshift(`${player.name} decidiu pular a acao extra da Distorcao Temporal.`);
         } else {
           throw new Error("Acao desconhecida.");
         }

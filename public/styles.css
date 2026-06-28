@@ -603,6 +603,11 @@ p {
   --hero-accent-soft: rgba(130, 228, 155, 0.2);
 }
 
+.player-hud.hero-mago {
+  --hero-accent: #d885ff;
+  --hero-accent-soft: rgba(216, 133, 255, 0.2);
+}
+
 .player-hud.is-you {
   border-color: rgba(255, 215, 133, 0.64);
 }
@@ -2570,5 +2575,11 @@ body.is-game-screen .right-rail {
 .discard-modal .reaction-cards .tcg-card button.danger {
   background: linear-gradient(135deg, #7a0018, #c1001c);
   border: none;
+}
+
+.trap-card.trap-disabled {
+  opacity: 0.5;
+  filter: grayscale(85%) contrast(85%);
+  border-color: rgba(255, 75, 75, 0.2);
 }
 

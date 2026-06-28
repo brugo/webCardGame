@@ -28,6 +28,7 @@ function getCardArt(card) {
   if (card) {
     if (card.heroId === "guardiao") return "/assets/guardiao-card.jpg";
     if (card.heroId === "batedor") return "/assets/batedor-card.jpg";
+    if (card.heroId === "mago") return "/assets/mago-card.jpg";
   }
   return cardArt;
 }
@@ -444,7 +445,7 @@ function renderGame() {
             ${renderTurnControls(state, me)}
             <p class="notice">${escapeHtml(local.error)}</p>
           </div>
-          ${renderTrapCard(state.activeTrap)}
+          ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
           ${renderIntentionCard(state.activeIntention)}
 
           <div class="glass-panel compact-panel">
@@ -460,6 +461,9 @@ function renderGame() {
       ${renderReactionPrompt(state, me)}
       ${renderPendingDiscardModal(state, me)}
       ${renderShieldAllocationModal(state, me)}
+      ${renderEnergyAllocationModal(state, me)}
+      ${renderEcoArcanoModal(state, me)}
+      ${renderDistorcaoTemporalModal(state, me)}
     </section>
   `;
 
@@ -844,7 +848,7 @@ function renderRoomCard(state) {
   `;
 }
 
-function renderTrapCard(trap) {
+function renderTrapCard(trap, disabledRounds) {
   if (!trap) {
     return `
       <article class="trap-card glass-panel">
@@ -855,9 +859,10 @@ function renderTrapCard(trap) {
     `;
   }
 
+  const isDisabled = disabledRounds && disabledRounds > 0;
   return `
-    <article class="trap-card glass-panel">
-      <span class="eyebrow">Armadilha ativa</span>
+    <article class="trap-card glass-panel ${isDisabled ? 'trap-disabled' : ''}">
+      <span class="eyebrow">${isDisabled ? `Desativada (${disabledRounds} rod.)` : 'Armadilha ativa'}</span>
       <div class="trap-art"><img src="${getTrapArt(trap)}" alt="" /><span>${escapeHtml(trap.id)}</span></div>
       <h2>${escapeHtml(trap.name)}</h2>
       <p>${escapeHtml(trap.text)}</p>
@@ -901,7 +906,7 @@ function renderPlayerHud(player) {
   return `
     <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${player.id === local.playerId ? "is-you" : ""} ${player.turnEnded ? "turn-ended" : ""}">
       <div class="portrait">
-        <img src="${player.heroId === 'guardiao' ? '/assets/guardiao-card.jpg' : player.heroId === 'batedor' ? '/assets/batedor-card.jpg' : cardArt}" alt="" />
+        <img src="${player.heroId === 'guardiao' ? '/assets/guardiao-card.jpg' : player.heroId === 'batedor' ? '/assets/batedor-card.jpg' : player.heroId === 'mago' ? '/assets/mago-card.jpg' : cardArt}" alt="" />
       </div>
       <div class="hud-main">
         <div class="hud-title">
@@ -944,7 +949,7 @@ function renderHeroCard(hero, selected) {
     <article class="hero-choice ${selected ? "selected" : ""}">
       <article class="tcg-card hero-preview">
         <div class="card-cost">${hero.energy}</div>
-        <img src="${hero.id === 'guardiao' ? '/assets/guardiao-card.jpg' : hero.id === 'batedor' ? '/assets/batedor-card.jpg' : cardArt}" alt="" />
+        <img src="${hero.id === 'guardiao' ? '/assets/guardiao-card.jpg' : hero.id === 'batedor' ? '/assets/batedor-card.jpg' : hero.id === 'mago' ? '/assets/mago-card.jpg' : cardArt}" alt="" />
         <div class="card-body">
           <strong>${escapeHtml(hero.name)}</strong>
           <span>${hero.life} vida | ${hero.energy} energia</span>
@@ -1099,6 +1104,137 @@ function renderShieldAllocationModal(state, me) {
           `).join("")}
         </div>
         <button id="confirmShieldAlloc">Confirmar Escudos</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderEnergyAllocationModal(state, me) {
+  const alloc = state?.pendingEnergyAllocation;
+  if (!alloc) return "";
+  const alivePlayers = state.players.filter((p) => p.life > 0);
+  
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="energyAllocTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow">Manipulacao de Energia</span>
+        <h2 id="energyAllocTitle">Mover Energia</h2>
+        <p class="muted">Escolha a origem, o destino e a quantidade de energia (limite 2⚡).</p>
+        
+        <div class="energy-alloc-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+          <label style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <strong>Origem:</strong>
+            <select id="energyAllocFrom" style="padding: 6px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${alivePlayers.filter(p => p.energy > 0).map(p => `
+                <option value="${p.id}">${escapeHtml(p.name)} (${p.energy}⚡)</option>
+              `).join("")}
+            </select>
+          </label>
+          
+          <label style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <strong>Destino:</strong>
+            <select id="energyAllocTo" style="padding: 6px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${alivePlayers.map(p => `
+                <option value="${p.id}">${escapeHtml(p.name)} (${p.energy}⚡)</option>
+              `).join("")}
+            </select>
+          </label>
+          
+          <label style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+            <strong>Quantidade:</strong>
+            <select id="energyAllocAmount" style="padding: 6px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              <option value="1">1⚡</option>
+              <option value="2">2⚡</option>
+            </select>
+          </label>
+        </div>
+        
+        <button id="confirmEnergyAlloc">Confirmar Transferencia</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderEcoArcanoModal(state, me) {
+  const alloc = state?.pendingEcoArcano;
+  if (!alloc || alloc.casterId !== me?.id) return "";
+  
+  const played = me.played || [];
+  const eligible = played.filter(c => c.id !== "eco-arcano" && c.id !== "cataclismo-arcano");
+  
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="ecoTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow">Magia Arcana</span>
+        <h2 id="ecoTitle">Eco Arcano</h2>
+        <p class="muted">Escolha uma carta jogada nesta rodada para repetir seus efeitos.</p>
+        
+        ${eligible.length === 0 ? `
+          <p class="muted" style="margin: 16px 0; text-align: center;">Nenhuma carta elegível foi jogada por você nesta rodada ainda.</p>
+          <button id="cancelEco" style="width: 100%;">Fechar</button>
+        ` : `
+          <div class="eco-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+            <label style="display: flex; flex-direction: column; gap: 4px;">
+              <strong>Carta a copiar:</strong>
+              <select id="ecoCardSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+                ${eligible.map(c => `<option value="${c.id}" data-type="${c.type}" data-target="${c.target || ""}">${escapeHtml(c.name)} (${c.cost}⚡) - ${escapeHtml(c.text)}</option>`).join("")}
+              </select>
+            </label>
+            
+            <div id="ecoTargetContainer" style="display: flex; flex-direction: column; gap: 4px;">
+              <strong>Alvo da magia:</strong>
+              <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              </select>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 10px;">
+            <button id="confirmEco" style="flex: 1;">Reconjurada!</button>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function renderDistorcaoTemporalModal(state, me) {
+  const alloc = state?.pendingDistorcaoTemporal;
+  if (!alloc || alloc.targetId !== me?.id) return "";
+  
+  const caster = state.players.find(p => p.id === alloc.casterId);
+  const eligible = me.hand.filter(c => c.cost <= 2 && c.type !== "reaction");
+  
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="distorcaoTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow">Distorcao Temporal</span>
+        <h2 id="distorcaoTitle">Conjuracao Temporal</h2>
+        <p class="muted">${escapeHtml(caster ? caster.name : "Mago")} lhe concedeu uma acao extra. Escolha uma carta de custo 2 ou menos para jogar gratuitamente.</p>
+        
+        ${eligible.length === 0 ? `
+          <p class="muted" style="margin: 16px 0; text-align: center;">Você não possui cartas de custo 2 ou menos na mão.</p>
+          <button id="skipDistorcao" style="width: 100%;">Pular</button>
+        ` : `
+          <div class="distorcao-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+            <label style="display: flex; flex-direction: column; gap: 4px;">
+              <strong>Selecione a carta:</strong>
+              <select id="distorcaoCardSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+                ${eligible.map(c => `<option value="${c.uid}">${escapeHtml(c.name)} (custo original: ${c.cost}⚡) - ${escapeHtml(c.text)}</option>`).join("")}
+              </select>
+            </label>
+            
+            <div id="distorcaoTargetContainer" style="display: flex; flex-direction: column; gap: 4px;">
+              <strong>Alvo da magia (se necessario):</strong>
+              <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              </select>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 10px;">
+            <button id="confirmDistorcao" style="flex: 1;">Jogar de Graca!</button>
+            <button id="skipDistorcao" class="secondary">Pular</button>
+          </div>
+        `}
       </div>
     </div>
   `;
@@ -1276,6 +1412,98 @@ function bindGlobalControls() {
       local.rulesSelectedHero = btn.dataset.heroTab;
       render();
     });
+  });
+  
+  // Energy allocation click listener
+  document.querySelector("#confirmEnergyAlloc")?.addEventListener("click", () => {
+    const fromId = document.querySelector("#energyAllocFrom")?.value;
+    const toId = document.querySelector("#energyAllocTo")?.value;
+    const amount = Number(document.querySelector("#energyAllocAmount")?.value || 1);
+    if (!fromId || !toId) {
+      showToast("Selecione os jogadores de origem e destino.", "warning");
+      return;
+    }
+    if (fromId === toId) {
+      showToast("A origem nao pode ser igual ao destino.", "warning");
+      return;
+    }
+    action({ type: "confirmEnergyAllocation", allocation: { fromId, toId, amount } });
+  });
+
+  // Eco Arcano click listeners and selection updates
+  const ecoSelect = document.querySelector("#ecoCardSelect");
+  if (ecoSelect) {
+    const updateEco = () => {
+      const option = ecoSelect.options[ecoSelect.selectedIndex];
+      if (!option) return;
+      const cardId = option.value;
+      const cardType = option.dataset.type;
+      const cardTarget = option.dataset.target;
+      const targetSelect = document.querySelector("#ecoTargetSelect");
+      if (targetSelect) {
+        targetSelect.innerHTML = "";
+        const needsEnemy = cardType === "attack" && cardId !== "bola-de-fogo" && cardId !== "chuva-de-flechas" && cardId !== "explosao-divina";
+        const needsAlly = cardTarget === "ally";
+        if (needsEnemy) {
+          local.state.enemies.filter(e => e.life > 0).forEach(e => {
+            targetSelect.insertAdjacentHTML("beforeend", `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`);
+          });
+        } else if (needsAlly) {
+          local.state.players.filter(p => p.life > 0).forEach(p => {
+            targetSelect.insertAdjacentHTML("beforeend", `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`);
+          });
+        } else {
+          targetSelect.insertAdjacentHTML("beforeend", `<option value="">Nao requer alvo</option>`);
+        }
+      }
+    };
+    ecoSelect.addEventListener("change", updateEco);
+    updateEco();
+  }
+  document.querySelector("#confirmEco")?.addEventListener("click", () => {
+    const cardId = document.querySelector("#ecoCardSelect")?.value;
+    const targetId = document.querySelector("#ecoTargetSelect")?.value;
+    action({ type: "confirmEcoArcano", copiedCardId: cardId, targetId });
+  });
+  document.querySelector("#cancelEco")?.addEventListener("click", () => {
+    action({ type: "cancelEcoArcano" });
+  });
+
+  // Distorcao Temporal click listeners and selection updates
+  const distSelect = document.querySelector("#distorcaoCardSelect");
+  if (distSelect) {
+    const updateDist = () => {
+      const cardUid = distSelect.value;
+      const me = getMe();
+      const card = me?.hand.find(c => c.uid === cardUid);
+      const targetSelect = document.querySelector("#distorcaoTargetSelect");
+      if (card && targetSelect) {
+        targetSelect.innerHTML = "";
+        const needsEnemy = card.type === "attack" && card.id !== "bola-de-fogo" && card.id !== "chuva-de-flechas" && card.id !== "explosao-divina" && card.id !== "raio-congelante" && card.id !== "tempestade-eletrica";
+        const needsAlly = card.target === "ally";
+        if (needsEnemy) {
+          local.state.enemies.filter(e => e.life > 0).forEach(e => {
+            targetSelect.insertAdjacentHTML("beforeend", `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`);
+          });
+        } else if (needsAlly) {
+          local.state.players.filter(p => p.life > 0).forEach(p => {
+            targetSelect.insertAdjacentHTML("beforeend", `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`);
+          });
+        } else {
+          targetSelect.insertAdjacentHTML("beforeend", `<option value="">Nao requer alvo</option>`);
+        }
+      }
+    };
+    distSelect.addEventListener("change", updateDist);
+    updateDist();
+  }
+  document.querySelector("#confirmDistorcao")?.addEventListener("click", () => {
+    const cardUid = document.querySelector("#distorcaoCardSelect")?.value;
+    const targetId = document.querySelector("#distorcaoTargetSelect")?.value;
+    action({ type: "playCard", cardUid, targetId });
+  });
+  document.querySelector("#skipDistorcao")?.addEventListener("click", () => {
+    action({ type: "skipDistorcaoTemporal" });
   });
 }
 
