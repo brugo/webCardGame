@@ -221,138 +221,153 @@ const monsterTemplates = {
 const intentionCards = [
   {
     id: "INT_001",
-    name: "Pressao Frontal",
-    commonText: "Comuns atacam o heroi com mais Vida atual.",
-    brutalText: "Brutais atacam o heroi com menos Vida atual.",
-    commonTarget: "maxLife",
-    brutalTarget: "minLife",
-    design: "Divide a pressao entre o heroi saudavel e o vulneravel."
+    name: "Caçada ao Sangue",
+    presagioText: "Revele a próxima carta do baralho de Armadilhas (sem ativá-la). O grupo vê o que está por vir.",
+    commonText: "Comuns atacam o herói com menos Vida atual.",
+    brutalText: "Brutais atacam o herói com menos Vida atual.",
+    represaliaText: "Se algum herói foi derrotado esta rodada, invoque 1 Inimigo Comum imediatamente.",
+    commonTarget: "minLife",
+    brutalTarget: "minLife"
   },
   {
     id: "INT_002",
-    name: "Quebra de Defesa",
-    commonText: "Comuns atacam o heroi com mais Escudo atual.",
-    brutalText: "Brutais atacam o heroi com menos Escudo atual.",
-    commonTarget: "maxShield",
-    brutalTarget: "minShield",
-    design: "Remove protecao e busca o alvo exposto."
+    name: "Pressão Crescente",
+    presagioText: "O Inimigo Brutal recebe +2 de Vida máxima e atual imediatamente.",
+    commonText: "Comuns atacam o herói com mais Vida atual.",
+    brutalText: "Brutais atacam o herói com menos Escudo atual.",
+    represaliaText: "Se o Brutal ainda estiver vivo ao fim da rodada, ele ganha Enfurecido permanentemente.",
+    commonTarget: "maxLife",
+    brutalTarget: "minShield"
   },
   {
     id: "INT_003",
-    name: "Cacada ao Exausto",
-    commonText: "Comuns atacam o heroi com menos Energia atual.",
-    brutalText: "Brutais atacam o heroi que gastou mais Energia nesta rodada.",
-    commonTarget: "minEnergy",
-    brutalTarget: "maxEnergySpent",
-    design: "Pune quem terminou esgotado ou fez uma rodada intensa."
+    name: "Fúria Coordenada",
+    presagioText: "Todos os inimigos em jogo ganham +1 de dano nesta rodada.",
+    commonText: "Comuns atacam o herói com mais cartas na mão.",
+    brutalText: "Brutais atacam o herói que causou mais dano nesta rodada.",
+    represaliaText: "Se nenhum inimigo foi derrotado nesta rodada, todos os heróis descartam 1 carta aleatoriamente.",
+    commonTarget: "maxHand",
+    brutalTarget: "maxDamageDealt"
   },
   {
     id: "INT_004",
-    name: "Maos Cheias",
-    commonText: "Comuns atacam o heroi com mais cartas na mao.",
-    brutalText: "Brutais atacam o heroi com menos cartas na mao.",
-    commonTarget: "maxHand",
-    brutalTarget: "minHand",
-    design: "Pressiona quem guardou opcoes e quem esvaziou a mao."
+    name: "Instinto Predatório",
+    presagioText: "Cada herói com 0 de Escudo sofre 1 de dano imediatamente.",
+    commonText: "Comuns atacam o herói com menos Escudo atual.",
+    brutalText: "Brutais atacam o herói com menos Vida atual.",
+    represaliaText: "Se nenhum herói possui Escudo ao fim da rodada, todos sofrem 1 de dano adicional.",
+    commonTarget: "minShield",
+    brutalTarget: "minLife"
   },
   {
     id: "INT_005",
-    name: "Sangue Recente",
-    commonText: "Comuns atacam o heroi que recebeu mais Cura nesta rodada.",
-    brutalText: "Brutais atacam o heroi com menos Vida atual.",
-    commonTarget: "maxHealingReceived",
-    brutalTarget: "minLife",
-    design: "Cria risco ao concentrar cura em um alvo."
+    name: "Coração Fraco",
+    presagioText: "O herói com menos Vida perde 1 de Energia nesta rodada (mínimo 1).",
+    commonText: "Comuns atacam o herói com menos Vida atual.",
+    brutalText: "Brutais atacam o herói com menos Vida atual.",
+    represaliaText: "Se o herói com menos Vida terminar a rodada abaixo de 5 pontos, ele sofre 2 de dano adicional.",
+    commonTarget: "minLife",
+    brutalTarget: "minLife"
   },
   {
     id: "INT_006",
-    name: "Retaliacao",
-    commonText: "Comuns atacam o heroi que causou mais dano nesta rodada.",
-    brutalText: "Brutais atacam o heroi que derrotou mais inimigos nesta rodada.",
-    commonTarget: "maxDamageDealt",
-    brutalTarget: "maxEnemiesDefeated",
-    design: "Faz o jogador ofensivo chamar a atencao da dungeon."
+    name: "Cerco Implacável",
+    presagioText: "Cada Inimigo Comum em jogo ganha +1 de Escudo imediatamente.",
+    commonText: "Comuns atacam o herói com menos Vida atual.",
+    brutalText: "Brutais atacam o herói com mais Escudo atual.",
+    represaliaText: "Se restarem 2 ou mais inimigos vivos ao fim da rodada, todos os heróis sofrem 1 de dano.",
+    commonTarget: "minLife",
+    brutalTarget: "maxShield"
   },
   {
     id: "INT_007",
-    name: "Cerco Simples",
-    commonText: "Comuns atacam o heroi com menos Vida atual.",
-    brutalText: "Brutais atacam o heroi com menos Vida atual.",
-    commonTarget: "minLife",
-    brutalTarget: "minLife",
-    design: "Concentra todo o dano no alvo mais ferido."
+    name: "Retaliação",
+    presagioText: "O Inimigo Brutal não pode ser alvo de Reações nesta rodada.",
+    commonText: "Comuns atacam o herói que causou mais dano nesta rodada.",
+    brutalText: "Brutais atacam o herói que derrotou mais inimigos nesta rodada.",
+    represaliaText: "Se o Brutal sobreviveu a esta rodada, ele ganha +1 de dano permanentemente.",
+    commonTarget: "maxDamageDealt",
+    brutalTarget: "maxEnemiesDefeated"
   },
   {
     id: "INT_008",
     name: "Golpe nos Fortes",
-    commonText: "Comuns atacam o heroi com mais Vida atual.",
-    brutalText: "Brutais atacam o heroi com mais Vida atual.",
+    presagioText: "O herói com mais Escudo atual perde metade do seu Escudo (arredondado para baixo).",
+    commonText: "Comuns atacam o herói com mais Vida atual.",
+    brutalText: "Brutais atacam o herói com mais Vida atual.",
+    represaliaText: "Se o herói com mais Vida não recebeu nenhum Escudo nesta rodada, ele sofre 2 de dano adicional.",
     commonTarget: "maxLife",
-    brutalTarget: "maxLife",
-    design: "Mira o heroi mais resistente."
+    brutalTarget: "maxLife"
   },
   {
     id: "INT_009",
-    name: "Panico nas Sombras",
-    commonText: "Comuns atacam o heroi com menos cartas na mao.",
-    brutalText: "Brutais atacam o heroi com menos Energia atual.",
+    name: "Pavor das Sombras",
+    presagioText: "Na próxima fase de compra desta sala, cada herói não comprará nenhuma carta.",
+    commonText: "Comuns atacam o herói com menos cartas na mão.",
+    brutalText: "Brutais atacam o herói com menos Energia atual.",
+    represaliaText: "Se algum herói terminar a rodada com 0 cartas na mão, ele sofre 2 de dano.",
     commonTarget: "minHand",
-    brutalTarget: "minEnergy",
-    design: "Pune quem se esvaziou demais."
+    brutalTarget: "minEnergy"
   },
   {
     id: "INT_010",
     name: "Oportunismo",
-    commonText: "Comuns atacam o heroi com menos Escudo atual.",
-    brutalText: "Brutais atacam o heroi com menos Vida atual.",
+    presagioText: "Se houver uma Armadilha ativa, ela aplica seu efeito uma vez adicional agora.",
+    commonText: "Comuns atacam o herói com menos Escudo atual.",
+    brutalText: "Brutais atacam o herói com menos Vida atual.",
+    represaliaText: "Se a Armadilha ainda estiver ativa ao fim da rodada, todos os heróis sofrem 1 de dano.",
     commonTarget: "minShield",
-    brutalTarget: "minLife",
-    design: "Pressiona defesas baixas e vida baixa."
+    brutalTarget: "minLife"
   },
   {
     id: "INT_011",
-    name: "Avanco Pesado",
-    commonText: "Comuns atacam o heroi com mais Escudo atual.",
-    brutalText: "Brutais atacam o heroi com mais Vida atual.",
+    name: "Avanço Pesado",
+    presagioText: "Todos os Inimigos Comuns em jogo ganham +2 de Vida máxima e atual.",
+    commonText: "Comuns atacam o herói com mais Escudo atual.",
+    brutalText: "Brutais atacam o herói com mais Vida atual.",
+    represaliaText: "Se restarem 2 ou mais Comuns vivos ao fim da rodada, o Brutal realiza 1 ataque adicional de 2 de dano fixo no herói com menos Vida.",
     commonTarget: "maxShield",
-    brutalTarget: "maxLife",
-    design: "Quebra os herois preparados para absorver dano."
+    brutalTarget: "maxLife"
   },
   {
     id: "INT_012",
-    name: "Cacada ao Preparado",
-    commonText: "Comuns atacam o heroi com mais cartas na mao.",
-    brutalText: "Brutais atacam o heroi com mais Energia atual.",
+    name: "Caçada ao Preparado",
+    presagioText: "O herói com mais cartas na mão deve descartar 1 carta agora (à sua escolha).",
+    commonText: "Comuns atacam o herói com mais cartas na mão.",
+    brutalText: "Brutais atacam o herói com mais Energia no início desta rodada.",
+    represaliaText: "Se algum herói gastou menos de 2 de Energia nesta rodada, ele sofre 1 de dano.",
     commonTarget: "maxHand",
-    brutalTarget: "maxEnergy",
-    design: "Mira quem ainda tem recursos guardados."
+    brutalTarget: "maxEnergyAtStartOfRound"
   },
   {
     id: "INT_013",
-    name: "Furia Contra o Atacante",
-    commonText: "Comuns atacam o heroi que jogou mais cartas de Ataque nesta rodada.",
-    brutalText: "Brutais atacam o heroi que causou mais dano nesta rodada.",
-    commonTarget: "maxAttackCardsPlayed",
-    brutalTarget: "maxDamageDealt",
-    design: "Responde a rodadas muito ofensivas."
+    name: "Execução Coordenada",
+    presagioText: "Todos os Inimigos Comuns ganham Veloz nesta rodada (atacam antes do Brutal).",
+    commonText: "Comuns atacam o herói com menos Escudo atual.",
+    brutalText: "Brutais atacam o herói que sofreu mais dano nesta rodada.",
+    represaliaText: "Se o herói com menos Escudo terminar a rodada com menos de 8 de Vida, ele sofre 2 de dano adicional.",
+    commonTarget: "minShield",
+    brutalTarget: "maxDamageTaken"
   },
   {
     id: "INT_014",
     name: "Ruptura do Ritmo",
-    commonText: "Comuns atacam o heroi que jogou mais cartas nesta rodada.",
-    brutalText: "Brutais atacam o heroi que jogou menos cartas nesta rodada.",
+    presagioText: "O herói com mais Escudo transfere metade do seu Escudo (arredondado para baixo) para o herói com menos Vida.",
+    commonText: "Comuns atacam o herói que jogou mais cartas nesta rodada.",
+    brutalText: "Brutais atacam o herói que jogou menos cartas nesta rodada.",
+    represaliaText: "Se algum herói não jogou nenhuma carta de Ataque nesta rodada, ele sofre 2 de dano.",
     commonTarget: "maxCardsPlayed",
-    brutalTarget: "minCardsPlayed",
-    design: "Agir demais ou se esconder pode ser perigoso."
+    brutalTarget: "minCardsPlayed"
   },
   {
     id: "INT_015",
-    name: "Execucao Coordenada",
-    commonText: "Comuns atacam o heroi com menos Escudo atual.",
-    brutalText: "Brutais atacam o heroi que sofreu mais dano nesta rodada.",
-    commonTarget: "minShield",
-    brutalTarget: "maxDamageTaken",
-    design: "Prepara um alvo vulneravel e tenta finalizar quem ja sofreu dano."
+    name: "Sangue e Cura",
+    presagioText: "O herói com mais Vida atual perde 2 pontos de Vida (ignora Escudo, não pode matar).",
+    commonText: "Comuns atacam o herói que recebeu mais cura nesta rodada.",
+    brutalText: "Brutais atacam o herói com menos Vida atual.",
+    represaliaText: "Se algum herói foi curado nesta rodada, ele sofre 1 de dano adicional.",
+    commonTarget: "maxHealingReceived",
+    brutalTarget: "minLife"
   }
 ];
 
@@ -1015,7 +1030,8 @@ function makeRoundStats() {
     cardsPlayed: 0,
     attackCardsPlayed: 0,
     healingReceived: 0,
-    damageTaken: 0
+    damageTaken: 0,
+    shieldReceived: 0
   };
 }
 
@@ -1188,6 +1204,9 @@ function archiveCurrentEnemies(session) {
 }
 
 function getRoundDrawCount(session) {
+  if (session.skipNextDraw) {
+    return 0;
+  }
   const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
   return (isTrapActive && session.activeTrap.effect === "drawTwo") ? 0 : 1;
 }
@@ -1263,7 +1282,11 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   const blocked = Math.min(target.shield, amount);
   target.shield -= blocked;
   const damage = amount - blocked;
+  const oldLife = target.life;
   target.life = Math.max(0, target.life - damage);
+  if (oldLife > 0 && target.life === 0) {
+    session.heroDefeatedThisRound = true;
+  }
   target.roundStats.damageTaken += damage;
   if (damage > 0) {
     pushVisualEvent(session, {
@@ -1326,6 +1349,367 @@ function drawIntention(session) {
   if (session.activeIntention) session.intentionDiscard.push(session.activeIntention);
   session.activeIntention = card;
   session.log.unshift(`Intencao revelada: ${card.name}.`);
+}
+
+function applyIntentionPresagio(session) {
+  const card = session.activeIntention;
+  if (!card) return;
+
+  session.log.unshift(`⚡ [Presságio] Ativando Presságio de ${card.name}: ${card.presagioText}`);
+
+  switch (card.id) {
+    case "INT_001": {
+      // INT-001 (Caçada ao Sangue):
+      // "Revele a próxima carta do baralho de Armadilhas (sem ativá-la). O grupo vê o que está por vir."
+      const nextTrap = session.trapDeck[0] || trapCards[0];
+      session.revealedNextTrap = nextTrap;
+      session.log.unshift(`[Presságio] A próxima armadilha revelada é: ${nextTrap.name} (${nextTrap.text})`);
+      break;
+    }
+    case "INT_002": {
+      // INT-002 (Pressão Crescente):
+      // "O Inimigo Brutal recebe +2 de Vida máxima e atual imediatamente."
+      session.enemies.forEach((enemy) => {
+        if (enemy.category === "brutal" && enemy.life > 0) {
+          enemy.maxLife += 2;
+          enemy.life += 2;
+          session.log.unshift(`[Presságio] ${enemy.name} ganha +2 de Vida máxima e atual.`);
+        }
+      });
+      break;
+    }
+    case "INT_003": {
+      // INT-003 (Fúria Coordenada):
+      // "Todos os inimigos em jogo ganham +1 de dano nesta rodada."
+      // Handled inside computeEnemyAttack.
+      break;
+    }
+    case "INT_004": {
+      // INT-004 (Instinto Predatório):
+      // "Cada herói com 0 de Escudo sofre 1 de dano imediatamente."
+      session.players.forEach((player) => {
+        if (player.life > 0 && player.shield === 0) {
+          applyDamageToHero(session, player, 1, "Instinto Predatorio (Pressagio)");
+        }
+      });
+      break;
+    }
+    case "INT_005": {
+      // INT-005 (Coração Fraco):
+      // "O herói com menos Vida perde 1 de Energia nesta rodada (mínimo 1)."
+      const target = selectTarget(session.players, "minLife");
+      if (target) {
+        target.energy = Math.max(1, target.energy - 1);
+        session.log.unshift(`[Presságio] ${target.name} (menor Vida) perdeu 1 de Energia nesta rodada.`);
+      }
+      break;
+    }
+    case "INT_006": {
+      // INT-006 (Cerco Implacável):
+      // "Cada Inimigo Comum em jogo ganha +1 de Escudo imediatamente."
+      session.enemies.forEach((enemy) => {
+        if (enemy.category === "common" && enemy.life > 0) {
+          enemy.shield += 1;
+          session.log.unshift(`[Presságio] ${enemy.name} recebe +1 de Escudo.`);
+        }
+      });
+      break;
+    }
+    case "INT_007": {
+      // INT-007 (Retaliação):
+      // "O Inimigo Brutal não pode ser alvo de Reações nesta rodada."
+      // Handled in advanceDungeonTurn by skipping reaction phase.
+      break;
+    }
+    case "INT_008": {
+      // INT-008 (Golpe nos Fortes):
+      // "O herói com mais Escudo atual perde metade do seu Escudo (arredondado para baixo)."
+      const target = selectTarget(session.players, "maxShield");
+      if (target && target.shield > 0) {
+        const removed = Math.floor(target.shield / 2);
+        target.shield -= removed;
+        session.log.unshift(`[Presságio] ${target.name} (mais Escudo) perdeu metade do seu Escudo (${removed} removido).`);
+      }
+      break;
+    }
+    case "INT_009": {
+      // INT-009 (Pavor das Sombras):
+      // "Na próxima fase de compra desta sala, cada herói não comprará nenhuma carta."
+      session.skipNextDraw = true;
+      break;
+    }
+    case "INT_010": {
+      // INT-010 (Oportunismo):
+      // "Se houver uma Armadilha ativa, ela aplica seu efeito uma vez adicional agora."
+      const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+      if (isTrapActive) {
+        const effect = session.activeTrap.effect;
+        if (effect === "energyPenalty") {
+          session.players.forEach((player) => {
+            if (player.life > 0) player.energy = Math.max(0, player.energy - 1);
+          });
+          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (-1 Energia).`);
+        } else if (effect === "shieldDecay") {
+          session.players.forEach((player) => {
+            if (player.life > 0) player.shield = Math.max(0, player.shield - 1);
+          });
+          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (-1 Escudo).`);
+        } else if (effect === "endDungeonAllDamage") {
+          session.players.forEach((player) => {
+            if (player.life > 0) applyDamageToHero(session, player, 1, session.activeTrap.name);
+          });
+          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (1 de dano a todos).`);
+        } else if (effect === "endRoundLowestLifeDamage") {
+          const target = selectTarget(session.players, "minLife");
+          if (target) applyDamageToHero(session, target, 1, session.activeTrap.name);
+          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (1 de dano no herói com menos vida).`);
+        } else if (effect === "endDungeonDamageIfTwoEnemies") {
+          if (aliveEnemyCount(session) >= 2) {
+            session.players.forEach((player) => {
+              if (player.life > 0) applyDamageToHero(session, player, 1, session.activeTrap.name);
+            });
+            session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (1 de dano a todos).`);
+          }
+        } else {
+          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) tem efeito passivo e não pôde ser ativada de imediato.`);
+        }
+      } else {
+        session.log.unshift(`[Presságio] Oportunismo: Nenhuma armadilha ativa para ativar.`);
+      }
+      break;
+    }
+    case "INT_011": {
+      // INT-011 (Avanço Pesado):
+      // "Todos os Inimigos Comuns em jogo ganham +2 de Vida máxima e atual."
+      session.enemies.forEach((enemy) => {
+        if (enemy.category === "common" && enemy.life > 0) {
+          enemy.maxLife += 2;
+          enemy.life += 2;
+          session.log.unshift(`[Presságio] ${enemy.name} ganha +2 de Vida máxima e atual.`);
+        }
+      });
+      break;
+    }
+    case "INT_012": {
+      // INT-012 (Caçada ao Preparado):
+      // "O herói com mais cartas na mão deve descartar 1 carta agora (à sua escolha)."
+      const target = selectTarget(session.players, "maxHand");
+      if (target && target.hand.length > 0) {
+        target.pendingDiscard = (target.pendingDiscard || 0) + 1;
+        session.log.unshift(`[Presságio] ${target.name} (mais cartas) deve escolher 1 carta para descartar.`);
+      }
+      break;
+    }
+    case "INT_013": {
+      // INT-013 (Execução Coordenada):
+      // "Todos os Inimigos Comuns ganham Veloz nesta rodada (atacam antes do Brutal)."
+      // Handled in startDungeonTurn.
+      break;
+    }
+    case "INT_014": {
+      // INT-014 (Ruptura do Ritmo):
+      // "O herói com mais Escudo transfere metade do seu Escudo (arredondado para baixo) para o herói com menos Vida."
+      const source = selectTarget(session.players, "maxShield");
+      const target = selectTarget(session.players, "minLife");
+      if (source && target && source.id !== target.id && source.shield > 0) {
+        const transferAmount = Math.floor(source.shield / 2);
+        if (transferAmount > 0) {
+          source.shield -= transferAmount;
+          target.shield += transferAmount;
+          target.roundStats.shieldReceived = (target.roundStats.shieldReceived || 0) + transferAmount;
+          session.log.unshift(`[Presságio] Ruptura do Ritmo: ${source.name} transferiu ${transferAmount} de Escudo para ${target.name}.`);
+        }
+      }
+      break;
+    }
+    case "INT_015": {
+      // INT-015 (Sangue e Cura):
+      // "O herói com mais Vida atual perde 2 pontos de Vida (ignora Escudo, não pode matar)."
+      const target = selectTarget(session.players, "maxLife");
+      if (target && target.life > 0) {
+        const damage = Math.min(target.life - 1, 2);
+        if (damage > 0) {
+          target.life -= damage;
+          pushVisualEvent(session, {
+            type: "damage",
+            targetType: "hero",
+            targetId: target.id,
+            amount: damage,
+            source: "Sangue e Cura (Pressagio)"
+          });
+          session.log.unshift(`[Presságio] Sangue e Cura: ${target.name} perdeu ${damage} de Vida.`);
+        }
+      }
+      break;
+    }
+  }
+}
+
+function applyIntentionRepresalia(session) {
+  const card = session.activeIntention;
+  if (!card) return;
+
+  session.log.unshift(`💀 [Represália] Resolvendo Represália de ${card.name}: ${card.represaliaText}`);
+
+  switch (card.id) {
+    case "INT_001": {
+      // INT-001: "Se algum herói foi derrotado esta rodada, invoque 1 Inimigo Comum imediatamente."
+      if (session.heroDefeatedThisRound) {
+        const templateId = drawEnemyId(session, "common");
+        const newEnemy = createEnemy(session, templateId);
+        session.enemies.push(newEnemy);
+        session.log.unshift(`[Represália] Caçada ao Sangue: Um herói foi derrotado. Invocado ${newEnemy.name}.`);
+      }
+      break;
+    }
+    case "INT_002": {
+      // INT-002: "Se o Brutal ainda estiver vivo ao fim da rodada, ele ganha Enfurecido permanentemente."
+      session.enemies.forEach((enemy) => {
+        if (enemy.category === "brutal" && enemy.life > 0) {
+          enemy.isEnfurecido = true;
+          session.log.unshift(`[Represália] Pressão Crescente: ${enemy.name} ganha Enfurecido permanentemente.`);
+        }
+      });
+      break;
+    }
+    case "INT_003": {
+      // INT-003: "Se nenhum inimigo foi derrotado nesta rodada, todos os heróis descartam 1 carta aleatoriamente."
+      const totalEnemiesDefeated = session.players.reduce((sum, p) => sum + (p.roundStats.enemiesDefeated || 0), 0);
+      if (totalEnemiesDefeated === 0) {
+        session.players.forEach((player) => {
+          if (player.life > 0) {
+            discardRandomCard(session, player);
+          }
+        });
+      }
+      break;
+    }
+    case "INT_004": {
+      // INT-004: "Se nenhum herói possui Escudo ao fim da rodada, todos sofrem 1 de dano adicional."
+      const noShield = session.players.every((p) => p.life <= 0 || p.shield === 0);
+      if (noShield) {
+        session.players.forEach((player) => {
+          if (player.life > 0) {
+            applyDamageToHero(session, player, 1, "Instinto Predatorio (Represalia)");
+          }
+        });
+      }
+      break;
+    }
+    case "INT_005": {
+      // INT-005: "Se o herói com menos Vida terminar a rodada abaixo de 5 pontos, ele sofre 2 de dano adicional."
+      const target = selectTarget(session.players, "minLife");
+      if (target && target.life > 0 && target.life < 5) {
+        applyDamageToHero(session, target, 2, "Coracao Fraco (Represalia)");
+      }
+      break;
+    }
+    case "INT_006": {
+      // INT-006: "Se restarem 2 ou mais inimigos vivos ao fim da rodada, todos os heróis sofrem 1 de dano."
+      if (aliveEnemyCount(session) >= 2) {
+        session.players.forEach((player) => {
+          if (player.life > 0) {
+            applyDamageToHero(session, player, 1, "Cerco Implacavel (Represalia)");
+          }
+        });
+      }
+      break;
+    }
+    case "INT_007": {
+      // INT-007: "Se o Brutal sobreviveu a esta rodada, ele ganha +1 de dano permanentemente."
+      session.enemies.forEach((enemy) => {
+        if (enemy.category === "brutal" && enemy.life > 0) {
+          enemy.attack += 1;
+          session.log.unshift(`[Represália] Retaliação: ${enemy.name} ganha +1 de dano permanentemente.`);
+        }
+      });
+      break;
+    }
+    case "INT_008": {
+      // INT-008: "Se o herói com mais Vida não recebeu nenhum Escudo nesta rodada, ele sofre 2 de dano adicional."
+      const target = selectTarget(session.players, "maxLife");
+      if (target && target.life > 0 && !(target.roundStats.shieldReceived > 0)) {
+        applyDamageToHero(session, target, 2, "Golpe nos Fortes (Represalia)");
+      }
+      break;
+    }
+    case "INT_009": {
+      // INT-009: "Se algum herói terminar a rodada com 0 cartas na mão, ele sofre 2 de dano."
+      session.players.forEach((player) => {
+        if (player.life > 0 && player.hand.length === 0) {
+          applyDamageToHero(session, player, 2, "Pavor das Sombras (Represalia)");
+        }
+      });
+      break;
+    }
+    case "INT_010": {
+      // INT-010: "Se a Armadilha ainda estiver ativa ao fim da rodada, todos os heróis sofrem 1 de dano."
+      const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+      if (isTrapActive) {
+        session.players.forEach((player) => {
+          if (player.life > 0) {
+            applyDamageToHero(session, player, 1, "Oportunismo (Represalia)");
+          }
+        });
+      }
+      break;
+    }
+    case "INT_011": {
+      // INT-011: "Se restarem 2 ou mais Comuns vivos ao fim da rodada, o Brutal realiza 1 ataque adicional de 2 de dano fixo no herói com menos Vida."
+      const aliveCommonsCount = session.enemies.filter((e) => e.category === "common" && e.life > 0).length;
+      const brutal = session.enemies.find((e) => e.category === "brutal" && e.life > 0);
+      if (aliveCommonsCount >= 2 && brutal) {
+        const target = selectTarget(session.players, "minLife");
+        if (target) {
+          applyDamageToHero(session, target, 2, `${brutal.name} (Represalia)`);
+        }
+      }
+      break;
+    }
+    case "INT_012": {
+      // INT-012: "Se algum herói gastou menos de 2 de Energia nesta rodada, ele sofre 1 de dano."
+      session.players.forEach((player) => {
+        if (player.life > 0 && player.roundStats.energySpent < 2) {
+          applyDamageToHero(session, player, 1, "Cacada ao Preparado (Represalia)");
+        }
+      });
+      break;
+    }
+    case "INT_013": {
+      // INT-013: "Se o herói com menos Escudo terminar a rodada com menos de 8 de Vida, ele sofre 2 de dano adicional."
+      const target = selectTarget(session.players, "minShield");
+      if (target && target.life > 0 && target.life < 8) {
+        applyDamageToHero(session, target, 2, "Execucao Coordenada (Represalia)");
+      }
+      break;
+    }
+    case "INT_014": {
+      // INT-014: "Se algum herói não jogou nenhuma carta de Ataque nesta rodada, ele sofre 2 de dano."
+      session.players.forEach((player) => {
+        if (player.life > 0 && player.roundStats.attackCardsPlayed === 0) {
+          applyDamageToHero(session, player, 2, "Ruptura do Ritmo (Represalia)");
+        }
+      });
+      break;
+    }
+    case "INT_015": {
+      // INT-015: "Se algum herói foi curado nesta rodada, ele sofre 1 de dano adicional."
+      session.players.forEach((player) => {
+        if (player.life > 0 && player.roundStats.healingReceived > 0) {
+          applyDamageToHero(session, player, 1, "Sangue e Cura (Represalia)");
+        }
+      });
+      break;
+    }
+  }
+}
+
+function discardRandomCard(session, player) {
+  if (player.hand.length === 0) return;
+  const idx = Math.floor(Math.random() * player.hand.length);
+  const card = player.hand.splice(idx, 1)[0];
+  player.discard.push(card);
+  session.log.unshift(`${player.name} descartou ${card.name} aleatoriamente.`);
 }
 
 function addPlayer(session, name) {
@@ -1455,7 +1839,13 @@ function startGame(session) {
     drawCards(player, 5);
   });
   applyStartOfRoundEffects(session);
+  session.players.forEach((p) => { p.energyAtStartOfRound = p.energy; });
+  session.heroDefeatedThisRound = false;
+  session.revealedNextTrap = null;
+  session.nextDrawReduction = 0;
+  session.skipNextDraw = false;
   drawIntention(session);
+  applyIntentionPresagio(session);
   session.log.unshift("A partida comecou. Cada heroi comprou exatamente 5 cartas.");
 }
 
@@ -1517,11 +1907,17 @@ function startNextRound(session) {
     const drawn = drawCards(player, cardsToDraw);
     session.log.unshift(`${player.name} comprou ${drawn} de ${cardsToDraw} cartas na rodada ${session.round}.`);
   });
+  session.nextDrawReduction = 0;
+  session.skipNextDraw = false;
   applyStartOfRoundEffects(session);
+  session.players.forEach((p) => { p.energyAtStartOfRound = p.energy; });
+  session.heroDefeatedThisRound = false;
+  session.revealedNextTrap = null;
   session.enemies.forEach((enemy) => {
     enemy.forcedTargetId = null;
   });
   drawIntention(session);
+  applyIntentionPresagio(session);
   session.log.unshift(
     completedRoom
       ? `Nova sala preparada: ${session.room.name}.`
@@ -1642,6 +2038,7 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
 
   if (card.selfBlock) {
     player.shield += card.selfBlock;
+    player.roundStats.shieldReceived = (player.roundStats.shieldReceived || 0) + card.selfBlock;
     session.log.unshift(`${player.name} recebeu ${card.selfBlock} de Escudo com ${card.name}.`);
     pushVisualEvent(session, {
       type: "shield",
@@ -1655,6 +2052,7 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
   if (card.allBlock) {
     session.players.filter((ally) => ally.life > 0).forEach((ally) => {
       ally.shield += card.allBlock;
+      ally.roundStats.shieldReceived = (ally.roundStats.shieldReceived || 0) + card.allBlock;
       pushVisualEvent(session, {
         type: "shield",
         targetType: "hero",
@@ -1669,6 +2067,7 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
   if (card.block) {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
     target.shield += card.block;
+    target.roundStats.shieldReceived = (target.roundStats.shieldReceived || 0) + card.block;
     session.log.unshift(`${target.name} recebeu ${card.block} de Escudo com ${card.name}.`);
     pushVisualEvent(session, {
       type: "shield",
@@ -1746,6 +2145,7 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     if (amount > 0 && fromPlayer.id !== toPlayer.id) {
       fromPlayer.shield -= amount;
       toPlayer.shield += amount;
+      toPlayer.roundStats.shieldReceived = (toPlayer.roundStats.shieldReceived || 0) + amount;
       pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: toPlayer.id, amount, source: card.name });
       session.log.unshift(`${player.name} moveu ${amount} de Escudo de ${fromPlayer.name} para ${toPlayer.name}.`);
     } else {
@@ -1784,6 +2184,7 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     session.players.filter((ally) => ally.life > 0).forEach((ally) => {
       applyHealToHero(session, ally, 5, card.name);
       ally.shield += 5;
+      ally.roundStats.shieldReceived = (ally.roundStats.shieldReceived || 0) + 5;
       ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
       pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: ally.id, amount: 5, source: card.name });
       drawCards(ally, 1);
@@ -1983,7 +2384,7 @@ function startDungeonTurn(session) {
   session.log.unshift(`Turno da dungeon: ${intention.name}.`);
 
   if (!isRoomComplete(session)) {
-    const brutalsFirst = session.room.effect === "brutalsFirst" || session.activeTrap?.effect === "brutalsFirst";
+    const brutalsFirst = (session.room.effect === "brutalsFirst" || session.activeTrap?.effect === "brutalsFirst") && session.activeIntention?.id !== "INT_013";
     if (brutalsFirst) {
       queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
       queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
@@ -2020,7 +2421,8 @@ function advanceDungeonTurn(session) {
     const target = forcedTarget || selectTarget(session.players, step.targetCriterion);
     if (!target) continue;
     const attack = computeEnemyAttack(session, enemy, target, true);
-    const eligiblePlayerIds = getReactionEligiblePlayers(session).map((player) => player.id);
+    const isRetaliacaoBrutal = enemy.category === "brutal" && session.activeIntention?.id === "INT_007";
+    const eligiblePlayerIds = isRetaliacaoBrutal ? [] : getReactionEligiblePlayers(session).map((player) => player.id);
 
     if (eligiblePlayerIds.length > 0) {
       session.pendingReaction = {
@@ -2047,6 +2449,7 @@ function advanceDungeonTurn(session) {
 }
 
 function finishDungeonTurn(session) {
+  applyIntentionRepresalia(session);
   applyEndOfDungeonEffects(session);
   applyRoomReward(session);
 
@@ -2177,7 +2580,8 @@ function getCriterionValue(player, criterion) {
     maxAttackCardsPlayed: player.roundStats.attackCardsPlayed,
     maxCardsPlayed: player.roundStats.cardsPlayed,
     minCardsPlayed: player.roundStats.cardsPlayed,
-    maxDamageTaken: player.roundStats.damageTaken
+    maxDamageTaken: player.roundStats.damageTaken,
+    maxEnergyAtStartOfRound: player.energyAtStartOfRound || 0
   };
   return values[criterion] ?? 0;
 }
@@ -2193,6 +2597,12 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
   const forcedTarget = session.players.find((player) => player.id === enemy.forcedTargetId && player.life > 0);
   if (forcedTarget) target = forcedTarget;
   let attack = enemy.attack;
+  if (enemy.isEnfurecido && enemy.life <= enemy.maxLife / 2) {
+    attack += 2;
+  }
+  if (session.activeIntention?.id === "INT_003") {
+    attack += 1;
+  }
   if (session.room.effect === "commonBonusAtThreeEnemies" && enemy.category === "common" && aliveEnemyCount(session) >= 3) {
     attack += 1;
   }
@@ -2284,9 +2694,16 @@ function sanitizeSession(session, viewerId) {
       acc[heroId] = allUniqueCards;
       return acc;
     }, {}),
+    roomCards: roomCards,
+    trapCards: trapCards,
+    intentionCards: intentionCards,
     room: session.room,
-    enemies: session.enemies,
+    enemies: session.enemies.map(enemy => ({
+      ...enemy,
+      name: (enemy.isEnfurecido && enemy.life <= enemy.maxLife / 2) ? `${enemy.name} (Enfurecido)` : enemy.name
+    })),
     activeTrap: session.activeTrap,
+    revealedNextTrap: session.revealedNextTrap,
     roomDeckCount: session.roomDeck.length,
     trapDeckCount: session.trapDeck.length,
     activeIntention: session.activeIntention,
@@ -2386,6 +2803,38 @@ async function handleApi(req, res) {
   try {
     if (req.method === "GET" && parts[0] === "api" && parts[1] === "health") {
       json(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "GET" && parts[0] === "api" && parts[1] === "cards") {
+      const heroesList = Object.values(heroes).map(({ deck, ...hero }) => hero);
+      const heroCardsMap = Object.keys(heroes).reduce((acc, heroId) => {
+        const hero = heroes[heroId];
+        const deckCards = hero.deck.map(([cardId]) => cards[cardId]);
+        const supremeCard = hero.supreme ? cards[hero.supreme] : null;
+        const allUniqueCards = [];
+        const seen = new Set();
+        if (supremeCard) {
+          allUniqueCards.push(supremeCard);
+          seen.add(supremeCard.id);
+        }
+        deckCards.forEach(card => {
+          if (card && !seen.has(card.id)) {
+            allUniqueCards.push(card);
+            seen.add(card.id);
+          }
+        });
+        acc[heroId] = allUniqueCards;
+        return acc;
+      }, {});
+
+      json(res, 200, {
+        roomCards,
+        trapCards,
+        intentionCards,
+        heroes: heroesList,
+        heroCards: heroCardsMap
+      });
       return;
     }
 
@@ -2493,6 +2942,7 @@ async function handleApi(req, res) {
             session.players.filter((ally) => ally.life > 0).forEach((ally) => {
               applyHealToHero(session, ally, 5, sc.name);
               ally.shield += 5;
+              ally.roundStats.shieldReceived = (ally.roundStats.shieldReceived || 0) + 5;
               ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
               pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: ally.id, amount: 5, source: sc.name });
               drawCards(ally, 1);
@@ -2515,6 +2965,7 @@ async function handleApi(req, res) {
             session.log.unshift(`${player.name} usou ${sc.name}! Causou 6 de dano em todos os inimigos e 8 de dano adicional em ${singleTarget ? singleTarget.name : "nenhum inimigo"}.`);
           } else if (sc.id === "bastiao-supremo") {
             player.shield += 8;
+            player.roundStats.shieldReceived = (player.roundStats.shieldReceived || 0) + 8;
             player.bastiaoSupremoActive = true;
             pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: player.id, amount: 8, source: sc.name });
             session.log.unshift(`${player.name} usou ${sc.name}! Recebeu 8 de Escudo, redirecionara todo o dano aliado a si mesmo e reduzira todo o dano sofrido pela metade ate a proxima rodada.`);
@@ -2557,8 +3008,12 @@ async function handleApi(req, res) {
           Object.entries(allocation).forEach(([pid, amount]) => {
             const target = session.players.find((p) => p.id === pid);
             if (target) {
-              target.shield = Number(amount);
-              if (Number(amount) > 0) pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: pid, amount: Number(amount), source: "Escudo redistribuido" });
+              const val = Number(amount);
+              target.shield = val;
+              if (val > 0) {
+                target.roundStats.shieldReceived = (target.roundStats.shieldReceived || 0) + val;
+                pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: pid, amount: val, source: "Escudo redistribuido" });
+              }
             }
           });
           session.pendingShieldAllocation = null;

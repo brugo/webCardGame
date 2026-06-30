@@ -10,14 +10,19 @@ const local = {
   toastTone: "warning",
   rulesOpen: false,
   rulesQuery: "",
-  rulesTab: "glossary",
+  rulesTab: "manual",
   rulesSelectedHero: "guardiao",
   state: null,
   events: null,
   justPlayedUid: "",
   selectedCardUid: "",
   seenVisualEventIds: new Set(),
-  previousMeters: {}
+  previousMeters: {},
+  roomCards: [],
+  trapCards: [],
+  intentionCards: [],
+  heroes: [],
+  heroCards: {}
 };
 
 const cardArt = "/assets/hero-card-example.png";
@@ -115,6 +120,21 @@ function clearAuth() {
   window.localStorage.removeItem("tcg.token");
   render();
 }
+
+async function loadCards() {
+  try {
+    const data = await api("/api/cards");
+    local.roomCards = data.roomCards || [];
+    local.trapCards = data.trapCards || [];
+    local.intentionCards = data.intentionCards || [];
+    local.heroes = data.heroes || [];
+    local.heroCards = data.heroCards || {};
+    render();
+  } catch (err) {
+    console.error("Erro ao carregar as cartas da biblioteca:", err);
+  }
+}
+loadCards();
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -976,15 +996,29 @@ function renderIntentionCard(intention) {
   }
 
   return `
-    <article class="intention-card glass-panel">
+    <article class="intention-card glass-panel new-intention-v2">
       <span class="eyebrow">Carta de intencao</span>
-      <div class="intention-art">
-        <span>${escapeHtml(intention.id)}</span>
+      <div class="intention-header">
+        <span class="card-number">${escapeHtml(intention.id)}</span>
+        <h2>${escapeHtml(intention.name)}</h2>
       </div>
-      <h2>${escapeHtml(intention.name)}</h2>
-      <div class="intention-rules">
-        <p><strong>Comuns</strong>${escapeHtml(intention.commonText)}</p>
-        <p><strong>Brutais</strong>${escapeHtml(intention.brutalText)}</p>
+      <div class="intention-rules-v2">
+        <div class="section-v2 presagio-v2">
+          <div class="label-v2">⚡ Presságio</div>
+          <p>${escapeHtml(intention.presagioText)}</p>
+        </div>
+        <div class="section-v2 comum-v2">
+          <div class="label-v2">👤 Comuns atacam</div>
+          <p>${escapeHtml(intention.commonText)}</p>
+        </div>
+        <div class="section-v2 brutal-v2">
+          <div class="label-v2">👹 Brutal ataca</div>
+          <p>${escapeHtml(intention.brutalText)}</p>
+        </div>
+        <div class="section-v2 represalia-v2">
+          <div class="label-v2">💀 Represália</div>
+          <p>${escapeHtml(intention.represaliaText)}</p>
+        </div>
       </div>
     </article>
   `;
@@ -1006,8 +1040,12 @@ function renderSummaryCard(state) {
   let intentionText = "Nenhuma intenção revelada.";
   if (state.activeIntention) {
     intentionText = `
-      <div><strong>Comuns:</strong> ${escapeHtml(state.activeIntention.commonText || "Sem ação.")}</div>
-      <div><strong>Brutais:</strong> ${escapeHtml(state.activeIntention.brutalText || "Sem ação.")}</div>
+      <div class="summary-rules-v2">
+        <div class="summary-section-v2 presagio-sum">⚡ <strong>Presságio:</strong> ${escapeHtml(state.activeIntention.presagioText)}</div>
+        <div class="summary-section-v2 comum-sum">👤 <strong>Comuns:</strong> ${escapeHtml(state.activeIntention.commonText)}</div>
+        <div class="summary-section-v2 brutal-sum">👹 <strong>Brutais:</strong> ${escapeHtml(state.activeIntention.brutalText)}</div>
+        <div class="summary-section-v2 represalia-sum">💀 <strong>Represália:</strong> ${escapeHtml(state.activeIntention.represaliaText)}</div>
+      </div>
     `;
   }
 
@@ -1484,6 +1522,322 @@ function renderToast() {
   return `<div class="toast ${local.toastTone}">${escapeHtml(local.toast)}</div>`;
 }
 
+function exportToPDF() {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    showToast("Bloqueador de popups impediu a exportação. Por favor, permita popups para este site.", "warning");
+    return;
+  }
+
+  // 1. Build Manual HTML
+  let manualHtml = `
+    <h2>1. Manual do Jogo</h2>
+    <p>O <strong>Web Card Game</strong> é um jogo de cartas cooperativo de combate em masmorras. Você e seus companheiros devem selecionar heróis e trabalhar em equipe para sobreviver e derrotar os monstros que habitam cada sala da masmorra.</p>
+    
+    <h3>🛡️ Seleção de Heróis e Baralhos</h3>
+    <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
+    <ul>
+      <li><strong>Guardião Solar (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
+      <li><strong>Oráculo Lunar (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
+      <li><strong>Batedor Verde (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
+      <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
+    </ul>
+    <p><strong>Cartas Supremas:</strong> Cada herói possui uma carta Suprema especial. Ela fica fora do seu deck e pode ser conjurada diretamente da mesa a qualquer momento no seu turno. Pode ser usada apenas uma única vez por partida.</p>
+
+    <h3>🚪 Início da Sala e Rodadas</h3>
+    <p>A aventura é dividida em Salas de Combate. Cada rodada segue as seguintes etapas:</p>
+    <ol>
+      <li><strong>Seleção da Sala (Início da masmorra):</strong> O grupo escolhe uma Carta de Sala que define o tema, quantos monstros Comuns e Brutais surgirão, uma regra especial constante e a recompensa final da sala.</li>
+      <li><strong>Fase de Preparação:</strong> No início de cada rodada, uma Carta de Intenção da masmorra é revelada (mostrando quem os inimigos planejam atacar) e uma Armadilha (se houver) aplica seus efeitos prejudiciais.</li>
+      <li><strong>Restauração e Compra:</strong> Todos os heróis recuperam sua Energia ao máximo e compram cartas até atingir o seu Limite de Mão (limite inicial de 5 cartas).</li>
+    </ol>
+
+    <h3>🔄 Fim do Deck (Baralho Vazio)</h3>
+    <p>Se em algum momento da partida o seu deck de compras ficar sem cartas quando você precisar comprar (seja na fase de compra ou devido ao efeito de alguma magia), a sua pilha de descartes é automaticamente embaralhada de volta no seu deck de compras. Você nunca perde suas cartas!</p>
+
+    <h3>🎯 Mecânica de Alvos e Desempates (Regra de Ouro)</h3>
+    <p>No final da rodada, a masmorra ataca. Os monstros atacam com base na Carta de Intenção ativa (ex: "comuns atacam quem tem mais vida", "brutais atacam quem tem menos escudo").</p>
+    <p>Se houver um empate no critério da intenção (por exemplo: a intenção diz "atacar quem tem menos escudo" e ambos os heróis estão com 0 escudo; ou "quem recebeu mais cura" e a rodada acabou de começar sem cura realizada), o jogo ativa a regra de Desempate Universal na seguinte ordem de prioridade:</p>
+    <ol>
+      <li><strong>Menos Vida atual:</strong> O monstro ataca o herói com menos Vida restante.</li>
+      <li><strong>Menos Escudo atual:</strong> Se a vida for idêntica, ataca quem tiver menos Escudo.</li>
+      <li><strong>Menos Cartas na Mão:</strong> Se ambos forem iguais, ataca quem tiver menos cartas na mão.</li>
+      <li><strong>Ordem de Turno / Lobby:</strong> Se o empate persistir, o monstro ataca conforme a ordem do lobby (Guardião &rarr; Oráculo &rarr; Batedor &rarr; Mago).</li>
+    </ol>
+    <p><em>Importante:</em> O critério é avaliado no exato momento do ataque. Se a intenção for "menos escudo" e ambos os jogadores tiveram seus escudos zerados por ataques anteriores na mesma rodada, o histórico não conta; é considerado um empate (0x0) e segue a ordem de desempate acima (menos Vida atual).</p>
+
+    <h3>⚡ Ações e a Janela de Reação</h3>
+    <p>Durante a sua fase de ações, você joga cartas da mão gastando a Energia necessária indicada no canto da carta. Quando todos terminam, a fase da masmorra começa.</p>
+    <p><strong>Janela de Reações:</strong> Quando um monstro declara um ataque contra um herói, antes de sofrer o dano, o jogo abre uma janela especial. Qualquer jogador que tenha cartas do tipo Reação na mão pode jogá-las (ex: Interceptar, Contra-Ataque, etc.) para alterar o alvo, anular o dano ou contra-atacar. Se ninguém quiser ou puder reagir, os jogadores devem clicar em Pular para que o dano seja resolvido.</p>
+
+    <h3>💎 Conclusão de Sala e Recompensas</h3>
+    <p>Ao derrotar todos os monstros e concluir o objetivo da sala, os jogadores podem escolher uma recompensa permanente. Cada recompensa só pode ser selecionada uma única vez por partida:</p>
+    <ul>
+      <li><strong>Energia Máxima:</strong> Aumenta permanentemente sua Energia máxima em +1⚡.</li>
+      <li><strong>Tamanho da Mão:</strong> Aumenta permanentemente o limite de cartas que você pode manter na mão em +1🎴.</li>
+      <li><strong>Troca de Mão (Redraw):</strong> Concede a habilidade de descartar toda a sua mão e comprar novas cartas uma vez por sala.</li>
+    </ul>
+  `;
+
+  // 2. Build Glossary HTML
+  let glossaryHtml = `<h2>2. Glossário de Termos</h2><table class="rule-table"><thead><tr><th>Termo</th><th>Descrição</th></tr></thead><tbody>`;
+  glossaryEntries.forEach(([term, desc]) => {
+    glossaryHtml += `<tr><td><strong>${escapeHtml(term)}</strong></td><td>${escapeHtml(desc)}</td></tr>`;
+  });
+  glossaryHtml += `</tbody></table>`;
+
+  // 3. Build Hero Cards HTML
+  let heroesHtml = "<h2>3. Cartas dos Heróis</h2>";
+  const heroesList = local.heroes || [];
+  const heroCardsMap = local.heroCards || {};
+  heroesList.forEach(hero => {
+    heroesHtml += `<h3>${escapeHtml(hero.name)} (${hero.life} Vida, ${hero.energy} Energia)</h3>`;
+    heroesHtml += `<div class="card-grid">`;
+    const cards = heroCardsMap[hero.id] || [];
+    cards.forEach(card => {
+      const isSupreme = card.id === "bastiao-supremo" || card.id === "luz-da-esperanca" || card.id === "tempestade-de-flechas";
+      heroesHtml += `
+        <div class="print-card">
+          <div class="card-header">
+            <span class="card-cost">${card.cost}⚡</span>
+            <strong>${escapeHtml(card.name)}</strong>
+            <span class="card-type">${escapeHtml(card.type)}${isSupreme ? " (Suprema)" : ""}</span>
+          </div>
+          <p>${escapeHtml(card.text)}</p>
+        </div>
+      `;
+    });
+    heroesHtml += `</div>`;
+  });
+
+  // 4. Build Rooms HTML
+  let roomsHtml = "<h2>4. Cartas de Sala</h2><div class=\"card-grid\">";
+  const roomCards = local.roomCards || [];
+  roomCards.forEach(room => {
+    roomsHtml += `
+      <div class="print-card">
+        <div class="card-header">
+          <strong>${escapeHtml(room.name)}</strong>
+          <span class="card-type">${escapeHtml(room.theme)}</span>
+        </div>
+        <p><em>${escapeHtml(room.subtitle || "")}</em></p>
+        <p>🎯 <strong>Objetivo:</strong> ${escapeHtml(room.objective)}</p>
+        <p>⚠️ <strong>Regra Especial:</strong> ${escapeHtml(room.rule)}</p>
+        <p>👾 <strong>Setup:</strong> ${room.setup?.common || 0} Comuns, ${room.setup?.brutal || 0} Brutais</p>
+      </div>
+    `;
+  });
+  roomsHtml += "</div>";
+
+  // 5. Build Intentions HTML
+  let intentionsHtml = "<h2>5. Cartas de Intenção</h2><div class=\"card-grid\">";
+  const intentionCards = local.intentionCards || [];
+  intentionCards.forEach(intention => {
+    intentionsHtml += `
+      <div class="print-card new-intention-v2" style="background: rgba(13, 24, 30, 0.82); border: 1px solid rgba(255, 246, 223, 0.16); padding: 14px; border-radius: 8px; color: #f0ebe3;">
+        <div class="intention-header" style="border-bottom: 2px solid #C9922A; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: #F5E6C4; font-size: 1.1rem;">${escapeHtml(intention.name)}</strong>
+          <span class="card-cost" style="color: #C9922A; font-weight: bold;">${escapeHtml(intention.id)}</span>
+        </div>
+        <div class="intention-rules-v2" style="display: grid; gap: 6px; font-size: 0.85rem;">
+          <div class="section-v2 presagio-v2" style="background: rgba(217, 119, 6, 0.1); border-left: 3px solid #d97706; padding: 6px 10px; border-radius: 4px; color: #ffe3b3;">
+            <strong>⚡ Presságio</strong>: ${escapeHtml(intention.presagioText)}
+          </div>
+          <div class="section-v2 comum-v2" style="background: rgba(37, 99, 235, 0.1); border-left: 3px solid #2563eb; padding: 6px 10px; border-radius: 4px; color: #dbeafe;">
+            <strong>👤 Comuns</strong> <code>(${escapeHtml(intention.commonTarget)})</code>: ${escapeHtml(intention.commonText)}
+          </div>
+          <div class="section-v2 brutal-v2" style="background: rgba(220, 38, 38, 0.1); border-left: 3px solid #dc2626; padding: 6px 10px; border-radius: 4px; color: #fee2e2;">
+            <strong>👹 Brutais</strong> <code>(${escapeHtml(intention.brutalTarget)})</code>: ${escapeHtml(intention.brutalText)}
+          </div>
+          <div class="section-v2 represalia-v2" style="background: rgba(124, 58, 237, 0.1); border-left: 3px solid #7c3aed; padding: 6px 10px; border-radius: 4px; color: #f3e8ff;">
+            <strong>💀 Represália</strong>: ${escapeHtml(intention.represaliaText)}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  intentionsHtml += "</div>";
+
+  // 6. Build Traps HTML
+  let trapsHtml = "<h2>6. Armadilhas</h2><div class=\"card-grid\">";
+  const trapCards = local.trapCards || [];
+  trapCards.forEach(trap => {
+    trapsHtml += `
+      <div class="print-card">
+        <div class="card-header">
+          <strong>${escapeHtml(trap.name)}</strong>
+          <span class="card-cost">${escapeHtml(trap.id)}</span>
+        </div>
+        <p>🕸️ <strong>Efeito:</strong> ${escapeHtml(trap.text)}</p>
+      </div>
+    `;
+  });
+  trapsHtml += "</div>";
+
+  // Combine document
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Web Card Game - Manual e Biblioteca de Regras</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+          font-family: 'Inter', sans-serif;
+          color: #333;
+          background: #fff;
+          line-height: 1.5;
+          margin: 40px;
+          font-size: 13px;
+        }
+        h1, h2, h3, h4 {
+          color: #111;
+          margin-top: 18px;
+          margin-bottom: 8px;
+        }
+        h1 {
+          font-size: 2.2rem;
+          text-align: center;
+          border-bottom: 3px double #333;
+          padding-bottom: 12px;
+          margin-bottom: 30px;
+        }
+        h2 {
+          font-size: 1.6rem;
+          border-bottom: 2px solid #333;
+          padding-bottom: 6px;
+          margin-top: 36px;
+          page-break-before: always;
+        }
+        h3 {
+          font-size: 1.15rem;
+          color: #8b5a24;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 4px;
+          margin-top: 20px;
+        }
+        .card-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: 12px;
+        }
+        .print-card {
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          padding: 10px;
+          background: #fafafa;
+          page-break-inside: avoid;
+        }
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: bold;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 4px;
+          margin-bottom: 6px;
+        }
+        .card-cost {
+          background: #e0f7fa;
+          color: #006064;
+          padding: 1px 5px;
+          border-radius: 3px;
+          font-size: 0.8rem;
+        }
+        .card-type {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          padding: 1px 5px;
+          border-radius: 3px;
+          background: #eee;
+          border: 1px solid #ddd;
+        }
+        .rule-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 12px;
+        }
+        .rule-table th, .rule-table td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        .rule-table th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        ul, ol {
+          padding-left: 18px;
+        }
+        li {
+          margin-bottom: 4px;
+        }
+        code {
+          font-family: monospace;
+          background: #eee;
+          padding: 1px 3px;
+          border-radius: 3px;
+          font-size: 0.85rem;
+        }
+        .no-print-bar {
+          background: #f5f5f5;
+          border: 1px solid #ddd;
+          padding: 10px;
+          margin-bottom: 20px;
+          text-align: center;
+          border-radius: 4px;
+        }
+        .no-print-bar button {
+          background: #8b5a24;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          font-size: 1rem;
+          font-weight: bold;
+          cursor: pointer;
+          border-radius: 4px;
+        }
+        .no-print-bar button:hover {
+          background: #a06e36;
+        }
+        @media print {
+          .no-print-bar {
+            display: none;
+          }
+          body {
+            margin: 15px;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="no-print-bar">
+        <p>Esta é a visualização de impressão das regras. Escolha <strong>Salvar como PDF</strong> no destino da janela de impressão.</p>
+        <button onclick="window.print()">Imprimir / Salvar como PDF</button>
+      </div>
+      <h1>Web Card Game - Manual & Biblioteca de Regras</h1>
+      <p style="text-align: center; color: #666; font-style: italic;">Documento gerado em tempo real em ${new Date().toLocaleDateString("pt-BR")}</p>
+      
+      ${manualHtml}
+      ${glossaryHtml}
+      ${heroesHtml}
+      ${roomsHtml}
+      ${intentionsHtml}
+      ${trapsHtml}
+    </body>
+    </html>
+  `;
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.print();
+  }, 300);
+}
+
 function normalizeSearch(value) {
   return String(value || "")
     .normalize("NFD")
@@ -1494,8 +1848,12 @@ function normalizeSearch(value) {
 function renderRulesModal() {
   if (!local.rulesOpen) return "";
   
+  const isManual = local.rulesTab === "manual";
   const isGlossary = local.rulesTab === "glossary";
   const isCards = local.rulesTab === "cards";
+  const isRooms = local.rulesTab === "rooms";
+  const isIntentions = local.rulesTab === "intentions";
+  const isTraps = local.rulesTab === "traps";
   
   const query = normalizeSearch(local.rulesQuery);
   const entries = glossaryEntries.filter(([term, description]) =>
@@ -1503,7 +1861,72 @@ function renderRulesModal() {
   );
   
   let tabContent = "";
-  if (isGlossary) {
+  if (isManual) {
+    tabContent = `
+      <div class="rules-results manual-rules-container">
+        <section class="manual-section">
+          <h3>📖 Introdução ao Jogo</h3>
+          <p>O <strong>Web Card Game</strong> é um jogo de cartas cooperativo de combate em masmorras. Você e seus companheiros devem selecionar heróis e trabalhar em equipe para sobreviver e derrotar os monstros que habitam cada sala da masmorra.</p>
+        </section>
+
+        <section class="manual-section">
+          <h3>🛡️ Seleção de Heróis e Baralhos</h3>
+          <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
+          <ul>
+            <li><strong>Guardião Solar (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
+            <li><strong>Oráculo Lunar (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
+            <li><strong>Batedor Verde (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
+            <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
+          </ul>
+          <p>🌟 <strong>Cartas Supremas:</strong> Cada herói possui uma carta Suprema especial (ex: <em>Bastião Supremo</em>, <em>Luz da Esperança</em>, etc.). Ela fica fora do seu deck e pode ser conjurada diretamente da mesa a qualquer momento no seu turno. **Ela pode ser usada apenas uma única vez por partida**.</p>
+        </section>
+
+        <section class="manual-section">
+          <h3>🚪 Início da Sala e Rodadas</h3>
+          <p>A aventura é dividida em Salas de Combate. Cada rodada segue as seguintes etapas:</p>
+          <ol>
+            <li><strong>Seleção da Sala (Início da masmorra):</strong> O grupo escolhe uma Carta de Sala que define o tema, quantos monstros Comuns e Brutais surgirão, uma regra especial constante e a recompensa final da sala.</li>
+            <li><strong>Fase de Preparação:</strong> No início de cada rodada, uma **Carta de Intenção** da masmorra é revelada (mostrando quem os inimigos planejam atacar) e uma **Armadilha** (se houver) aplica seus efeitos prejudiciais.</li>
+            <li><strong>Restauração e Compra:</strong> Todos os heróis recuperam sua Energia ao máximo e compram cartas até atingir o seu **Limite de Mão** (limite inicial de 5 cartas).</li>
+          </ol>
+        </section>
+
+        <section class="manual-section">
+          <h3>🔄 Fim do Deck (Baralho Vazio)</h3>
+          <p>Se em algum momento da partida o seu deck de compras ficar sem cartas quando você precisar comprar (seja na fase de compra ou devido ao efeito de alguma magia), a sua **pilha de descartes é automaticamente embaralhada** de volta no seu deck de compras. Você nunca perde suas cartas!</p>
+        </section>
+
+        <section class="manual-section">
+          <h3>🎯 Mecânica de Alvos e Desempates (Regra de Ouro)</h3>
+          <p>No final da rodada, a masmorra ataca. Os monstros atacam com base na <strong>Carta de Intenção</strong> ativa (ex: "comuns atacam quem tem mais vida", "brutais atacam quem tem menos escudo").</p>
+          <p>Se houver um <strong>empate</strong> no critério da intenção (por exemplo: a intenção diz "atacar quem tem menos escudo" e ambos os heróis estão com 0 escudo; ou "quem recebeu mais cura" e a rodada acabou de começar sem cura realizada), o jogo ativa a regra de <strong>Desempate Universal</strong> na seguinte ordem de prioridade:</p>
+          <ul>
+            <li><strong>1º Critério:</strong> Monstro ataca quem tiver <strong>menos Vida atual</strong>.</li>
+            <li><strong>2º Critério:</strong> Se a vida for idêntica, ataca quem tiver <strong>menos Escudo atual</strong>.</li>
+            <li><strong>3º Critério:</strong> Se ainda empatar, ataca quem tiver <strong>menos cartas na mão</strong>.</li>
+            <li><strong>4º Critério:</strong> Em caso de empate absoluto, o monstro ataca de acordo com a ordem do lobby (Guardião &rarr; Oráculo &rarr; Batedor &rarr; Mago).</li>
+          </ul>
+          <p>⚠️ <em>Importante:</em> O critério é avaliado no **exato momento** do ataque. Se a intenção for "menos escudo" e ambos os jogadores tiveram seus escudos zerados por ataques anteriores na mesma rodada, o histórico não conta; é considerado um empate ($0 \times 0$) e segue a ordem de desempate acima (menos Vida atual).</p>
+        </section>
+
+        <section class="manual-section">
+          <h3>⚡ Ações e a Janela de Reação</h3>
+          <p>Durante a sua fase de ações, você joga cartas da mão pagando seu custo em Energia. Quando todos terminam, a fase da masmorra começa.</p>
+          <p>🛡️ <strong>Janela de Reações:</strong> Quando um monstro declara um ataque contra um herói, antes de sofrer o dano, o jogo abre uma janela especial. Qualquer jogador que tenha cartas do tipo <strong>Reação</strong> na mão pode jogá-las (ex: <em>Interceptar</em>, <em>Contra-Ataque</em>, etc.) para alterar o alvo, anular o dano ou contra-atacar. Se ninguém quiser ou puder reagir, os jogadores devem clicar em <strong>Pular</strong> para que o dano seja resolvido.</p>
+        </section>
+
+        <section class="manual-section">
+          <h3>💎 Conclusão de Sala e Recompensas</h3>
+          <p>Ao derrotar todos os monstros e concluir o objetivo da sala, os jogadores podem escolher uma recompensa permanente. Cada recompensa só pode ser selecionada **uma única vez por partida**:</p>
+          <ul>
+            <li><strong>Energia Máxima:</strong> Aumenta permanentemente sua Energia máxima em +1⚡.</li>
+            <li><strong>Tamanho da Mão:</strong> Aumenta permanentemente o limite de cartas que você pode manter na mão em +1🎴.</li>
+            <li><strong>Troca de Mão (Redraw):</strong> Concede a habilidade de descartar toda a sua mão e comprar novas cartas uma vez por sala.</li>
+          </ul>
+        </section>
+      </div>
+    `;
+  } else if (isGlossary) {
     tabContent = `
       <label class="rules-search">
         Buscar termo
@@ -1527,9 +1950,8 @@ function renderRulesModal() {
       </div>
     `;
   } else if (isCards) {
-    const state = local.state;
-    const heroesList = state?.heroes || [];
-    const heroCardsMap = state?.heroCards || {};
+    const heroesList = local.heroes || [];
+    const heroCardsMap = local.heroCards || {};
     const selectedHeroId = local.rulesSelectedHero || (heroesList[0]?.id || "guardiao");
     const cards = heroCardsMap[selectedHeroId] || [];
     
@@ -1555,7 +1977,63 @@ function renderRulesModal() {
               <p class="card-entry-text">${escapeHtml(card.text)}</p>
             </div>
           `;
-        }).join("") : `<p class="muted">Nenhum dado de carta disponível. Conecte-se a uma partida primeiro.</p>`}
+        }).join("") : `<p class="muted">Nenhum dado de carta de herói disponível.</p>`}
+      </div>
+    `;
+  } else if (isRooms) {
+    const roomCards = local.roomCards || [];
+    tabContent = `
+      <div class="rules-results cards-list-rules">
+        ${roomCards.length ? roomCards.map(room => `
+          <div class="rules-card-entry room-entry-card">
+            <div class="card-entry-header">
+              <span class="card-entry-cost">${escapeHtml(room.id)}</span>
+              <strong class="card-entry-name">${escapeHtml(room.name)}</strong>
+              <span class="card-entry-type theme-${room.theme}">${escapeHtml(room.theme)}</span>
+            </div>
+            <p class="card-entry-subtitle"><em>${escapeHtml(room.subtitle || "")}</em></p>
+            <div style="margin-top: 8px; display: grid; gap: 4px;">
+              <p class="card-entry-text">🎯 <strong>Objetivo:</strong> ${escapeHtml(room.objective)}</p>
+              <p class="card-entry-text">⚠️ <strong>Regra Especial:</strong> ${escapeHtml(room.rule)}</p>
+              <p class="card-entry-text">👾 <strong>Setup Inicial:</strong> ${room.setup?.common || 0} Comuns, ${room.setup?.brutal || 0} Brutais</p>
+            </div>
+          </div>
+        `).join("") : `<p class="muted">Nenhuma sala disponível no momento.</p>`}
+      </div>
+    `;
+  } else if (isIntentions) {
+    const intentionCards = local.intentionCards || [];
+    tabContent = `
+      <div class="rules-results cards-list-rules">
+        ${intentionCards.length ? intentionCards.map(intention => `
+          <div class="rules-card-entry intention-entry-card">
+            <div class="card-entry-header">
+              <span class="card-entry-cost">${escapeHtml(intention.id)}</span>
+              <strong class="card-entry-name">${escapeHtml(intention.name)}</strong>
+            </div>
+            <div style="margin-top: 8px; display: grid; gap: 6px;">
+              <p class="card-entry-text">👤 <strong>Comuns:</strong> ${escapeHtml(intention.commonText)} <code class="target-code">(${escapeHtml(intention.commonTarget)})</code></p>
+              <p class="card-entry-text">👹 <strong>Brutais:</strong> ${escapeHtml(intention.brutalText)} <code class="target-code">(${escapeHtml(intention.brutalTarget)})</code></p>
+            </div>
+            <p class="card-entry-subtitle" style="margin-top: 10px;"><em>🧠 Estratégia: ${escapeHtml(intention.design || "")}</em></p>
+          </div>
+        `).join("") : `<p class="muted">Nenhuma intenção disponível no momento.</p>`}
+      </div>
+    `;
+  } else if (isTraps) {
+    const trapCards = local.trapCards || [];
+    tabContent = `
+      <div class="rules-results cards-list-rules">
+        ${trapCards.length ? trapCards.map(trap => `
+          <div class="rules-card-entry trap-entry-card">
+            <div class="card-entry-header">
+              <span class="card-entry-cost">${escapeHtml(trap.id)}</span>
+              <strong class="card-entry-name">${escapeHtml(trap.name)}</strong>
+              <span class="card-entry-type badge-danger">Armadilha</span>
+            </div>
+            <p class="card-entry-text" style="margin-top: 8px;">🕸️ <strong>Efeito:</strong> ${escapeHtml(trap.text)}</p>
+          </div>
+        `).join("") : `<p class="muted">Nenhuma armadilha disponível no momento.</p>`}
       </div>
     `;
   }
@@ -1568,12 +2046,19 @@ function renderRulesModal() {
             <span class="eyebrow">Manual do Jogo</span>
             <h2 id="rulesTitle">Regras e Biblioteca</h2>
           </div>
-          <button id="rulesClose" class="secondary" aria-label="Fechar regras">Fechar</button>
+          <div class="rules-actions" style="display: flex; gap: 10px; align-items: center;">
+            <button id="exportPdfBtn" class="primary" style="background: linear-gradient(135deg, #ffd785, #a8720a); color: #1a1000; font-weight: bold; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">🖨️ Exportar PDF</button>
+            <button id="rulesClose" class="secondary" aria-label="Fechar regras">Fechar</button>
+          </div>
         </div>
         
-        <div class="rules-tabs">
+        <div class="rules-tabs" style="flex-wrap: wrap;">
+          <button id="tabManual" class="tab-nav ${isManual ? "active" : ""}">Manual</button>
           <button id="tabGlossary" class="tab-nav ${isGlossary ? "active" : ""}">Glossário</button>
           <button id="tabCards" class="tab-nav ${isCards ? "active" : ""}">Cartas dos Heróis</button>
+          <button id="tabRooms" class="tab-nav ${isRooms ? "active" : ""}">Cartas de Sala</button>
+          <button id="tabIntentions" class="tab-nav ${isIntentions ? "active" : ""}">Cartas de Intenção</button>
+          <button id="tabTraps" class="tab-nav ${isTraps ? "active" : ""}">Armadilhas</button>
         </div>
         
         <div class="rules-body">
@@ -1595,6 +2080,7 @@ function bindGlobalControls() {
     local.rulesOpen = false;
     render();
   });
+  document.querySelector("#exportPdfBtn")?.addEventListener("click", exportToPDF);
   document.querySelector(".rules-modal")?.addEventListener("click", (event) => {
     if (event.target.classList.contains("rules-modal")) {
       local.rulesOpen = false;
@@ -1610,6 +2096,10 @@ function bindGlobalControls() {
   });
   
   // Tab switching listeners
+  document.querySelector("#tabManual")?.addEventListener("click", () => {
+    local.rulesTab = "manual";
+    render();
+  });
   document.querySelector("#tabGlossary")?.addEventListener("click", () => {
     local.rulesTab = "glossary";
     render();
@@ -1617,6 +2107,18 @@ function bindGlobalControls() {
   });
   document.querySelector("#tabCards")?.addEventListener("click", () => {
     local.rulesTab = "cards";
+    render();
+  });
+  document.querySelector("#tabRooms")?.addEventListener("click", () => {
+    local.rulesTab = "rooms";
+    render();
+  });
+  document.querySelector("#tabIntentions")?.addEventListener("click", () => {
+    local.rulesTab = "intentions";
+    render();
+  });
+  document.querySelector("#tabTraps")?.addEventListener("click", () => {
+    local.rulesTab = "traps";
     render();
   });
   
