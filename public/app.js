@@ -22,7 +22,18 @@ const local = {
   trapCards: [],
   intentionCards: [],
   heroes: [],
-  heroCards: {}
+  heroCards: {},
+  // Cinematic animation system
+  animQueue: [],
+  animRunning: false,
+  lastTurn: null,
+  lastRoomNumber: null,
+  lastStatus: null,
+  newlyEnteredEnemies: new Set(),
+  revealedEnemyUids: new Set(),
+  roomStartInProgress: false,
+  visualLife: {},
+  visualShield: {}
 };
 
 const cardArt = "/assets/hero-card-example.png";
@@ -50,6 +61,12 @@ function getEnemyArt(enemy) {
     if (enemy.id === "sentinela") return "/assets/sentinela-oco.jpg";
     if (enemy.id === "salteador") return "/assets/salteador-cinzento.jpg";
     if (enemy.id === "bruxa") return "/assets/bruxa-do-breu.jpg";
+    if (enemy.id === "carcereiro") return "/assets/carcereiro-ferrugem.jpg";
+    if (enemy.id === "mistico") return "/assets/mistico-penumbra.jpg";
+    if (enemy.id === "arauto") return "/assets/arauto-cinza.jpg";
+    if (enemy.id === "colosso") return "/assets/colosso-cinzas.jpg";
+    if (enemy.id === "executor") return "/assets/executor-sombrio.jpg";
+    if (enemy.id === "basilisco") return "/assets/basilisco-azul.jpg";
   }
   return enemyArt;
 }
@@ -235,11 +252,269 @@ function collectMeterValues(state) {
   return values;
 }
 
+async function runCinematic(fn) {
+  local.animRunning = true;
+  try {
+    await fn();
+  } finally {
+    local.animRunning = false;
+    // Overwrite visual state with actual state to guarantee sync
+    if (local.state) {
+      (local.state.players || []).forEach(p => {
+        local.visualLife[p.id] = p.life;
+        local.visualShield[p.id] = p.shield;
+      });
+      (local.state.enemies || []).forEach(e => {
+        local.visualLife[e.uid] = e.life;
+        local.visualShield[e.uid] = e.shield;
+      });
+    }
+    render();
+
+    // Process next queued state if any
+    if (local.animQueue.length > 0) {
+      const nextQueuedState = local.animQueue.shift();
+      window.setTimeout(() => {
+        setState(nextQueuedState);
+      }, 0);
+    }
+  }
+}
+
+function getVisualLife(id, actualValue) {
+  if (local.visualLife && local.visualLife[id] !== undefined) {
+    return local.visualLife[id];
+  }
+  return actualValue;
+}
+
+function getVisualShield(id, actualValue) {
+  if (local.visualShield && local.visualShield[id] !== undefined) {
+    return local.visualShield[id];
+  }
+  return actualValue;
+}
+
+function applyEventToVisualState(event, state) {
+  const targetId = event.targetId;
+  const amount = event.amount;
+
+  if (event.targetType === "hero" || event.targetType === "player") {
+    const player = state.players.find(p => p.id === targetId);
+    if (!player) return;
+    
+    if (local.visualLife[targetId] === undefined) local.visualLife[targetId] = player.life;
+    if (local.visualShield[targetId] === undefined) local.visualShield[targetId] = player.shield;
+
+    if (event.type === "damage") {
+      let dmg = amount;
+      const currentShield = local.visualShield[targetId] || 0;
+      const blocked = Math.min(currentShield, dmg);
+      local.visualShield[targetId] = currentShield - blocked;
+      dmg -= blocked;
+      local.visualLife[targetId] = Math.max(0, (local.visualLife[targetId] || 0) - dmg);
+    } else if (event.type === "heal") {
+      local.visualLife[targetId] = Math.min(player.maxLife, (local.visualLife[targetId] || 0) + amount);
+    } else if (event.type === "shield") {
+      local.visualShield[targetId] = amount;
+    }
+  } else if (event.targetType === "enemy") {
+    const enemy = state.enemies.find(e => e.uid === targetId);
+    if (!enemy) return;
+
+    if (local.visualLife[targetId] === undefined) local.visualLife[targetId] = enemy.life;
+    if (local.visualShield[targetId] === undefined) local.visualShield[targetId] = enemy.shield;
+
+    if (event.type === "damage") {
+      let dmg = amount;
+      const currentShield = local.visualShield[targetId] || 0;
+      const blocked = Math.min(currentShield, dmg);
+      local.visualShield[targetId] = currentShield - blocked;
+      dmg -= blocked;
+      local.visualLife[targetId] = Math.max(0, (local.visualLife[targetId] || 0) - dmg);
+    } else if (event.type === "heal") {
+      local.visualLife[targetId] = Math.min(enemy.maxLife, (local.visualLife[targetId] || 0) + amount);
+    } else if (event.type === "shield") {
+      local.visualShield[targetId] = amount;
+    }
+  }
+}
+
+function isStateIdentical(s1, s2) {
+  if (!s1 || !s2) return false;
+  if (s1.turn !== s2.turn) return false;
+  if (s1.round !== s2.round) return false;
+  if (s1.dungeonResolved !== s2.dungeonResolved) return false;
+  if (s1.roomNumber !== s2.roomNumber) return false;
+  if (s1.status !== s2.status) return false;
+  
+  const pId1 = s1.pendingReaction?.id;
+  const pId2 = s2.pendingReaction?.id;
+  if (pId1 !== pId2) return false;
+  
+  if (s1.pendingShieldAllocation?.cardUid !== s2.pendingShieldAllocation?.cardUid) return false;
+  if (s1.pendingEnergyAllocation?.cardUid !== s2.pendingEnergyAllocation?.cardUid) return false;
+  if (s1.pendingEcoArcano?.cardUid !== s2.pendingEcoArcano?.cardUid) return false;
+  if (s1.pendingDistorcaoTemporal?.casterId !== s2.pendingDistorcaoTemporal?.casterId) return false;
+  
+  const ev1 = s1.visualEvents || [];
+  const ev2 = s2.visualEvents || [];
+  if (ev1.length !== ev2.length) return false;
+  if (ev1.length > 0 && ev1[ev1.length - 1].id !== ev2[ev2.length - 1].id) return false;
+  
+  const arena1 = s1.arena || [];
+  const arena2 = s2.arena || [];
+  if (arena1.length !== arena2.length) return false;
+  if (arena1.length > 0 && arena1[0].uid !== arena2[0].uid) return false;
+
+  const log1 = s1.log || [];
+  const log2 = s2.log || [];
+  if (log1.length !== log2.length) return false;
+  if (log1.length > 0 && log1[0] !== log2[0]) return false;
+
+  const pl1 = s1.players || [];
+  const pl2 = s2.players || [];
+  if (pl1.length !== pl2.length) return false;
+  for (let i = 0; i < pl1.length; i++) {
+    const p1 = pl1[i];
+    const p2 = pl2[i];
+    if (p1.id !== p2.id) return false;
+    if (p1.life !== p2.life) return false;
+    if (p1.shield !== p2.shield) return false;
+    if (p1.energy !== p2.energy) return false;
+    if (p1.turnEnded !== p2.turnEnded) return false;
+    if (p1.handCount !== p2.handCount) return false;
+    if (p1.discardCount !== p2.discardCount) return false;
+    if ((p1.played || []).length !== (p2.played || []).length) return false;
+  }
+
+  const en1 = s1.enemies || [];
+  const en2 = s2.enemies || [];
+  if (en1.length !== en2.length) return false;
+  for (let i = 0; i < en1.length; i++) {
+    const e1 = en1[i];
+    const e2 = en2[i];
+    if (e1.uid !== e2.uid) return false;
+    if (e1.life !== e2.life) return false;
+    if (e1.shield !== e2.shield) return false;
+    if (e1.isStunned !== e2.isStunned) return false;
+    if (e1.forcedTargetId !== e2.forcedTargetId) return false;
+  }
+  
+  return true;
+}
+
 function setState(nextState) {
+  if (isStateIdentical(nextState, local.state)) {
+    return;
+  }
+
+  if (local.animRunning) {
+    // Queue state updates received during a cinematic
+    local.animQueue.push(nextState);
+    return;
+  }
+
+  const prevState = local.state;
   local.previousMeters = collectMeterValues(local.state);
   local.state = nextState;
-  ingestVisualEvents(nextState);
-  render();
+
+  if (!local.visualLife) local.visualLife = {};
+  if (!local.visualShield) local.visualShield = {};
+
+  const prevTurn = prevState?.turn;
+  const nextTurn = nextState?.turn;
+  const prevStatus = prevState?.status;
+  const nextStatus = nextState?.status;
+  const prevRoom = prevState?.roomNumber;
+  const nextRoom = nextState?.roomNumber;
+  const prevPending = prevState?.pendingReaction;
+  const nextPending = nextState?.pendingReaction;
+
+  // New room / game start
+  const isNewRoom = nextStatus === "playing" && (
+    prevStatus !== "playing" ||
+    (prevRoom !== nextRoom && nextRoom !== local.lastRoomNumber)
+  );
+
+  // Dungeon turn just started (players → dungeon)
+  const isDungeonTurnStart = prevTurn === "players" && nextTurn === "dungeon";
+
+  // A pendingReaction was resolved AND a new reaction immediately followed (next monster)
+  const isReactionResolvedAndNewReaction = nextTurn === "dungeon" && nextPending && prevPending && prevPending.id !== nextPending.id;
+
+  // A new pendingReaction appeared (first one, no previous reaction)
+  const isNewReactionOnly = nextTurn === "dungeon" && nextPending && !prevPending;
+
+  // A pendingReaction was resolved and NO new reaction followed (last monster resolved)
+  const isReactionResolvedOnly = nextTurn === "dungeon" && !nextPending && prevPending;
+
+  // Hero turn just started (dungeon → players)
+  const isHeroTurnStart = prevTurn === "dungeon" && nextTurn === "players";
+
+  const isCinematic = isNewRoom || isDungeonTurnStart || isNewReactionOnly || isReactionResolvedOnly || isReactionResolvedAndNewReaction || isHeroTurnStart;
+
+  // Lock to previous state values if cinematic is starting
+  if (isCinematic && prevState) {
+    (prevState.players || []).forEach(p => {
+      if (local.visualLife[p.id] === undefined) local.visualLife[p.id] = p.life;
+      if (local.visualShield[p.id] === undefined) local.visualShield[p.id] = p.shield;
+    });
+    (prevState.enemies || []).forEach(e => {
+      if (local.visualLife[e.uid] === undefined) local.visualLife[e.uid] = e.life;
+      if (local.visualShield[e.uid] === undefined) local.visualShield[e.uid] = e.shield;
+    });
+  }
+
+  // If not cinematic and not running animation, keep visual values exactly in sync
+  if (!isCinematic && !local.animRunning) {
+    (nextState.players || []).forEach(p => {
+      local.visualLife[p.id] = p.life;
+      local.visualShield[p.id] = p.shield;
+    });
+    (nextState.enemies || []).forEach(e => {
+      local.visualLife[e.uid] = e.life;
+      local.visualShield[e.uid] = e.shield;
+    });
+  }
+
+  if (isNewRoom && nextState?.room) {
+    local.lastRoomNumber = nextRoom;
+    local.newlyEnteredEnemies.clear();
+    runCinematic(() => queueCinematicRoomStart(nextState));
+
+  } else if (isDungeonTurnStart) {
+    // Show dungeon banner, then render — first pendingReaction will arrive via SSE shortly
+    runCinematic(() => queueCinematicDungeonStart(nextState));
+
+  } else if (isReactionResolvedAndNewReaction) {
+    // A previous reaction resolved and a new one immediately started:
+    // Resolve the first monster's visual effects, then trigger the second monster's spotlight
+    runCinematic(async () => {
+      await queueCinematicAfterReaction(nextState);
+      await queueCinematicMonsterAttack(nextState);
+    });
+
+  } else if (isNewReactionOnly) {
+    // First monster about to attack: show its spotlight, THEN show reaction modal
+    runCinematic(() => queueCinematicMonsterAttack(nextState));
+
+  } else if (isReactionResolvedOnly) {
+    // Reaction decided and no more monster attacks: fire final visual effects
+    runCinematic(() => queueCinematicAfterReaction(nextState));
+
+  } else if (isHeroTurnStart) {
+    // Show hero turn banner + new intention card reveal
+    runCinematic(() => queueCinematicHeroTurn(nextState));
+
+  } else {
+    // Normal state update (e.g. hero plays a card, etc.)
+    ingestVisualEvents(nextState);
+    render();
+  }
+
+  local.lastTurn = nextTurn;
+  local.lastStatus = nextStatus;
 }
 
 function ingestVisualEvents(state) {
@@ -301,6 +576,443 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+// ============================================================
+// CINEMATIC ANIMATION ENGINE
+// ============================================================
+
+function sleep(ms) {
+  return new Promise(function(resolve) { window.setTimeout(resolve, ms); });
+}
+
+function getCinematicOverlay() {
+  let overlay = document.getElementById("cinematic-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "cinematic-overlay";
+    document.body.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function showOverlay() {
+  const overlay = getCinematicOverlay();
+  overlay.className = "fade-in";
+  overlay.innerHTML = "";
+  overlay.style.display = "flex";
+  return overlay;
+}
+
+async function hideOverlay() {
+  const overlay = document.getElementById("cinematic-overlay");
+  if (!overlay) return;
+  overlay.className = "fade-out";
+  await sleep(400);
+  overlay.style.display = "none";
+  overlay.innerHTML = "";
+}
+
+async function showCinematicBanner(title, subtitle, cssClass, duration) {
+  const dur = duration || 3000;
+  const overlay = showOverlay();
+  let eyebrowText = "🏰 Masmorra";
+  if (cssClass === "dungeon-turn") eyebrowText = "⚔️ Fase da Dungeon";
+  else if (cssClass === "hero-turn") eyebrowText = "🛡️ Fase dos Heróis";
+  const banner = document.createElement("div");
+  banner.className = "cinematic-banner enter " + (cssClass || "");
+  banner.innerHTML =
+    "<span class=\"cinematic-banner-eyebrow\">" + escapeHtml(eyebrowText) + "</span>" +
+    "<span class=\"cinematic-banner-title\">" + escapeHtml(title) + "</span>" +
+    "<div class=\"cinematic-banner-divider\"></div>" +
+    (subtitle ? "<span class=\"cinematic-banner-subtitle\">" + escapeHtml(subtitle) + "</span>" : "");
+  overlay.appendChild(banner);
+  await sleep(dur);
+  banner.classList.remove("enter");
+  banner.classList.add("exit");
+  await sleep(420);
+  await hideOverlay();
+}
+
+async function showRoomReveal(room, roomNumber, enemies) {
+  const overlay = showOverlay();
+  const modal = document.createElement("div");
+  modal.className = "room-reveal-modal enter";
+  const commonCount = enemies.filter(function(e) { return e.category === "common"; }).length;
+  const brutalCount = enemies.filter(function(e) { return e.category === "brutal"; }).length;
+  modal.innerHTML =
+    "<div class=\"room-reveal-card\">" +
+      "<span class=\"room-reveal-label\">Sala " + roomNumber + "</span>" +
+      "<h2 class=\"room-reveal-name\">" + escapeHtml(room.name) + "</h2>" +
+      (room.subtitle ? "<p class=\"room-reveal-subtitle\">" + escapeHtml(room.subtitle) + "</p>" : "") +
+      "<div class=\"room-reveal-setup\">" +
+        (commonCount > 0 ? "<span class=\"pill\">\uD83D\uDC64 " + commonCount + " Comum" + (commonCount > 1 ? "ns" : "") + "</span>" : "") +
+        (brutalCount > 0 ? "<span class=\"pill\">\uD83D\uDC79 " + brutalCount + " Brutal" + (brutalCount > 1 ? "is" : "") + "</span>" : "") +
+      "</div>" +
+      (room.rule ? "<p style=\"color:#ffe3a8;font-size:0.88rem;font-weight:800;border-top:1px solid rgba(255,246,223,0.18);padding-top:10px;margin-top:6px;\">" + escapeHtml(room.rule) + "</p>" : "") +
+    "</div>";
+  overlay.appendChild(modal);
+  await sleep(3400);
+  modal.classList.remove("enter");
+  modal.classList.add("exit");
+  await sleep(400);
+  await hideOverlay();
+}
+
+function buildMonsterCardHtml(enemy) {
+  const healthPct = Math.max(0, Math.min(100, Math.round((enemy.life / enemy.maxLife) * 100)));
+  return "<article class=\"monster-card " + enemy.category + "\" style=\"pointer-events:none;width:200px;height:290px;border-radius:16px;\">" +
+    "<div class=\"monster-art\"><img src=\"" + getEnemyArt(enemy) + "\" alt=\"\" /></div>" +
+    "<div class=\"monster-vertical-name\">" + escapeHtml(enemy.name) + "</div>" +
+    "<div class=\"monster-badge-left\">" +
+      (enemy.shield > 0 ? "<div class=\"stat-badge shield\"><span class=\"badge-bg\">\uD83D\uDEE1\uFE0F</span><span class=\"badge-value\">" + enemy.shield + "</span></div>" : "") +
+      "<div class=\"stat-badge attack\"><span class=\"badge-bg\">\u2694\uFE0F</span><span class=\"badge-value\">" + enemy.attack + "</span></div>" +
+    "</div>" +
+    "<div class=\"monster-health-vial\" style=\"--health-pct:" + healthPct + "%;\">" +
+      "<div class=\"vial-liquid\"></div><div class=\"vial-glass\"></div>" +
+      "<span class=\"vial-value\">" + enemy.life + "</span>" +
+    "</div>" +
+  "</article>";
+}
+
+async function showMonsterSpotlight(enemy, actionText, actionTarget) {
+  const overlay = showOverlay();
+  const modal = document.createElement("div");
+  modal.className = "monster-spotlight-modal enter";
+  const categoryLabel =
+    enemy.category === "brutal" ? "\uD83D\uDC79 Inimigo Brutal"
+    : enemy.category === "boss" ? "\uD83D\uDC51 Chefe"
+    : "\uD83D\uDC64 Inimigo Comum";
+  modal.innerHTML =
+    "<span class=\"spotlight-eyebrow\">" + escapeHtml(categoryLabel) + "</span>" +
+    "<div class=\"spotlight-card-wrap\">" + buildMonsterCardHtml(enemy) + "</div>" +
+    "<div class=\"spotlight-action-text\">" +
+      "<span class=\"action-verb\">" + escapeHtml(actionText) + "</span>" +
+      (actionTarget ? "<br><span style=\"color:#cfc5aa;font-weight:700;\">\u2192 </span><span class=\"action-target\">" + escapeHtml(actionTarget) + "</span>" : "") +
+      "<div class=\"action-damage\">\u2694\uFE0F " + enemy.attack + " de dano</div>" +
+    "</div>";
+  overlay.appendChild(modal);
+  await sleep(3000);
+  modal.classList.remove("enter");
+  modal.classList.add("exit");
+  await sleep(400);
+  await hideOverlay();
+}
+
+async function showMonsterEntrySpotlight(enemy) {
+  const overlay = showOverlay();
+  const modal = document.createElement("div");
+  modal.className = "monster-spotlight-modal enter";
+  const entryEnemy = Object.assign({}, enemy, { life: enemy.maxLife });
+  const entryHtml = buildMonsterCardHtml(entryEnemy);
+  const categoryLabel = enemy.category === "brutal" ? "\uD83D\uDC79 Inimigo Brutal entra na sala!" : "\uD83D\uDC64 Inimigo Comum entra na sala!";
+  modal.innerHTML =
+    "<span class=\"spotlight-eyebrow\">" + escapeHtml(categoryLabel) + "</span>" +
+    "<div class=\"spotlight-card-wrap\">" + entryHtml + "</div>" +
+    "<div class=\"spotlight-action-text\">" +
+      "<span style=\"color:#fff6df;\">" + escapeHtml(enemy.name) + "</span><br>" +
+      "<span style=\"color:#cfc5aa;font-size:0.95rem;font-weight:700;\">\u2764\uFE0F " + enemy.maxLife + " Vida \u00B7 \u2694\uFE0F " + enemy.attack + " Ataque" + (enemy.shield > 0 ? " \u00B7 \uD83D\uDEE1\uFE0F " + enemy.shield + " Escudo" : "") + "</span>" +
+    "</div>";
+  overlay.appendChild(modal);
+  await sleep(2600);
+  modal.classList.remove("enter");
+  modal.classList.add("exit");
+  await sleep(380);
+  await hideOverlay();
+}
+
+function fireVisualEffect(event) {
+  const elId = event.targetType === "enemy" ? ("card-enemy-" + event.targetId) : ("hud-player-" + event.targetId);
+  const el = document.getElementById(elId);
+  if (!el) return;
+  let className = "";
+  if (event.type === "damage") className = "effect-hit";
+  else if (event.type === "heal") className = "effect-heal";
+  else if (event.type === "shield") className = "effect-shield";
+  if (className) {
+    el.classList.remove("effect-hit", "effect-heal", "effect-shield");
+    void el.offsetWidth;
+    el.classList.add(className);
+    window.setTimeout(function() { el.classList.remove(className); }, event.type === "shield" ? 2500 : 1000);
+  }
+  const span = document.createElement("span");
+  const sign = event.type === "heal" ? "+" : event.type === "shield" ? "+" : "-";
+  const suffix = event.type === "shield" ? " \uD83D\uDEE1\uFE0F" : "";
+  span.className = "impact-number " + event.type + " " + event.targetType;
+  span.innerText = sign + event.amount + suffix;
+  const rect = el.getBoundingClientRect();
+  span.style.cssText = "position:fixed;z-index:10000;pointer-events:none;left:" + (rect.left + rect.width / 2) + "px;top:" + (rect.top + rect.height / 2) + "px;";
+  document.body.appendChild(span);
+  window.setTimeout(function() { span.remove(); }, 1300);
+}
+
+async function queueCinematicRoomStart(state) {
+  const roomNumber = state.roomNumber || 1;
+  const room = state.room;
+  const enemies = (state.enemies || []).filter(function(e) { return e.life > 0; });
+
+  local.roomStartInProgress = true;
+  local.revealedEnemyUids.clear();
+
+  ingestVisualEvents(state);
+  render();
+
+  await showCinematicBanner("Iniciando Sala " + roomNumber, room ? room.name : "", "");
+  await sleep(200);
+
+  if (room) {
+    await showRoomReveal(room, roomNumber, enemies);
+  }
+
+  for (let i = 0; i < enemies.length; i++) {
+    const enemy = enemies[i];
+    await showMonsterEntrySpotlight(enemy);
+    
+    // Add to revealed set and render so the card fades in/appears on the board
+    local.revealedEnemyUids.add(enemy.uid);
+    render();
+
+    const cardEl = document.getElementById("card-enemy-" + enemy.uid);
+    if (cardEl) {
+      cardEl.classList.add("monster-entry-anim");
+      window.setTimeout(function() { cardEl.classList.remove("monster-entry-anim"); }, 700);
+    }
+    await sleep(300);
+  }
+
+  local.roomStartInProgress = false;
+  render();
+}
+
+async function queueCinematicDungeonStart(state) {
+  const round = state.round || 1;
+
+  // DON'T ingest visual events yet — we'll fire them per-monster
+  render();
+  await sleep(300);
+
+  // Show dungeon turn banner
+  await showCinematicBanner("Turno " + round + " da Dungeon", "Os inimigos atacam!", "dungeon-turn");
+
+  // Case A: No reactions available — everything resolved instantly by server
+  // We need to animate each monster's attack sequentially on the client
+  if (!state.pendingReaction && state.dungeonResolved) {
+    const enemies = (state.enemies || []).filter(function(e) { return e.life > 0 || e.currentTargetName; });
+    const newEvents = (state.visualEvents || []).filter(function(ev) { return !local.seenVisualEventIds.has(ev.id); });
+    const usedEventIds = new Set();
+
+    // Show each enemy spotlight and fire their damage events
+    for (let i = 0; i < enemies.length; i++) {
+      const enemy = enemies[i];
+      if (!enemy.currentTargetName && !enemy.currentTargetHeroId) continue;
+
+      // Find the target player
+      const targetPlayer = state.players.find(function(p) {
+        return p.name === enemy.currentTargetName || p.heroId === enemy.currentTargetHeroId;
+      });
+
+      // Find damage events attributed to this enemy
+      const enemyEvents = [];
+      newEvents.forEach(function(ev) {
+        if (!usedEventIds.has(ev.id) && ev.enemyUid === enemy.uid) {
+          enemyEvents.push(ev);
+          usedEventIds.add(ev.id);
+        }
+      });
+
+      // Also match by source name if enemyUid not set
+      if (enemyEvents.length === 0 && targetPlayer) {
+        newEvents.forEach(function(ev) {
+          if (!usedEventIds.has(ev.id) && ev.type === "damage" && ev.targetType === "hero" && ev.targetId === targetPlayer.id && !ev.enemyUid) {
+            enemyEvents.push(ev);
+            usedEventIds.add(ev.id);
+          }
+        });
+      }
+
+      // Build action text
+      let actionText = enemy.name + " ataca";
+      if (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) {
+        actionText = enemy.name + " cura aliados";
+      } else if (enemy.keywords && (enemy.keywords.includes("Guardiã") || enemy.keywords.includes("Guardião"))) {
+        actionText = enemy.name + " protege aliados";
+      }
+
+      // Show spotlight for this monster
+      await showMonsterSpotlight(enemy, actionText, targetPlayer ? targetPlayer.name : null);
+
+      // Fire visual effects for this enemy's events
+      for (let j = 0; j < enemyEvents.length; j++) {
+        var ev = enemyEvents[j];
+        local.seenVisualEventIds.add(ev.id);
+        
+        // Apply changes to visual state before firing effect
+        applyEventToVisualState(ev, state);
+        
+        // Render the board with updated visual state so HP bars reflect changes
+        render();
+        await sleep(50);
+        
+        fireVisualEffect(ev);
+        await sleep(500);
+      }
+      if (enemyEvents.length > 0) await sleep(500);
+    }
+
+    // Fire any remaining global events (trap damage, room effects, etc.)
+    for (let k = 0; k < newEvents.length; k++) {
+      var gev = newEvents[k];
+      if (!local.seenVisualEventIds.has(gev.id) && !usedEventIds.has(gev.id)) {
+        local.seenVisualEventIds.add(gev.id);
+        applyEventToVisualState(gev, state);
+        render();
+        await sleep(50);
+        fireVisualEffect(gev);
+        await sleep(420);
+      }
+    }
+
+    // Mark all remaining events as seen
+    newEvents.forEach(function(ev) { local.seenVisualEventIds.add(ev.id); });
+    render();
+    return;
+  }
+
+  // Case B: There's a pendingReaction in this initial state — show that monster's spotlight
+  if (state.pendingReaction) {
+    var pending = state.pendingReaction;
+    var enemy = (state.enemies || []).find(function(e) { return e.uid === pending.enemyUid; })
+      || { name: pending.enemyName, category: pending.enemyCategory || "common", attack: pending.attack,
+           life: 1, maxLife: 1, shield: 0, uid: pending.enemyUid, keywords: [] };
+
+    var actionText2 = pending.enemyName + " ataca";
+    if (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) {
+      actionText2 = pending.enemyName + " cura aliados";
+    }
+
+    await showMonsterSpotlight(enemy, actionText2, pending.targetName);
+    
+    // Set animRunning to false so that reaction modal can render
+    local.animRunning = false;
+    render();
+    return;
+  }
+
+  // Case C: Dungeon turn started but not yet resolved (no pending yet, server will send next state)
+  render();
+}
+
+async function queueCinematicMonsterAttack(state) {
+  const pending = state.pendingReaction;
+  if (!pending) {
+    ingestVisualEvents(state);
+    render();
+    return;
+  }
+
+  // Find the enemy that's about to attack
+  const enemy = (state.enemies || []).find(function(e) { return e.uid === pending.enemyUid; })
+    || { name: pending.enemyName, category: pending.enemyCategory || "common", attack: pending.attack,
+         life: 1, maxLife: 1, shield: 0, uid: pending.enemyUid, keywords: [] };
+
+  let actionText = pending.enemyName + " ataca";
+  if (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) {
+    actionText = pending.enemyName + " cura aliados";
+  } else if (enemy.keywords && (enemy.keywords.includes("Guardiã") || enemy.keywords.includes("Guardião"))) {
+    actionText = pending.enemyName + " protege aliados";
+  }
+
+  // Show the monster spotlight (who will attack and whom)
+  await showMonsterSpotlight(enemy, actionText, pending.targetName);
+
+  // Now render the full board INCLUDING the reaction window (pendingReaction is set)
+  local.animRunning = false;
+  render();
+}
+
+async function queueCinematicAfterReaction(state) {
+  // A reaction was resolved — fire any new visual events, then render
+  const newEvents = (state.visualEvents || []).filter(function(ev) { return !local.seenVisualEventIds.has(ev.id); });
+
+  // Render board first so HP bars are up to date with previous animations
+  render();
+  await sleep(120);
+
+  for (let i = 0; i < newEvents.length; i++) {
+    const ev = newEvents[i];
+    local.seenVisualEventIds.add(ev.id);
+    
+    // Apply changes to visual state before firing effect
+    applyEventToVisualState(ev, state);
+    render();
+    await sleep(50);
+    
+    fireVisualEffect(ev);
+    await sleep(380);
+  }
+
+  if (newEvents.length > 0) await sleep(400);
+  render();
+}
+
+async function showIntentionReveal(intention) {
+  if (!intention) return;
+  const overlay = showOverlay();
+  const modal = document.createElement("div");
+  modal.className = "room-reveal-modal enter";
+
+  // Build the detail rows (only show sections that exist)
+  let detailRows = "";
+  if (intention.presagioText) {
+    detailRows +=
+      "<div style=\"background:rgba(217,119,6,0.18);border-left:3px solid #d97706;padding:10px 14px;border-radius:8px;\">" +
+        "<strong style=\"color:#f6bd5f;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px;\">⚡ Presságio</strong>" +
+        "<p style=\"color:#ffe3b3;font-size:0.9rem;margin:0;font-weight:800;\">" + escapeHtml(intention.presagioText) + "</p>" +
+      "</div>";
+  }
+  if (intention.commonText) {
+    detailRows +=
+      "<div style=\"background:rgba(37,99,235,0.14);border-left:3px solid #2563eb;padding:10px 14px;border-radius:8px;\">" +
+        "<strong style=\"color:#93c5fd;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px;\">👤 Comuns Atacam</strong>" +
+        "<p style=\"color:#dbeafe;font-size:0.9rem;margin:0;font-weight:800;\">" + escapeHtml(intention.commonText) + "</p>" +
+      "</div>";
+  }
+  if (intention.brutalText) {
+    detailRows +=
+      "<div style=\"background:rgba(220,38,38,0.14);border-left:3px solid #dc2626;padding:10px 14px;border-radius:8px;\">" +
+        "<strong style=\"color:#fca5a5;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px;\">👹 Brutais Atacam</strong>" +
+        "<p style=\"color:#fee2e2;font-size:0.9rem;margin:0;font-weight:800;\">" + escapeHtml(intention.brutalText) + "</p>" +
+      "</div>";
+  }
+
+  modal.innerHTML =
+    "<div class=\"room-reveal-card intention-reveal-card\">" +
+      "<span class=\"room-reveal-label\">✨ Nova Carta de Intenção</span>" +
+      "<h2 class=\"room-reveal-name\" style=\"font-size:clamp(1.4rem,3.5vw,2.4rem);\">" + escapeHtml(intention.name) + "</h2>" +
+      (detailRows ? "<div style=\"display:grid;gap:10px;margin-top:14px;text-align:left;\">" + detailRows + "</div>" : "") +
+    "</div>";
+
+  overlay.appendChild(modal);
+  await sleep(4200);
+  modal.classList.remove("enter");
+  modal.classList.add("exit");
+  await sleep(400);
+  await hideOverlay();
+}
+
+
+async function queueCinematicHeroTurn(state) {
+  const round = state.round || 1;
+  ingestVisualEvents(state);
+  render();
+  await sleep(300);
+  // Banner: hero turn
+  await showCinematicBanner("Turno " + round + " dos Heróis", "É a vez dos heróis agirem!", "hero-turn");
+  // Reveal the new intention card that was just drawn for this round
+  if (state.activeIntention) {
+    await showIntentionReveal(state.activeIntention);
+  }
+  render();
 }
 
 function getMe() {
@@ -454,6 +1166,32 @@ function renderGame() {
     `).join("")
     : `<div class="recent-action-item muted">Nenhuma ação registrada ainda.</div>`;
 
+  let bossHudHtml = "";
+  if (state.room?.effect === "bossRoom" && state.enemies.some(e => e.isBoss)) {
+    const boss = state.enemies.find(e => e.isBoss);
+    bossHudHtml = `
+      <div class="boss-hud-bar glass-panel animate-fade-in">
+        <div class="boss-hud-info">
+          <span class="boss-hud-name">${escapeHtml(boss.name)}</span>
+          <span class="badge badge-danger">${boss.fase_atual === 2 ? "Fase 2 - FÚRIA" : "Fase 1"}</span>
+        </div>
+        ${state.maldicao_contador !== null ? `
+          <div class="boss-hud-clock">
+            <span class="clock-icon">⌛</span>
+            <span class="clock-label">Relógio da Maldição:</span>
+            <strong class="clock-value ${state.maldicao_contador <= 2 ? "warning animate-pulse" : ""}">${state.maldicao_contador}</strong>
+          </div>
+        ` : ""}
+        ${state.activeTorment ? `
+          <div class="boss-hud-torment">
+            <span class="torment-badge">Tormento:</span>
+            <span class="torment-name" title="${escapeHtml(state.activeTorment.text)}">${escapeHtml(state.activeTorment.name)}</span>
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }
+
   app.innerHTML = `
     <section class="game-board room-${roomTheme}">
       <div class="board-grid">
@@ -467,6 +1205,7 @@ function renderGame() {
         </aside>
 
         <section class="battlefield">
+          ${bossHudHtml}
           <div class="recent-actions-panel glass-panel">
             <div class="recent-actions-header">
               <span class="eyebrow">Ações Recentes</span>
@@ -500,6 +1239,7 @@ function renderGame() {
           </div>
           ${renderGameStatusPanel(state, me)}
           ${renderRoomCard(state)}
+          ${state.activeTorment ? renderTormentCard(state.activeTorment) : ""}
           ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
           ${renderIntentionCard(state.activeIntention)}
 
@@ -687,6 +1427,7 @@ function playSelectedCard() {
 }
 
 function renderReactionPrompt(state, me) {
+  if (local.animRunning) return "";
   const pending = state.pendingReaction;
   if (!pending) return "";
 
@@ -804,6 +1545,7 @@ function renderHandDock(me, state) {
 }
 
 function renderSelectedCardModal(state, me) {
+  if (local.animRunning) return "";
   const card = me.hand.find((candidate) => candidate.uid === local.selectedCardUid);
   if (!card) return "";
 
@@ -957,6 +1699,20 @@ function renderRoomCard(state) {
   `;
 }
 
+function renderTormentCard(torment) {
+  if (!torment) return "";
+  return `
+    <article class="torment-card glass-panel">
+      <span class="eyebrow">Tormento Ativo</span>
+      <div class="torment-header">
+        <span class="card-number">${escapeHtml(torment.id)}</span>
+        <h2>${escapeHtml(torment.name)}</h2>
+      </div>
+      <p class="torment-text">${escapeHtml(torment.text)}</p>
+    </article>
+  `;
+}
+
 function renderTrapCard(trap, disabledRounds) {
   if (!trap) {
     return `
@@ -1012,7 +1768,7 @@ function renderIntentionCard(intention) {
           <p>${escapeHtml(intention.commonText)}</p>
         </div>
         <div class="section-v2 brutal-v2">
-          <div class="label-v2">👹 Brutal ataca</div>
+          <div class="label-v2">${local.state?.room?.effect === 'bossRoom' ? '👑 Chefe ataca' : '👹 Brutal ataca'}</div>
           <p>${escapeHtml(intention.brutalText)}</p>
         </div>
         <div class="section-v2 represalia-v2">
@@ -1043,7 +1799,7 @@ function renderSummaryCard(state) {
       <div class="summary-rules-v2">
         <div class="summary-section-v2 presagio-sum">⚡ <strong>Presságio:</strong> ${escapeHtml(state.activeIntention.presagioText)}</div>
         <div class="summary-section-v2 comum-sum">👤 <strong>Comuns:</strong> ${escapeHtml(state.activeIntention.commonText)}</div>
-        <div class="summary-section-v2 brutal-sum">👹 <strong>Brutais:</strong> ${escapeHtml(state.activeIntention.brutalText)}</div>
+        <div class="summary-section-v2 brutal-sum">👹 <strong>${state.room?.effect === 'bossRoom' ? 'Chefe' : 'Brutais'}:</strong> ${escapeHtml(state.activeIntention.brutalText)}</div>
         <div class="summary-section-v2 represalia-sum">💀 <strong>Represália:</strong> ${escapeHtml(state.activeIntention.represaliaText)}</div>
       </div>
     `;
@@ -1071,6 +1827,28 @@ function renderSummaryCard(state) {
   `;
 }
 
+function renderStatusEffects(statusEffects) {
+  if (!statusEffects) return "";
+  const badges = [];
+  if (statusEffects.veneno > 0) {
+    badges.push(`<span class="status-badge veneno" title="Veneno: sofre ${statusEffects.veneno} de dano no início da rodada. Curável.">🧪 Veneno ${statusEffects.veneno}</span>`);
+  }
+  if (statusEffects.queimadura && statusEffects.queimadura.duration > 0) {
+    badges.push(`<span class="status-badge queimadura" title="Queimadura: sofre ${statusEffects.queimadura.value} de dano (ignora Escudo) no final do turno da masmorra. Duração: ${statusEffects.queimadura.duration} rodadas.">🔥 Queimadura ${statusEffects.queimadura.value} (${statusEffects.queimadura.duration}r)</span>`);
+  }
+  if (statusEffects.vacuo) {
+    badges.push(`<span class="status-badge vacuo" title="Vácuo: não recebe compra automática no início da rodada.">🌀 Vácuo</span>`);
+  }
+  if (statusEffects.enfraquecido > 0) {
+    badges.push(`<span class="status-badge enfraquecido" title="Enfraquecido: a próxima carta de ataque causará ${statusEffects.enfraquecido} a menos de dano.">⚔️ Enfraquecido ${statusEffects.enfraquecido}</span>`);
+  }
+  if (statusEffects.exposto) {
+    badges.push(`<span class="status-badge exposto" title="Exposto: sofre +1 de dano de todas as fontes.">🎯 Exposto</span>`);
+  }
+  if (badges.length === 0) return "";
+  return `<div class="status-effects-list">${badges.join("")}</div>`;
+}
+
 function renderPlayerHud(player) {
   const hasResources = local.state?.status === "playing" && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
   return `
@@ -1086,10 +1864,11 @@ function renderPlayerHud(player) {
         ${
           hasResources
             ? `
-              ${renderPlayerMeter("life", player.life || 0, player.maxLife || 1, "Vida", `hero-${player.id}-life`)}
+              ${renderPlayerMeter("life", getVisualLife(player.id, player.life || 0), player.maxLife || 1, "Vida", `hero-${player.id}-life`)}
               ${renderPlayerMeter("energy", player.energy || 0, player.maxEnergy || 1, "Energia", `hero-${player.id}-energy`)}
+              ${renderStatusEffects(player.statusEffects)}
               <div class="hud-stats">
-                <span class="hero-shield shield-badge"><i></i>${player.shield || 0}</span>
+                <span class="hero-shield shield-badge"><i></i>${getVisualShield(player.id, player.shield || 0)}</span>
                 <span>Deck ${player.deckCount}</span>
                 <span>Mao ${player.handCount}</span>
                 <span>Desc ${player.discardCount}</span>
@@ -1131,21 +1910,76 @@ function renderHeroCard(hero, selected) {
 }
 
 function renderMonsterCard(enemy) {
-  const defeated = enemy.life <= 0;
+  const isHidden = local.roomStartInProgress && !local.revealedEnemyUids.has(enemy.uid);
+  const visualLife = getVisualLife(enemy.uid, enemy.life || 0);
+  const visualShield = getVisualShield(enemy.uid, enemy.shield || 0);
+  const defeated = visualLife <= 0;
+
+  const categoryText = enemy.category === "brutal" ? "Brutal" : "Comum";
+  const metaParts = [enemy.role, categoryText];
+  if (enemy.keywords && enemy.keywords.length > 0) {
+    enemy.keywords.forEach(kw => {
+      let text = kw;
+      if (kw === "Curandeira") text = `Curandeira ${enemy.curandeiraValue || ""}`;
+      if (kw === "Guardiã") text = `Guardiã ${enemy.guardiaValue || ""}`;
+      metaParts.push(text);
+    });
+  }
+  const metaText = metaParts.filter(Boolean).join(" • ");
+
+  let targetBadgeHtml = "";
+  if (enemy.currentTargetName && !defeated) {
+    targetBadgeHtml = `
+      <div class="monster-target-badge" title="Alvo atual do monstro para esta rodada">
+        Alvo: <span>${escapeHtml(enemy.currentTargetName)}</span>
+      </div>
+    `;
+  }
+
+  const healthPct = Math.max(0, Math.min(100, Math.round((visualLife / enemy.maxLife) * 100)));
+
   return `
-    <article id="card-enemy-${enemy.uid}" class="monster-card ${enemy.category} ${defeated ? "defeated" : ""}">
+    <article id="card-enemy-${enemy.uid}" class="monster-card ${enemy.category} ${defeated ? "defeated" : ""}" style="${isHidden ? "opacity: 0; pointer-events: none; transition: opacity 0.5s;" : ""}">
+      ${targetBadgeHtml}
+      
       <div class="monster-art">
         <img src="${getEnemyArt(enemy)}" alt="" />
       </div>
-      <div class="monster-info">
-        <span>${escapeHtml(enemy.role)}</span>
-        <strong>${escapeHtml(enemy.name)}</strong>
+
+      <!-- Nome Vertical (Borda Esquerda) -->
+      <div class="monster-vertical-name">
+        ${escapeHtml(enemy.name)}
       </div>
-      ${renderMeter("life", enemy.life, enemy.maxLife, "Vida", `enemy-${enemy.uid}-life`)}
-      <div class="monster-footer">
-        <span>Ataque ${enemy.attack}</span>
-        <span class="shield-badge"><i></i>${enemy.shield}</span>
-        <span>${enemy.life}/${enemy.maxLife}</span>
+
+      <!-- Informações Verticais (Borda Direita) -->
+      <div class="monster-vertical-meta" title="${escapeHtml(metaText)}">
+        ${escapeHtml(metaText)}
+      </div>
+
+      <!-- Efeitos de Status (Flutuando no Centro-Baixo) -->
+      <div class="monster-status-overlay">
+        ${renderStatusEffects(enemy.statusEffects)}
+      </div>
+
+      <!-- Badges de Ataque e Escudo (Canto Inferior Esquerdo) -->
+      <div class="monster-badge-left">
+        ${visualShield > 0 ? `
+          <div class="stat-badge shield" title="Escudo: ${visualShield}">
+            <span class="badge-bg">🛡️</span>
+            <span class="badge-value">${visualShield}</span>
+          </div>
+        ` : ""}
+        <div class="stat-badge attack" title="Ataque: ${enemy.attack}">
+          <span class="badge-bg">⚔️</span>
+          <span class="badge-value">${enemy.attack}</span>
+        </div>
+      </div>
+
+      <!-- Pote de Vida Estilo Diablo (Canto Inferior Direito) -->
+      <div class="monster-health-vial" title="Vida: ${visualLife}/${enemy.maxLife}" style="--health-pct: ${healthPct}%;">
+        <div class="vial-liquid"></div>
+        <div class="vial-glass"></div>
+        <span class="vial-value">${visualLife}</span>
       </div>
     </article>
   `;
@@ -1230,6 +2064,7 @@ function renderCardTags(card) {
 }
 
 function renderPendingDiscardModal(state, me) {
+  if (local.animRunning) return "";
   if (!(me.pendingDiscard > 0)) return "";
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="discardTitle">
@@ -1255,6 +2090,7 @@ function renderPendingDiscardModal(state, me) {
 }
 
 function renderRewardSelectionModal(state, me) {
+  if (local.animRunning) return "";
   if (!local.rewardModalOpen) return "";
   
   const chosen = me.chosenRewards || [];
@@ -1337,6 +2173,7 @@ function renderRewardSelectionModal(state, me) {
 }
 
 function renderShieldAllocationModal(state, me) {
+  if (local.animRunning) return "";
   const alloc = state.pendingShieldAllocation;
   if (!alloc) return "";
   const total = alloc.totalShield ?? state.players.reduce((s, p) => s + p.shield, 0);
@@ -1362,6 +2199,7 @@ function renderShieldAllocationModal(state, me) {
 }
 
 function renderEnergyAllocationModal(state, me) {
+  if (local.animRunning) return "";
   const alloc = state?.pendingEnergyAllocation;
   if (!alloc) return "";
   const alivePlayers = state.players.filter((p) => p.life > 0);
@@ -1408,6 +2246,7 @@ function renderEnergyAllocationModal(state, me) {
 }
 
 function renderEcoArcanoModal(state, me) {
+  if (local.animRunning) return "";
   const alloc = state?.pendingEcoArcano;
   if (!alloc || alloc.casterId !== me?.id) return "";
   
@@ -1450,6 +2289,7 @@ function renderEcoArcanoModal(state, me) {
 }
 
 function renderDistorcaoTemporalModal(state, me) {
+  if (local.animRunning) return "";
   const alloc = state?.pendingDistorcaoTemporal;
   if (!alloc || alloc.targetId !== me?.id) return "";
   
@@ -2223,6 +3063,177 @@ function bindGlobalControls() {
   });
 }
 
+function renderBossSelection() {
+  const state = local.state;
+  const options = state.bossSelectOptions || [];
+
+  app.innerHTML = `
+    <section class="boss-selection-screen">
+      <div class="boss-selection-container glass-panel">
+        <span class="eyebrow text-center">Fase Final - Sala 4</span>
+        <h1 class="boss-select-title">Escolha o seu Destino</h1>
+        <p class="boss-select-subtitle">Vocês sobreviveram até aqui. Agora, escolham o Chefe que irão enfrentar na sala final.</p>
+
+        <div class="boss-cards-grid">
+          ${options.map(boss => `
+            <div class="boss-card-choice glass-panel" data-boss-id="${boss.id}">
+              <div class="boss-card-header">
+                <h2>${escapeHtml(boss.name)}</h2>
+                <span class="boss-title">${escapeHtml(boss.title || "")}</span>
+              </div>
+              <div class="boss-stats-row">
+                <div class="boss-stat">
+                  <span class="stat-label">Vida</span>
+                  <span class="stat-value life">${boss.maxLife} HP</span>
+                </div>
+                <div class="boss-stat">
+                  <span class="stat-label">Escudo</span>
+                  <span class="stat-value shield">${boss.shield}</span>
+                </div>
+                <div class="boss-stat">
+                  <span class="stat-label">Ataque</span>
+                  <span class="stat-value attack">${boss.attack}</span>
+                </div>
+              </div>
+              <div class="boss-description-box">
+                <p class="boss-desc-text">${escapeHtml(boss.description || "")}</p>
+                <div class="boss-mechanics">
+                  <strong>Mecânica:</strong>
+                  <ul>
+                    ${boss.id === "inquisidor" ? `
+                      <li><strong>Fase 1:</strong> Pune uso de cartas de Defesa com 2 de dano.</li>
+                      <li><strong>Fase 2 (50% HP):</strong> Destrói escudos dos heróis e todos os seus ataques passam a ignorar Escudo.</li>
+                    ` : ""}
+                    ${boss.id === "bruxa" ? `
+                      <li><strong>Maldição do Relógio:</strong> Relógio começa em 5 e decrementa a cada rodada. Chegando a 0, causa 7 de dano a todos.</li>
+                      <li><strong>Fase 2 (50% HP):</strong> Relógio cai para 1, invoca Bruxa do Breu e Místico Penumbra, e aplica Vácuo a todos.</li>
+                    ` : ""}
+                    ${boss.id === "colosso" ? `
+                      <li><strong>Fase 1:</strong> Regenera +3 de Escudo no início da fase da masmorra.</li>
+                      <li><strong>Fase 2 (50% HP):</strong> Causa 8 de dano a todos, entra em fúria (+15 ATK) e realiza um segundo ataque imediato de 5 de dano.</li>
+                    ` : ""}
+                    ${boss.id === "oraculo" ? `
+                      <li><strong>Fase 1:</strong> Regenera +4 de Vida no início do turno da masmorra.</li>
+                      <li><strong>Fase 2 (50% HP):</strong> Cura 20 HP de transição, envenena todos e rouba a cura recebida pelos heróis.</li>
+                    ` : ""}
+                  </ul>
+                </div>
+              </div>
+              <button class="btn btn-primary select-boss-btn" data-boss="${boss.id}">Confrontar</button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+
+  document.querySelectorAll(".select-boss-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      action({ type: "selectBoss", bossId: btn.dataset.boss });
+    });
+  });
+}
+
+function renderEndGame() {
+  const state = local.state;
+  const isVictory = state.status === "victory";
+
+  let totalDmgDealt = 0;
+  let totalDmgTaken = 0;
+  let totalHeal = 0;
+  let totalCards = 0;
+
+  state.players.forEach(p => {
+    totalDmgDealt += p.roundStats?.damageDealt || 0;
+    totalDmgTaken += p.roundStats?.damageTaken || 0;
+    totalHeal += p.roundStats?.healingReceived || 0;
+    totalCards += p.roundStats?.cardsPlayed || 0;
+  });
+
+  app.innerHTML = `
+    <section class="endgame-screen ${isVictory ? "victory" : "defeat"}">
+      <div class="endgame-container glass-panel animate-fade-in">
+        <div class="endgame-header">
+          <div class="result-badge">${isVictory ? "🏆 Vitória" : "💀 Derrota"}</div>
+          <h1>${isVictory ? "Masmorra Concluída!" : "Seu grupo sucumbiu..."}</h1>
+          <p class="endgame-subtitle">
+            ${isVictory 
+              ? "Vocês derrotaram o Chefe Final e conquistaram a glória eterna!" 
+              : "As profundezas da masmorra reclamaram mais algumas almas. Tente novamente!"
+            }
+          </p>
+        </div>
+
+        <div class="match-summary-box">
+          <h3>Resumo da Partida</h3>
+          <div class="global-stats-row">
+            <div class="global-stat-item">
+              <span class="gstat-label">Rodadas Totais</span>
+              <span class="gstat-value">${state.round || 1}</span>
+            </div>
+            <div class="global-stat-item">
+              <span class="gstat-label">Dano Causado</span>
+              <span class="gstat-value">${totalDmgDealt}</span>
+            </div>
+            <div class="global-stat-item">
+              <span class="gstat-label">Dano Sofrido</span>
+              <span class="gstat-value">${totalDmgTaken}</span>
+            </div>
+            <div class="global-stat-item">
+              <span class="gstat-label">Cura Recebida</span>
+              <span class="gstat-value">${totalHeal}</span>
+            </div>
+          </div>
+
+          <div class="heroes-summary-list">
+            <h4>Estatísticas dos Heróis</h4>
+            <div class="heroes-stats-grid">
+              ${state.players.map(p => `
+                <div class="hero-stat-card glass-panel">
+                  <div class="hcard-header">
+                    <h5>${escapeHtml(p.name)}</h5>
+                    <span class="hero-tag">${escapeHtml(p.heroName || "Sem heroi")}</span>
+                  </div>
+                  <div class="hcard-body">
+                    <div class="hcard-row">
+                      <span>Dano causado:</span>
+                      <strong>${p.roundStats?.damageDealt || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Dano recebido:</span>
+                      <strong>${p.roundStats?.damageTaken || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Cura recebida:</span>
+                      <strong>${p.roundStats?.healingReceived || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Cartas jogadas:</span>
+                      <strong>${p.roundStats?.cardsPlayed || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Inimigos derrotados:</span>
+                      <strong>${p.roundStats?.enemiesDefeated || 0}</strong>
+                    </div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+
+        <div class="endgame-actions">
+          <button id="rematchBtn" class="btn btn-primary btn-lg">Jogar Novamente</button>
+        </div>
+      </div>
+    </section>
+  `;
+
+  document.querySelector("#rematchBtn").addEventListener("click", () => {
+    action({ type: "rematch" });
+  });
+}
+
 function render() {
   const isGameScreen = local.state?.status === "playing";
   document.body.classList.toggle("is-game-screen", Boolean(isGameScreen));
@@ -2240,6 +3251,10 @@ function render() {
 
   if (local.state.status === "lobby") {
     renderLobby();
+  } else if (local.state.status === "boss_selection") {
+    renderBossSelection();
+  } else if ((local.state.status === "victory" || local.state.status === "defeat") && !local.animRunning) {
+    renderEndGame();
   } else {
     renderGame();
   }
