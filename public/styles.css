@@ -769,7 +769,7 @@ p {
   font-size: 0.86rem;
 }
 
-.hero-party-panel .hud-stats span:not(.hero-shield) {
+.hero-party-panel .hud-stats span:not(.hero-shield):not(.hero-carga-batalha) {
   border: 1px solid rgba(255, 246, 223, 0.12);
   border-radius: 6px;
   padding: 5px 7px;
@@ -784,6 +784,19 @@ p {
   color: #e9f8ff;
   font-size: 1.06rem;
   font-weight: 950;
+}
+
+.hero-party-panel .hero-carga-batalha {
+  border: 1px solid rgba(255, 168, 85, 0.38);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.32), rgba(0, 0, 0, 0.24));
+  color: #ffeedb;
+  font-size: 1.06rem;
+  font-weight: 950;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .hero-party-panel .hero-shield i {
@@ -1887,6 +1900,10 @@ body.is-game-screen .hero-party-panel .meter {
 }
 
 body.is-game-screen .hero-party-panel .hero-shield {
+  font-size: 0.9rem;
+}
+
+body.is-game-screen .hero-party-panel .hero-carga-batalha {
   font-size: 0.9rem;
 }
 

@@ -1591,7 +1591,7 @@ function renderSelectedCardModal(state, me) {
     targetSelect = "";
   }
 
-  const blocked = state.turn !== "players" || me.turnEnded || me.energy < card.cost || card.type === "reaction";
+  const blocked = isCardBlocked(card, state, me) || card.type === "reaction";
 
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="selectedCardName">
@@ -1850,7 +1850,7 @@ function renderStatusEffects(statusEffects) {
 }
 
 function renderPlayerHud(player) {
-  const hasResources = local.state?.status === "playing" && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
+  const hasResources = (local.state?.status === "playing" || local.animRunning) && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
   return `
     <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${player.id === local.playerId ? "is-you" : ""} ${player.turnEnded ? "turn-ended" : ""}">
       <div class="portrait">
@@ -1869,6 +1869,7 @@ function renderPlayerHud(player) {
               ${renderStatusEffects(player.statusEffects)}
               <div class="hud-stats">
                 <span class="hero-shield shield-badge"><i></i>${getVisualShield(player.id, player.shield || 0)}</span>
+                ${player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null ? `<span class="hero-carga-batalha charge-badge" title="Carga de Batalha: acumula ao provocar/proteger e aumenta o dano de Carga do Guardião.">⚔️ Carga: ${player.carga_de_batalha}</span>` : ""}
                 <span>Deck ${player.deckCount}</span>
                 <span>Mao ${player.handCount}</span>
                 <span>Desc ${player.discardCount}</span>
@@ -1985,9 +1986,31 @@ function renderMonsterCard(enemy) {
   `;
 }
 
+function isCardBlocked(card, state, me) {
+  if (!me) return true;
+  if (state.turn !== "players" || me.turnEnded || me.energy < card.cost) return true;
+
+  const alivePlayers = state.players.filter((p) => p.life > 0);
+  if (card.id === "manipular-energia" || card.id === "redistribuir-escudos" || card.id === "escudo-compartilhado") {
+    if (alivePlayers.length < 2) return true;
+  }
+
+  if (card.id === "manipular-energia") {
+    const isFreePlay = state.pendingDistorcaoTemporal && state.pendingDistorcaoTemporal.targetId === me.id;
+    const finalCost = isFreePlay ? 0 : card.cost;
+    const hasEnergySource = alivePlayers.some(p => {
+      const postPlayEnergy = (p.id === me.id) ? (p.energy - finalCost) : p.energy;
+      return postPlayEnergy >= 1;
+    });
+    if (!hasEnergySource) return true;
+  }
+
+  return false;
+}
+
 function renderHandCard(card, state, index = 0, total = 1) {
   const me = getMe();
-  const blocked = state.turn !== "players" || me.turnEnded || me.energy < card.cost;
+  const blocked = isCardBlocked(card, state, me);
   const reactionMode = Boolean(state.pendingReaction);
   const center = (total - 1) / 2;
   const offset = (index - center) * 92;
@@ -3235,7 +3258,7 @@ function renderEndGame() {
 }
 
 function render() {
-  const isGameScreen = local.state?.status === "playing";
+  const isGameScreen = local.state?.status === "playing" || local.animRunning;
   document.body.classList.toggle("is-game-screen", Boolean(isGameScreen));
 
   if (!local.sessionId || !local.playerId || !local.token) {
