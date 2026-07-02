@@ -1260,6 +1260,7 @@ function renderGame() {
       ${renderEcoArcanoModal(state, me)}
       ${renderDistorcaoTemporalModal(state, me)}
       ${renderRewardSelectionModal(state, me)}
+      ${renderIntentionLookModal(state, me)}
     </section>
   `;
 
@@ -1290,8 +1291,14 @@ function renderGame() {
   });
   document.querySelector("#playSelectedCard")?.addEventListener("click", playSelectedCard);
   document.querySelector("#skipReaction")?.addEventListener("click", () => action({ type: "skipReaction" }));
+  document.querySelector("#skipReactionsThisRound")?.addEventListener("click", () => action({ type: "skipReactionsThisRound" }));
   document.querySelectorAll("[data-reaction-card]").forEach((button) => {
-    button.addEventListener("click", () => action({ type: "playReaction", cardUid: button.dataset.reactionCard }));
+    button.addEventListener("click", () => {
+      const cardUid = button.dataset.reactionCard;
+      const targetSelect = document.querySelector(`#reactionTarget-${cardUid}`);
+      const targetId = targetSelect ? targetSelect.value : undefined;
+      action({ type: "playReaction", cardUid, targetId });
+    });
   });
   document.querySelector("#useSupreme")?.addEventListener("click", () => action({ type: "useSupreme" }));
   document.querySelector("#buyCard")?.addEventListener("click", () => action({ type: "buyCard" }));
@@ -1330,6 +1337,16 @@ function renderGame() {
     action({ type: "selectRoomReward", rewardId: local.selectedRewardId });
     local.rewardModalOpen = false;
     local.selectedRewardId = null;
+  });
+
+  document.querySelector("#confirmIntentionLookBtn")?.addEventListener("click", () => {
+    action({
+      type: "confirmIntentionLook",
+      discardedCardId: local.tempDiscardedId,
+      reorderedCardIds: local.tempIntentionOrder
+    });
+    local.tempIntentionOrder = null;
+    local.tempDiscardedId = null;
   });
 
   // use redraw click
@@ -1432,36 +1449,84 @@ function renderReactionPrompt(state, me) {
   if (!pending) return "";
 
   const isEligible = pending.eligiblePlayerIds.includes(me.id) && !pending.skippedPlayerIds.includes(me.id);
-  const reactionCards = me.hand.filter((card) => card.type === "reaction");
+  const reactionCards = me.hand.filter((card) => {
+    if (card.type !== "reaction") return false;
+    if (pending.playableCardUids && pending.playableCardUids[me.id]) {
+      return pending.playableCardUids[me.id].includes(card.uid);
+    }
+    return true;
+  });
+
+  const reactionTitle = pending.type === "trap" 
+    ? `A Armadilha ${escapeHtml(pending.trapName)} vai aplicar seu efeito`
+    : pending.type === "status_apply"
+    ? `O status ${escapeHtml(pending.statusType)} vai ser aplicado em ${escapeHtml(pending.targetName)}`
+    : pending.type === "cura_emergencia"
+    ? `Cura de Emergência: Heróis com pouca Vida!`
+    : `${escapeHtml(pending.enemyName)} vai atacar ${escapeHtml(pending.targetName)}`;
+
+  const reactionText = pending.type === "trap" || pending.type === "status_apply" || pending.type === "cura_emergencia"
+    ? escapeHtml(pending.ruleText)
+    : `${escapeHtml(pending.ruleText)} Dano previsto: ${pending.attack}.`;
 
   return `
     <section class="reaction-window" role="dialog" aria-modal="true" aria-labelledby="reactionTitle">
       <div class="reaction-panel glass-panel">
         <span class="eyebrow">Janela de reacao</span>
-        <h2 id="reactionTitle">${escapeHtml(pending.enemyName)} vai atacar ${escapeHtml(pending.targetName)}</h2>
-        <p>${escapeHtml(pending.ruleText)} Dano previsto: ${pending.attack}.</p>
+        <h2 id="reactionTitle">${reactionTitle}</h2>
+        <p>${reactionText}</p>
         ${
           isEligible
             ? `
               <div class="reaction-cards">
                 ${reactionCards
                   .map(
-                    (card) => `
-                      <article class="tcg-card reaction-choice ${me.energy < card.cost ? "unplayable" : ""}">
-                        <div class="card-cost">${card.cost}</div>
-                        <img src="${getCardArt(card)}" alt="" />
-                        <div class="card-body">
-                          <strong>${escapeHtml(card.name)}</strong>
-                          <p>${escapeHtml(card.text)}</p>
-                          ${renderCardTags(card)}
-                        </div>
-                        <button data-reaction-card="${card.uid}" ${me.energy < card.cost ? "disabled" : ""}>Usar reacao</button>
-                      </article>
-                    `
+                    (card) => {
+                      let cost = card.cost;
+                      if (me.proxima_carta_desconto_1) {
+                        cost = Math.max(0, cost - 1);
+                      }
+                      
+                      let targetSelectHtml = "";
+                      if (card.id === "voz-do-oraculo") {
+                        targetSelectHtml = `
+                          <label style="margin: 8px 12px; display: block; text-align: left; font-size: 0.85em;">
+                            Herói imune:
+                            <select id="reactionTarget-${card.uid}" style="width: 100%; padding: 6px; border-radius: 4px; background: #222; color: #fff; border: 1px solid #444; margin-top: 4px;">
+                              ${state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+                            </select>
+                          </label>
+                        `;
+                      } else if (card.id === "cura-de-emergencia") {
+                        targetSelectHtml = `
+                          <label style="margin: 8px 12px; display: block; text-align: left; font-size: 0.85em;">
+                            Herói a curar:
+                            <select id="reactionTarget-${card.uid}" style="width: 100%; padding: 6px; border-radius: 4px; background: #222; color: #fff; border: 1px solid #444; margin-top: 4px;">
+                              ${state.players.filter(p => p.life > 0 && p.life <= 8).map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${p.life} PV)</option>`).join("")}
+                            </select>
+                          </label>
+                        `;
+                      }
+
+                      return `
+                        <article class="tcg-card reaction-choice ${me.energy < cost ? "unplayable" : ""}">
+                          <div class="card-cost">${cost}</div>
+                          <img src="${getCardArt(card)}" alt="" />
+                          <div class="card-body">
+                            <strong>${escapeHtml(card.name)}</strong>
+                            <p style="font-size:0.75rem; line-height: 1.2; margin: 4px 0;">${escapeHtml(card.text)}</p>
+                            ${renderCardTags(card)}
+                          </div>
+                          ${targetSelectHtml}
+                          <button data-reaction-card="${card.uid}" ${me.energy < cost ? "disabled" : ""}>Usar reacao</button>
+                        </article>
+                      `;
+                    }
                   )
                   .join("")}
               </div>
               <button id="skipReaction" class="secondary">Nao reagir desta vez</button>
+              <button id="skipReactionsThisRound" class="secondary">Nao reagir neste turno</button>
             `
             : `<p class="muted">Aguardando jogadores com cartas de reacao decidirem.</p>`
         }
@@ -1469,6 +1534,110 @@ function renderReactionPrompt(state, me) {
     </section>
   `;
 }
+
+function renderIntentionLookModal(state, me) {
+  if (local.animRunning) return "";
+  const look = state.pendingIntentionLook;
+  if (!look) return "";
+
+  const isMe = look.casterId === me.id;
+
+  if (isMe && !local.tempIntentionOrder) {
+    local.tempIntentionOrder = look.cards.map(c => c.id);
+    local.tempDiscardedId = null;
+  }
+
+  if (!isMe) {
+    local.tempIntentionOrder = null;
+    local.tempDiscardedId = null;
+  }
+
+  const cardsList = look.cards;
+  const discardedId = local.tempDiscardedId;
+  const currentOrder = local.tempIntentionOrder || [];
+
+  let contentHtml = "";
+  if (isMe) {
+    contentHtml = `
+      <p style="margin-bottom: 12px; color: #f2dfb7;">Você pode reorganizar as cartas do topo do baralho de Intenções. ${look.canDiscard ? "Também pode descartar uma para o fundo." : ""}</p>
+      
+      <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+        ${currentOrder.map((id, index) => {
+          const card = cardsList.find(c => c.id === id);
+          return `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+              <div style="text-align: left;">
+                <strong style="color: #fff; font-size: 1.05rem;">${escapeHtml(card.name)}</strong>
+                <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: #bbb;">${escapeHtml(card.presagioText)}</p>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                ${index > 0 ? `<button class="secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="moveIntentionUp(${index})">⬆ Subir</button>` : ""}
+                ${index < currentOrder.length - 1 ? `<button class="secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="moveIntentionDown(${index})">⬇ Descer</button>` : ""}
+                ${look.canDiscard && !discardedId ? `<button class="danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="discardIntention('${card.id}')">🗑 Descartar</button>` : ""}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      ${discardedId ? `
+        <div style="margin-bottom: 20px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="text-align: left;">
+            <span style="color: #ef4444; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; display: block;">Descartada (irá para o fundo):</span>
+            <strong style="color: #fff;">${escapeHtml(cardsList.find(c => c.id === discardedId)?.name)}</strong>
+          </div>
+          <button class="secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="undiscardIntention()">Desfazer descarte</button>
+        </div>
+      ` : ""}
+
+      <button id="confirmIntentionLookBtn" style="width: 100%; font-weight: 900; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer;">
+        Confirmar Reordenação
+      </button>
+    `;
+  } else {
+    contentHtml = `
+      <p class="muted" style="text-align: center; padding: 20px;">O Oráculo está olhando e reordenando as Intenções do topo do baralho...</p>
+    `;
+  }
+
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="intentionLookTitle">
+      <div class="glass-panel" style="width: min(540px, 100%); padding: 20px; display: grid; gap: 14px; position: relative;">
+        <h2 id="intentionLookTitle" style="color: #ffd785; font-size: 1.5rem; margin: 0; text-align: center;">Olhando o Futuro (Intenções)</h2>
+        ${contentHtml}
+      </div>
+    </div>
+  `;
+}
+
+window.moveIntentionUp = (index) => {
+  if (index <= 0) return;
+  const temp = local.tempIntentionOrder[index];
+  local.tempIntentionOrder[index] = local.tempIntentionOrder[index - 1];
+  local.tempIntentionOrder[index - 1] = temp;
+  render();
+};
+
+window.moveIntentionDown = (index) => {
+  if (index >= local.tempIntentionOrder.length - 1) return;
+  const temp = local.tempIntentionOrder[index];
+  local.tempIntentionOrder[index] = local.tempIntentionOrder[index + 1];
+  local.tempIntentionOrder[index + 1] = temp;
+  render();
+};
+
+window.discardIntention = (cardId) => {
+  local.tempDiscardedId = cardId;
+  local.tempIntentionOrder = local.tempIntentionOrder.filter(id => id !== cardId);
+  render();
+};
+
+window.undiscardIntention = () => {
+  if (!local.tempDiscardedId) return;
+  local.tempIntentionOrder.push(local.tempDiscardedId);
+  local.tempDiscardedId = null;
+  render();
+};
 
 function renderGameStatusPanel(state, me) {
   const isPlayersTurn = state.turn === "players";
@@ -1497,20 +1666,14 @@ function renderHandDock(me, state) {
   return `
     <section class="hand-dock" aria-label="Mao do jogador">
       <div class="hand-meta glass-panel">
-        <div>
-          <span class="eyebrow">Mao</span>
-          <strong>${me.hand.length}</strong>
-        </div>
-        <div class="resource-strip">
-          ${renderEnergyPips(me.energy, me.maxEnergy)}
-        </div>
-        <button id="buyCard" class="buy-card-btn" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || me.hand.length >= (me.maxHandSize || 5) ? 'disabled' : ''}>
-          🎴 Comprar (1⚡)
+        <button id="buyCard" class="buy-card-btn" title="Comprar carta (1⚡)" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || me.hand.length >= (me.maxHandSize || 5) ? 'disabled' : ''}>
+          <span class="buy-card-text">+1</span>
+          <span class="buy-card-cost">⚡</span>
         </button>
         ${hasSupreme ? `
           <div class="supreme-container">
             <button id="useSupreme" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
-              ✨ Suprema
+              Suprema
             </button>
             <div class="supreme-hover-preview">
               <article class="tcg-card play-card ${me.supremeCard.type} supreme-preview-card">
@@ -1526,7 +1689,7 @@ function renderHandDock(me, state) {
           </div>
         ` : me.supremeUsed ? `<span class="supreme-used muted">Suprema usada</span>` : ""}
         ${me.hasRedrawAvailable ? `
-          <div class="supreme-container" style="margin-top: 6px;">
+          <div class="supreme-container">
             <button id="useRedraw" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''} style="background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 0 14px rgba(168, 85, 247, 0.5); color: #fff; animation: none;">
               🔄 Trocar Mão
             </button>
@@ -1869,6 +2032,8 @@ function renderPlayerHud(player) {
               ${renderStatusEffects(player.statusEffects)}
               <div class="hud-stats">
                 <span class="hero-shield shield-badge"><i></i>${getVisualShield(player.id, player.shield || 0)}</span>
+                ${player.profecia_tokens && player.profecia_tokens.length > 0 ? `<span class="hero-profecia prophecy-badge" title="Profecia ativa: cura ao sofrer dano de ataque inimigo.">👁️ Profecia: +${player.profecia_tokens.reduce((a, b) => a + b, 0)}</span>` : ""}
+                ${player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana ativa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : ""}
                 ${player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null ? `<span class="hero-carga-batalha charge-badge" title="Carga de Batalha: acumula ao provocar/proteger e aumenta o dano de Carga do Guardião.">⚔️ Carga: ${player.carga_de_batalha}</span>` : ""}
                 <span>Deck ${player.deckCount}</span>
                 <span>Mao ${player.handCount}</span>

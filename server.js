@@ -663,18 +663,29 @@ const heroes = {
     energy: 5,
     supreme: "luz-da-esperanca",
     deck: [
-      ["cura-menor", 2],
-      ["cura-em-massa", 2],
-      ["inspiracao", 2],
-      ["redistribuir-escudos", 2],
-      ["planejamento", 2],
-      ["luz-sagrada", 2],
-      ["renovacao", 1],
-      ["descanso-breve", 1],
-      ["escudo-compartilhado", 1],
+      ["cura-de-emergencia", 1],
+      ["bencao-protetora", 1],
+      ["voz-do-oraculo", 1],
+      ["cura-menor", 1],
+      ["cura-em-ondas", 1],
+      ["planejamento", 1],
+      ["redistribuir-escudos", 1],
+      ["absolvicao", 1],
+      ["inspiracao", 1],
+      ["profecia-menor", 1],
+      ["pressagio", 1],
+      ["toque-sagrado", 1],
+      ["cura-de-alma", 1],
+      ["luz-sagrada", 1],
+      ["profecia-dupla", 1],
+      ["bencao-arcana", 1],
       ["purificar", 1],
+      ["visao-do-futuro", 1],
+      ["luz-purificadora", 1],
+      ["descanso-breve", 1],
+      ["renovacao", 1],
       ["reanimar", 1],
-      ["explosao-divina", 2]
+      ["julgamento-divino", 1]
     ]
   },
   batedor: {
@@ -998,39 +1009,43 @@ const cards = {
     damage: 2,
     text: "Causa 2 de dano ao monstro."
   },
+  "cura-de-emergencia": {
+    id: "cura-de-emergencia",
+    name: "Cura de Emergência",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando um ataque inimigo reduzir a Vida de qualquer herói para 8 ou menos, esse herói imediatamente cura 5."
+  },
+  "bencao-protetora": {
+    id: "bencao-protetora",
+    name: "Bênção Protetora",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando um monstro aplicaria um status effect a qualquer herói, negue essa aplicação de status. (O dano ainda ocorre normalmente)."
+  },
+  "voz-do-oraculo": {
+    id: "voz-do-oraculo",
+    name: "Voz do Oráculo",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando uma Armadilha ativa aplicaria seu efeito (em qualquer fase da rodada), escolha um herói. Esse herói é imune ao efeito desta Armadilha nesta aplicação específica."
+  },
   "cura-menor": {
     id: "cura-menor",
     name: "Cura Menor",
     type: "heal",
     target: "ally",
     cost: 1,
-    heal: 3,
-    text: "Cura 3 de vida de um aliado."
+    heal: 4,
+    text: "Cure 4 de Vida de um aliado. Se esse aliado possui Veneno, remova todo o Veneno dele."
   },
-  "cura-em-massa": {
-    id: "cura-em-massa",
-    name: "Cura em Massa",
+  "cura-em-ondas": {
+    id: "cura-em-ondas",
+    name: "Cura em Ondas",
     type: "heal",
-    cost: 2,
-    allHeal: 2,
-    text: "Todos os aliados recebem Cura 2."
-  },
-  "inspiracao": {
-    id: "inspiracao",
-    name: "Inspiracao",
-    type: "energy",
-    target: "ally",
-    cost: 2,
-    energy: 2,
-    text: "Um aliado recupera 2 de Energia."
-  },
-  "redistribuir-escudos": {
-    id: "redistribuir-escudos",
-    name: "Redistribuir Escudos",
-    type: "control",
     cost: 1,
-    moveShield: true,
-    text: "Mova qualquer quantidade de Escudo de um aliado para outro."
+    allHeal: 2,
+    text: "Todos os aliados curam 2 de Vida."
   },
   "planejamento": {
     id: "planejamento",
@@ -1041,22 +1056,106 @@ const cards = {
     planning: true,
     text: "Um aliado compra 2 cartas e depois descarta 1 carta."
   },
+  "redistribuir-escudos": {
+    id: "redistribuir-escudos",
+    name: "Redistribuir Escudos",
+    type: "control",
+    cost: 1,
+    moveShield: true,
+    text: "Mova qualquer quantidade de Escudo de um aliado para outro."
+  },
+  "absolvicao": {
+    id: "absolvicao",
+    name: "Absolvição",
+    type: "control",
+    target: "ally",
+    cost: 1,
+    text: "Remova todos os status effects ativos de um aliado (Veneno, Queimadura, Vácuo, Enfraquecido, Exposto)."
+  },
+  "inspiracao": {
+    id: "inspiracao",
+    name: "Inspiração",
+    type: "energy",
+    target: "ally",
+    cost: 1,
+    energy: 2,
+    text: "Um aliado recupera 2 de Energia."
+  },
+  "profecia-menor": {
+    id: "profecia-menor",
+    name: "Profecia Menor",
+    type: "heal",
+    target: "ally",
+    cost: 1,
+    text: "Coloque 1 token de Profecia (valor: 5) em um aliado. Na próxima vez que esse aliado sofrer dano de um ataque inimigo nesta rodada, ele cura 5 imediatamente após o dano resolver."
+  },
+  "pressagio": {
+    id: "pressagio",
+    name: "Presságio",
+    type: "control",
+    cost: 1,
+    text: "Olhe as próximas 2 cartas do topo do baralho de Intenções (sem removê-las). Você pode reordenar essas 2 cartas como desejar."
+  },
+  "toque-sagrado": {
+    id: "toque-sagrado",
+    name: "Toque Sagrado",
+    type: "heal",
+    target: "ally",
+    cost: 2,
+    heal: 6,
+    text: "Cure 6 de Vida de um aliado. Remova todos os status effects desse aliado."
+  },
+  "cura-de-alma": {
+    id: "cura-de-alma",
+    name: "Cura de Alma",
+    type: "heal",
+    cost: 2,
+    text: "Todos os aliados curam 3 de Vida. Aliados que possuem qualquer status effect ativo curam 3 adicionais (6 de Vida total)."
+  },
   "luz-sagrada": {
     id: "luz-sagrada",
     name: "Luz Sagrada",
     type: "attack",
-    cost: 1,
-    damage: 3,
-    text: "Cause 3 de dano a um inimigo."
+    cost: 2,
+    damage: 5,
+    text: "Cause 5 de dano a um inimigo. Se qualquer aliado possui um status effect ativo no momento em que esta carta resolve, cause 8 de dano em vez disso."
   },
-  "renovacao": {
-    id: "renovacao",
-    name: "Renovacao",
+  "profecia-dupla": {
+    id: "profecia-dupla",
+    name: "Profecia Dupla",
     type: "heal",
+    cost: 2,
+    text: "Coloque 1 token de Profecia (valor: 4) em dois aliados diferentes."
+  },
+  "bencao-arcana": {
+    id: "bencao-arcana",
+    name: "Bênção Arcana",
+    type: "control",
     target: "ally",
-    cost: 3,
-    heal: 6,
-    text: "Cura 6 de vida de um aliado."
+    cost: 2,
+    text: "Escolha um aliado. A próxima carta que ele jogar nesta rodada custa 1 de Energia a menos (mínimo 0)."
+  },
+  "purificar": {
+    id: "purificar",
+    name: "Purificar",
+    type: "control",
+    cost: 2,
+    removeTrap: true,
+    text: "Remova a Armadilha ativa da sala. Todos os heróis compram 1 carta."
+  },
+  "visao-do-futuro": {
+    id: "visao-do-futuro",
+    name: "Visão do Futuro",
+    type: "control",
+    cost: 2,
+    text: "Olhe as próximas 3 cartas do topo do baralho de Intenções. Você pode descartar 1 delas (ela vai para o fundo do baralho). Recoloque as restantes no topo na ordem que preferir."
+  },
+  "luz-purificadora": {
+    id: "luz-purificadora",
+    name: "Luz Purificadora",
+    type: "heal",
+    cost: 2,
+    text: "Remova Queimadura de todos os aliados. Para cada aliado cuja Queimadura foi removida desta forma, esse aliado cura 3 de Vida."
   },
   "descanso-breve": {
     id: "descanso-breve",
@@ -1064,48 +1163,41 @@ const cards = {
     type: "energy",
     cost: 2,
     allEnergy: 1,
-    text: "Todos os aliados recuperam 1 de Energia."
+    text: "Todos os aliados recuperam 1 de Energia e compram 1 carta."
   },
-  "escudo-compartilhado": {
-    id: "escudo-compartilhado",
-    name: "Escudo Compartilhado",
-    type: "control",
-    cost: 2,
-    shareShields: true,
-    text: "Redistribua livremente todos os Escudos existentes entre os herois."
-  },
-  "purificar": {
-    id: "purificar",
-    name: "Purificar",
-    type: "control",
-    cost: 5,
-    removeTrap: true,
-    text: "Remova a armadilha ativa. Todos os herois da mesa devem escolher e descartar 1 carta."
+  "renovacao": {
+    id: "renovacao",
+    name: "Renovação",
+    type: "heal",
+    target: "ally",
+    cost: 3,
+    heal: 8,
+    text: "Cure 8 de Vida de um aliado. Esse aliado compra 1 carta."
   },
   "reanimar": {
     id: "reanimar",
-    name: "reanimar",
+    name: "Reanimar",
     type: "heal",
     target: "ally",
-    cost: 4,
-    revive: 5,
-    text: "Reviva um aliado derrotado com 5 de Vida."
+    cost: 3,
+    revive: 6,
+    text: "Traga um herói derrotado de volta com 6 de Vida e remova todos os status effects dele."
   },
-  "explosao-divina": {
-    id: "explosao-divina",
-    name: "Explosao Divina",
+  "julgamento-divino": {
+    id: "julgamento-divino",
+    name: "Julgamento Divino",
     type: "attack",
-    cost: 2,
-    areaDamage: 2,
-    text: "Causa 2 de dano em todos os inimigos."
+    cost: 3,
+    damage: 4,
+    text: "Cause 4 de dano a todos os inimigos. Remova 1 status effect de cada aliado (à escolha do Oráculo)."
   },
   "luz-da-esperanca": {
     id: "luz-da-esperanca",
-    name: "Luz da Esperanca",
+    name: "Luz da Esperança",
     type: "heal",
     cost: 0,
     supremeEffects: true,
-    text: "Suprema. Todos os aliados recebem Cura 5, Escudo 5, Energia +2 e Compra 1."
+    text: "Suprema. Todos os aliados recebem: Cura 8, Escudo 5, todos os status effects removidos, Energia +2 e compram 1 carta."
   },
   "flecha-precisa": {
     id: "flecha-precisa",
@@ -1738,19 +1830,44 @@ function applyStartOfRoundEffects(session) {
   if (session.room.effect === "ritualStartDamage") {
     session.players.forEach((player) => applyDamageToHero(session, player, 1, "Camara do Ritual"));
   }
-  if (session.activeTrap?.effect === "energyPenalty") {
-    session.players.forEach((player) => {
-      player.energy = Math.max(0, player.energy - 1);
-    });
-    session.log.unshift("Armadilha: cada heroi comeca a rodada com -1 de Energia.");
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  if (isTrapActive && !session.startRoundTrapApplied) {
+    if (session.activeTrap.effect === "energyPenalty") {
+      const affectedPlayerIds = session.players.filter(p => p.life > 0).map(p => p.id);
+      const paused = triggerTrapEffect(session, session.activeTrap, affectedPlayerIds, (immuneIds) => {
+        session.players.forEach((player) => {
+          if (player.life > 0) {
+            if (!immuneIds.includes(player.id)) {
+              player.energy = Math.max(0, player.energy - 1);
+              session.log.unshift(`${player.name} perdeu 1 de Energia devido à armadilha ${session.activeTrap.name}.`);
+            }
+          }
+        });
+        session.startRoundTrapApplied = true;
+        applyStartOfRoundEffects(session);
+      });
+      if (paused) return;
+    }
+    if (session.activeTrap.effect === "shieldDecay") {
+      const affectedPlayerIds = session.players.filter(p => p.life > 0 && p.shield > 0).map(p => p.id);
+      const paused = triggerTrapEffect(session, session.activeTrap, affectedPlayerIds, (immuneIds) => {
+        session.players.forEach((player) => {
+          if (player.life > 0) {
+            if (!immuneIds.includes(player.id)) {
+              player.shield = Math.max(0, player.shield - 1);
+              session.log.unshift(`${player.name} perdeu 1 de Escudo devido à armadilha ${session.activeTrap.name}.`);
+            }
+          }
+        });
+        session.startRoundTrapApplied = true;
+        applyStartOfRoundEffects(session);
+      });
+      if (paused) return;
+    }
   }
-  if (session.activeTrap?.effect === "shieldDecay") {
-    session.players.forEach((player) => {
-      player.shield = Math.max(0, player.shield - 1);
-    });
-    session.log.unshift("Armadilha: cada heroi perde 1 de Escudo.");
-  }
-  if (session.activeTrap?.effect === "discardBeforeDraw") {
+  session.startRoundTrapApplied = false;
+
+  if (isTrapActive && session.activeTrap.effect === "discardBeforeDraw") {
     session.log.unshift("Armadilha: descarte antes da compra ja foi absorvido pela limpeza da mao no prototipo.");
   }
 
@@ -2866,6 +2983,7 @@ function addPlayer(session, name) {
     reflectDamage: 0,
     reduceDamage: 0,
     statusEffects: makeStatusEffects(),
+    profecia_tokens: [],
     roundStats: makeRoundStats(),
     deck: [],
     hand: [],
@@ -2959,6 +3077,7 @@ function startGame(session) {
     player.reflectDamage = 0;
     player.reduceDamage = 0;
     player.statusEffects = makeStatusEffects();
+    player.profecia_tokens = [];
     player.nextAttackBonus = 0;
     player.bastiaoSupremoActive = false;
     player.turnEnded = false;
@@ -2969,6 +3088,7 @@ function startGame(session) {
     player.discard = [];
     player.pendingDiscard = 0;
     player.supremeUsed = false;
+    player.skipReactionsThisRound = false;
     // Give player their supreme card if their hero has one
     const supremeId = hero.supreme;
     player.supremeCard = supremeId && cards[supremeId]
@@ -3065,6 +3185,9 @@ function startNextRound(session) {
     player.activeShields = [];
     player.turnEnded = player.life <= 0;
     player.roundStats = makeRoundStats();
+    player.skipReactionsThisRound = false;
+    player.profecia_tokens = [];
+    player.proxima_carta_desconto_1 = false;
     
     // Draw logic checking Vácuo
     const isVacuo = player.statusEffects?.vacuo;
@@ -3328,14 +3451,21 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
   }
 
   // reanimar: revive a defeated ally
-  if (card.revive) {
+  if (card.id === "reanimar") {
     const target = session.players.find((p) => p.id === payload.targetId && p.life <= 0)
       || session.players.find((p) => p.life <= 0);
     if (!target) throw new Error("Nao ha aliados derrotados para reanimar.");
-    target.life = card.revive;
+    target.life = 6;
     target.turnEnded = false;
-    pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: card.revive, source: card.name });
-    session.log.unshift(`${target.name} foi reanimado com ${card.revive} de Vida!`);
+    if (target.statusEffects) {
+      target.statusEffects.veneno = 0;
+      target.statusEffects.queimadura = { value: 0, duration: 0 };
+      target.statusEffects.vacuo = false;
+      target.statusEffects.enfraquecido = 0;
+      target.statusEffects.exposto = false;
+    }
+    pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: 6, source: card.name });
+    session.log.unshift(`${target.name} foi reanimado com 6 de Vida e livre de status!`);
   }
 
   // redistribuir-escudos: move shield from one ally to another
@@ -3382,12 +3512,19 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
   // suprema: luz-da-esperanca
   if (card.supremeEffects) {
     session.players.filter((ally) => ally.life > 0).forEach((ally) => {
-      applyHealToHero(session, ally, 5, card.name);
+      applyHealToHero(session, ally, 8, card.name);
       addShieldToHero(session, ally, 5, card);
-      ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
+      if (ally.statusEffects) {
+        ally.statusEffects.veneno = 0;
+        ally.statusEffects.queimadura = { value: 0, duration: 0 };
+        ally.statusEffects.vacuo = false;
+        ally.statusEffects.enfraquecido = 0;
+        ally.statusEffects.exposto = false;
+      }
+      ally.energy = Math.min(ally.maxEnergy, ally.energy + 2);
       drawCards(ally, 1);
     });
-    session.log.unshift(`${player.name} usou ${card.name}! Todos os aliados receberam Cura 5, Escudo 5, Energia +2 e compraram 1 carta.`);
+    session.log.unshift(`${player.name} usou ${card.name}! Todos os aliados receberam Cura 8, Escudo 5, remoção de status, Energia +2 e compraram 1 carta.`);
   }
 
   if (card.provoke) {
@@ -3545,6 +3682,197 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     addShieldToHero(session, player, 10, card, { espinhoso: 6 });
   }
 
+  // Oraculo Lunar custom cards
+  if (card.id === "cura-menor") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (target.statusEffects && target.statusEffects.veneno > 0) {
+      target.statusEffects.veneno = 0;
+      session.log.unshift(`${target.name} teve todo o Veneno removido por Cura Menor.`);
+    }
+  }
+
+  if (card.id === "absolvicao") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (target.statusEffects) {
+      target.statusEffects.veneno = 0;
+      target.statusEffects.queimadura = { value: 0, duration: 0 };
+      target.statusEffects.vacuo = false;
+      target.statusEffects.enfraquecido = 0;
+      target.statusEffects.exposto = false;
+      session.log.unshift(`${target.name} teve todos os efeitos de status removidos por Absolvição.`);
+    }
+  }
+
+  if (card.id === "profecia-menor") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target.profecia_tokens) target.profecia_tokens = [];
+    target.profecia_tokens.push(5);
+    session.log.unshift(`${player.name} colocou Profecia de 5 em ${target.name}.`);
+  }
+
+  if (card.id === "pressagio") {
+    const cardsList = session.intentionDeck.slice(0, 2);
+    session.pendingIntentionLook = {
+      cardUid: card.uid,
+      casterId: player.id,
+      maxCards: 2,
+      cards: cardsList.map(c => ({ id: c.id, name: c.name, presagioText: c.presagioText })),
+      canDiscard: false
+    };
+    session.log.unshift(`${player.name} jogou Presságio. Aguardando reordenar o topo do baralho de Intenções.`);
+  }
+
+  if (card.id === "toque-sagrado") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    applyHealToHero(session, target, 6, card.name);
+    if (target.statusEffects) {
+      target.statusEffects.veneno = 0;
+      target.statusEffects.queimadura = { value: 0, duration: 0 };
+      target.statusEffects.vacuo = false;
+      target.statusEffects.enfraquecido = 0;
+      target.statusEffects.exposto = false;
+    }
+    session.log.unshift(`${player.name} usou Toque Sagrado em ${target.name}: curou 6 de Vida e removeu todos os status.`);
+  }
+
+  if (card.id === "cura-de-alma") {
+    session.players.filter(ally => ally.life > 0).forEach(ally => {
+      const hasStatus = ally.statusEffects && (
+        ally.statusEffects.veneno > 0 ||
+        ally.statusEffects.queimadura.duration > 0 ||
+        ally.statusEffects.vacuo ||
+        ally.statusEffects.enfraquecido > 0 ||
+        ally.statusEffects.exposto
+      );
+      const amount = hasStatus ? 6 : 3;
+      applyHealToHero(session, ally, amount, card.name);
+    });
+    session.log.unshift(`${player.name} usou Cura de Alma!`);
+  }
+
+  if (card.id === "luz-sagrada") {
+    const target = session.enemies.find(e => e.uid === payload.targetId && e.life > 0) || session.enemies.find(e => e.life > 0);
+    if (target) {
+      const hasAnyStatus = session.players.some(ally => ally.life > 0 && ally.statusEffects && (
+        ally.statusEffects.veneno > 0 ||
+        ally.statusEffects.queimadura.duration > 0 ||
+        ally.statusEffects.vacuo ||
+        ally.statusEffects.enfraquecido > 0 ||
+        ally.statusEffects.exposto
+      ));
+      const baseDmg = hasAnyStatus ? 8 : 5;
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Luz Sagrada em ${target.name} e causou ${dmg} de dano (base: ${baseDmg}).`);
+    }
+  }
+
+  if (card.id === "profecia-dupla") {
+    const target1 = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target1.profecia_tokens) target1.profecia_tokens = [];
+    target1.profecia_tokens.push(4);
+    
+    const otherAllies = session.players.filter(p => p.life > 0 && p.id !== target1.id);
+    if (otherAllies.length > 0) {
+      otherAllies.sort((a, b) => a.life - b.life);
+      const target2 = otherAllies[0];
+      if (!target2.profecia_tokens) target2.profecia_tokens = [];
+      target2.profecia_tokens.push(4);
+      session.log.unshift(`${player.name} colocou Profecia de 4 em ${target1.name} e ${target2.name} com Profecia Dupla.`);
+    } else {
+      session.log.unshift(`${player.name} colocou Profecia de 4 em ${target1.name} com Profecia Dupla (nenhum outro aliado vivo).`);
+    }
+  }
+
+  if (card.id === "bencao-arcana") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    target.proxima_carta_desconto_1 = true;
+    session.log.unshift(`${player.name} concedeu Bênção Arcana para ${target.name} (desconto de 1 de energia na próxima carta).`);
+  }
+
+  if (card.id === "purificar") {
+    if (session.activeTrap) {
+      const trapName = session.activeTrap.name;
+      session.trapDiscard.push(session.activeTrap);
+      session.activeTrap = null;
+      session.log.unshift(`${player.name} purificou a armadilha ${trapName}!`);
+    }
+    session.players.forEach(p => {
+      if (p.life > 0) {
+        drawCards(p, 1);
+      }
+    });
+    session.log.unshift(`Purificar: Todos os aliados vivos compraram 1 carta.`);
+  }
+
+  if (card.id === "visao-do-futuro") {
+    const cardsList = session.intentionDeck.slice(0, 3);
+    session.pendingIntentionLook = {
+      cardUid: card.uid,
+      casterId: player.id,
+      maxCards: Math.min(3, session.intentionDeck.length),
+      cards: cardsList.map(c => ({ id: c.id, name: c.name, presagioText: c.presagioText })),
+      canDiscard: true
+    };
+    session.log.unshift(`${player.name} jogou Visão do Futuro. Aguardando descarte e reorganização do topo de Intenções.`);
+  }
+
+  if (card.id === "luz-purificadora") {
+    session.players.forEach(p => {
+      if (p.life > 0 && p.statusEffects && p.statusEffects.queimadura?.duration > 0) {
+        p.statusEffects.queimadura = { value: 0, duration: 0 };
+        applyHealToHero(session, p, 3, card.name);
+        session.log.unshift(`Luz Purificadora removeu Queimadura de ${p.name} e curou-o em 3.`);
+      }
+    });
+  }
+
+  if (card.id === "descanso-breve") {
+    session.players.filter(p => p.life > 0).forEach(p => {
+      p.energy = Math.min(p.maxEnergy, p.energy + 1);
+      drawCards(p, 1);
+    });
+    session.log.unshift(`${player.name} jogou Descanso Breve: todos os aliados recuperaram 1 de Energia e compraram 1 carta.`);
+  }
+
+  if (card.id === "renovacao") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    applyHealToHero(session, target, 8, card.name);
+    drawCards(target, 1);
+    session.log.unshift(`${player.name} usou Renovação em ${target.name}: curou 8 e fez ${target.name} comprar 1 carta.`);
+  }
+
+  if (card.id === "julgamento-divino") {
+    const targets = session.enemies.filter((enemy) => enemy.life > 0);
+    targets.forEach((enemy) =>
+      applyDamageToEnemy(session, enemy, getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session)), card.name, false, player)
+    );
+    session.players.filter(p => p.life > 0).forEach(p => {
+      if (p.statusEffects) {
+        let removed = "";
+        if (p.statusEffects.vacuo) {
+          p.statusEffects.vacuo = false;
+          removed = "Vácuo";
+        } else if (p.statusEffects.exposto) {
+          p.statusEffects.exposto = false;
+          removed = "Exposto";
+        } else if (p.statusEffects.queimadura.duration > 0) {
+          p.statusEffects.queimadura = { value: 0, duration: 0 };
+          removed = "Queimadura";
+        } else if (p.statusEffects.veneno > 0) {
+          p.statusEffects.veneno = 0;
+          removed = "Veneno";
+        } else if (p.statusEffects.enfraquecido > 0) {
+          p.statusEffects.enfraquecido = 0;
+          removed = "Enfraquecido";
+        }
+        if (removed) {
+          session.log.unshift(`Julgamento Divino removeu ${removed} de ${p.name}.`);
+        }
+      }
+    });
+  }
+
   // Batedor (Archer) custom cards
   if (card.nextAttackBonus) {
     player.nextAttackBonus = (player.nextAttackBonus || 0) + card.nextAttackBonus;
@@ -3658,11 +3986,6 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
 
 function applyHealToHero(session, target, amount, source) {
   if (session.activeTrap?.effect === "noHealing") return;
-
-  if (amount > 0 && target.statusEffects && target.statusEffects.veneno > 0) {
-    target.statusEffects.veneno = 0;
-    session.log.unshift(`${target.name} foi curado por ${source} e todo o Veneno foi removido.`);
-  }
 
   const before = target.life;
   target.life = Math.min(target.maxLife, target.life + amount);
@@ -3920,14 +4243,34 @@ function applyQueimaduraTick(session) {
 }
 
 function finishDungeonTurn(session) {
-  applyIntentionRepresalia(session);
-  applyEndOfDungeonEffects(session);
-  applyQueimaduraTick(session);
-  applyRoomReward(session);
+  if (!session.represaliaApplied) {
+    applyIntentionRepresalia(session);
+    session.represaliaApplied = true;
+  }
+  if (!session.endDungeonEffectsApplied) {
+    const paused = applyEndOfDungeonEffects(session);
+    if (paused) return; // Keep paused
+    session.endDungeonEffectsApplied = true;
+  }
+  if (!session.queimaduraTickApplied) {
+    applyQueimaduraTick(session);
+    session.queimaduraTickApplied = true;
+  }
+  if (!session.roomRewardApplied) {
+    applyRoomReward(session);
+    session.roomRewardApplied = true;
+  }
 
   session.dungeonResolved = true;
   session.pendingReaction = null;
   session.dungeonQueue = [];
+  
+  // Reset flags for next round
+  session.represaliaApplied = false;
+  session.endDungeonEffectsApplied = false;
+  session.queimaduraTickApplied = false;
+  session.roomRewardApplied = false;
+  
   session.log.unshift("Turno da dungeon resolvido. Os jogadores podem iniciar a proxima rodada.");
 }
 
@@ -3952,6 +4295,15 @@ function canPlayReactionCard(session, player, card, pending) {
   if (card.id === "contra-ataque") {
     return true;
   }
+  if (card.id === "voz-do-oraculo") {
+    return pending.type === "trap";
+  }
+  if (card.id === "bencao-protetora") {
+    return pending.type === "status_apply";
+  }
+  if (card.id === "cura-de-emergencia") {
+    return pending.type === "cura_emergencia";
+  }
   return false;
 }
 
@@ -3959,8 +4311,33 @@ function getReactionEligiblePlayers(session, tempPending) {
   const pending = tempPending || session.pendingReaction;
   if (!pending) return [];
   return session.players.filter(
-    (player) => player.life > 0 && player.hand.some((card) => card.type === "reaction" && canPlayReactionCard(session, player, card, pending))
+    (player) => player.life > 0 && !player.skipReactionsThisRound && player.hand.some((card) => card.type === "reaction" && canPlayReactionCard(session, player, card, pending))
   );
+}
+
+function resolvePendingSpecialReaction(session) {
+  if (session.pendingTrapCallback) {
+    const callback = session.pendingTrapCallback;
+    session.pendingTrapCallback = null;
+    session.pendingReaction = null;
+    callback([]); // no immune players
+    return true;
+  }
+  if (session.pendingStatusCallback) {
+    const callback = session.pendingStatusCallback;
+    session.pendingStatusCallback = null;
+    session.pendingReaction = null;
+    callback(false); // not negated
+    return true;
+  }
+  if (session.pendingCuraCallback) {
+    const callback = session.pendingCuraCallback;
+    session.pendingCuraCallback = null;
+    session.pendingReaction = null;
+    callback(null); // no heal
+    return true;
+  }
+  return false;
 }
 
 function skipReaction(session, player) {
@@ -3972,8 +4349,27 @@ function skipReaction(session, player) {
 
   const remaining = pending.eligiblePlayerIds.filter((id) => !pending.skippedPlayerIds.includes(id));
   if (remaining.length === 0) {
+    if (resolvePendingSpecialReaction(session)) return;
     resolvePendingReactionAttack(session);
     advanceDungeonTurn(session);
+  }
+}
+
+function skipReactionsThisRound(session, player) {
+  player.skipReactionsThisRound = true;
+  session.log.unshift(`${player.name} decidiu nao reagir nesta rodada.`);
+
+  const pending = session.pendingReaction;
+  if (pending && pending.eligiblePlayerIds.includes(player.id)) {
+    if (!pending.skippedPlayerIds.includes(player.id)) {
+      pending.skippedPlayerIds.push(player.id);
+    }
+    const remaining = pending.eligiblePlayerIds.filter((id) => !pending.skippedPlayerIds.includes(id));
+    if (remaining.length === 0) {
+      if (resolvePendingSpecialReaction(session)) return;
+      resolvePendingReactionAttack(session);
+      advanceDungeonTurn(session);
+    }
   }
 }
 
@@ -3985,14 +4381,19 @@ function playReaction(session, player, payload) {
   const cardIndex = player.hand.findIndex((card) => card.uid === payload.cardUid && card.type === "reaction");
   if (cardIndex === -1) throw new Error("Carta de reacao nao encontrada na mao.");
   const card = player.hand[cardIndex];
-  if (player.energy < card.cost) throw new Error("Energia insuficiente para a reacao.");
+  
+  let finalCost = card.cost;
+  if (player.proxima_carta_desconto_1) {
+    finalCost = Math.max(0, finalCost - 1);
+  }
+  if (player.energy < finalCost) throw new Error("Energia insuficiente para a reacao.");
   if (!canPlayReactionCard(session, player, card, pending)) {
     throw new Error(`Nao e possivel jogar ${card.name} nesta situacao.`);
   }
 
   player.hand.splice(cardIndex, 1);
-  player.energy -= card.cost;
-  player.roundStats.energySpent += card.cost;
+  player.energy -= finalCost;
+  player.roundStats.energySpent += finalCost;
   player.roundStats.cardsPlayed += 1;
   player.played.push(card);
   session.arena.unshift({
@@ -4000,12 +4401,50 @@ function playReaction(session, player, payload) {
     heroId: card.heroId,
     name: card.name,
     type: card.type,
-    cost: card.cost,
+    cost: finalCost,
     intercept: card.intercept,
     reflect: card.reflect,
     text: card.text,
     playedBy: player.name
   });
+
+  if (player.proxima_carta_desconto_1) {
+    player.proxima_carta_desconto_1 = false;
+  }
+
+  if (card.id === "voz-do-oraculo") {
+    const targetId = payload.targetId;
+    session.pendingReaction = null;
+    const callback = session.pendingTrapCallback;
+    session.pendingTrapCallback = null;
+    session.log.unshift(`${player.name} usou Voz do Oráculo e tornou um herói imune.`);
+    if (callback) {
+      callback([targetId]);
+    }
+    return;
+  }
+
+  if (card.id === "bencao-protetora") {
+    session.pendingReaction = null;
+    const callback = session.pendingStatusCallback;
+    session.pendingStatusCallback = null;
+    session.log.unshift(`${player.name} usou Bênção Protetora e negou a aplicação de status.`);
+    if (callback) {
+      callback(true); // negated = true
+    }
+    return;
+  }
+
+  if (card.id === "cura-de-emergencia") {
+    const targetId = payload.targetId;
+    session.pendingReaction = null;
+    const callback = session.pendingCuraCallback;
+    session.pendingCuraCallback = null;
+    if (callback) {
+      callback(targetId);
+    }
+    return;
+  }
 
   const enemy = session.enemies.find((candidate) => candidate.uid === pending.enemyUid && candidate.life > 0);
   const target = session.players.find((candidate) => candidate.id === pending.targetId && candidate.life > 0);
@@ -4179,6 +4618,63 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
   return attack;
 }
 
+function triggerTrapEffect(session, trap, affectedPlayerIds, executeEffectFn) {
+  const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
+  const hasVoz = oraculo && oraculo.hand.some(c => c.id === "voz-do-oraculo");
+  
+  if (hasVoz) {
+    session.pendingReaction = {
+      id: randomUUID(),
+      type: "trap",
+      trapId: trap.id,
+      trapName: trap.name,
+      ruleText: trap.text,
+      eligiblePlayerIds: [oraculo.id],
+      skippedPlayerIds: [],
+      affectedPlayerIds,
+      playableCardUids: {
+        [oraculo.id]: oraculo.hand.filter(c => c.id === "voz-do-oraculo").map(c => c.uid)
+      }
+    };
+    session.pendingTrapCallback = executeEffectFn;
+    session.log.unshift(`[Armadilha] Voz do Oraculo pode ser usada contra ${trap.name}. Reacoes abertas.`);
+    return true; // indicates paused
+  }
+  
+  executeEffectFn([]);
+  return false;
+}
+
+function triggerStatusApplyReaction(session, enemy, target, statusType, statusValue, executeApplyFn) {
+  const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
+  const hasBencao = oraculo && oraculo.hand.some(c => c.id === "bencao-protetora");
+  
+  if (hasBencao) {
+    session.pendingReaction = {
+      id: randomUUID(),
+      type: "status_apply",
+      enemyUid: enemy.uid,
+      enemyName: enemy.name,
+      targetId: target.id,
+      targetName: target.name,
+      statusType,
+      statusValue,
+      ruleText: `Bênção Protetora: Nega a aplicação de ${statusType} em ${target.name}.`,
+      eligiblePlayerIds: [oraculo.id],
+      skippedPlayerIds: [],
+      playableCardUids: {
+        [oraculo.id]: oraculo.hand.filter(c => c.id === "bencao-protetora").map(c => c.uid)
+      }
+    };
+    session.pendingStatusCallback = executeApplyFn;
+    session.log.unshift(`[Status] Bênção Protetora pode ser usada para negar o status ${statusType} em ${target.name}. Reações abertas.`);
+    return true; // indicates paused
+  }
+  
+  executeApplyFn(false); // apply normally (not negated)
+  return false;
+}
+
 function resolveEnemyAttack(session, enemy, target, overrideAttack = null) {
   const forcedTarget = session.players.find((player) => player.id === enemy.forcedTargetId && player.life > 0)
     || (session.todos_inimigos_forcam_guardiao && session.players.find((player) => player.heroId === "guardiao" && player.life > 0));
@@ -4186,6 +4682,10 @@ function resolveEnemyAttack(session, enemy, target, overrideAttack = null) {
   const attack = overrideAttack ?? computeEnemyAttack(session, enemy, target, true);
   const damage = applyDamageToHero(session, target, attack, enemy.name, enemy);
 
+  resolveEnemyAttackStage1(session, enemy, target, damage);
+}
+
+function resolveEnemyAttackStage1(session, enemy, target, damage) {
   if (enemy.isBoss && enemy.id === "colosso") {
     if (session.activeIntention?.id === "BOSSCOL-002" && damage > 0) {
       session.colossoTargetDamaged = target;
@@ -4208,31 +4708,118 @@ function resolveEnemyAttack(session, enemy, target, overrideAttack = null) {
     enemy.statusEffects.enfraquecido = 0;
   }
 
+  resolveEnemyAttackStage2(session, enemy, target, damage);
+}
+
+function resolveEnemyAttackStage2(session, enemy, target, damage) {
   // Peçonhenta trigger
   if (damage > 0 && enemy.keywords?.includes("Peçonhenta")) {
     if (target.statusEffects) {
-      target.statusEffects.veneno = (target.statusEffects.veneno || 0) + 1;
-      session.log.unshift(`Peçonhenta: ${enemy.name} aplicou Veneno 1 em ${target.name}.`);
+      const paused = triggerStatusApplyReaction(session, enemy, target, "Veneno", 1, (negated) => {
+        if (!negated) {
+          target.statusEffects.veneno = (target.statusEffects.veneno || 0) + 1;
+          session.log.unshift(`Peçonhenta: ${enemy.name} aplicou Veneno 1 em ${target.name}.`);
+        }
+        resolveEnemyAttackStage3(session, enemy, target, damage);
+      });
+      if (paused) return;
+    } else {
+      resolveEnemyAttackStage3(session, enemy, target, damage);
     }
+  } else {
+    resolveEnemyAttackStage3(session, enemy, target, damage);
   }
+}
 
+function resolveEnemyAttackStage3(session, enemy, target, damage) {
   // Paralisante trigger
   if (damage > 0 && enemy.keywords?.includes("Paralisante")) {
     if (target.statusEffects) {
-      target.statusEffects.vacuo = true;
-      session.log.unshift(`Paralisante: ${enemy.name} aplicou Vácuo em ${target.name}.`);
+      const paused = triggerStatusApplyReaction(session, enemy, target, "Vácuo", 1, (negated) => {
+        if (!negated) {
+          target.statusEffects.vacuo = true;
+          session.log.unshift(`Paralisante: ${enemy.name} aplicou Vácuo em ${target.name}.`);
+        }
+        resolveEnemyAttackStage4(session, enemy, target, damage);
+      });
+      if (paused) return;
+    } else {
+      resolveEnemyAttackStage4(session, enemy, target, damage);
     }
+  } else {
+    resolveEnemyAttackStage4(session, enemy, target, damage);
   }
+}
 
+function resolveEnemyAttackStage4(session, enemy, target, damage) {
   if (damage > 0 && session.activeTrap?.effect === "splashLowestLife") {
     const splashTarget = selectTarget(
       session.players.filter((player) => player.id !== target.id),
       "minLife"
     );
-    if (splashTarget) applyDamageToHero(session, splashTarget, 1, session.activeTrap.name);
+    if (splashTarget) {
+      const paused = triggerTrapEffect(session, session.activeTrap, [splashTarget.id], (immuneIds) => {
+        if (!immuneIds.includes(splashTarget.id)) {
+          applyDamageToHero(session, splashTarget, 1, session.activeTrap.name);
+        }
+        resolveEnemyAttackStage5(session, enemy, target, damage);
+      });
+      if (paused) return;
+    } else {
+      resolveEnemyAttackStage5(session, enemy, target, damage);
+    }
+  } else {
+    resolveEnemyAttackStage5(session, enemy, target, damage);
+  }
+}
+
+function resolveEnemyAttackStage5(session, enemy, target, damage) {
+  if (damage > 0) {
+    const lowLifeHeroes = session.players.filter(p => p.life > 0 && p.life <= 8);
+    if (lowLifeHeroes.length > 0) {
+      const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
+      const hasCuraEmergencia = oraculo && oraculo.hand.some(c => c.id === "cura-de-emergencia");
+      if (hasCuraEmergencia) {
+        session.pendingReaction = {
+          id: randomUUID(),
+          type: "cura_emergencia",
+          enemyUid: enemy.uid,
+          enemyName: enemy.name,
+          eligiblePlayerIds: [oraculo.id],
+          skippedPlayerIds: [],
+          lowLifeHeroIds: lowLifeHeroes.map(p => p.id),
+          ruleText: `Cura de Emergência: Cura 5 de Vida em um herói com 8 ou menos de Vida.`,
+          playableCardUids: {
+            [oraculo.id]: oraculo.hand.filter(c => c.id === "cura-de-emergencia").map(c => c.uid)
+          }
+        };
+        session.pendingCuraCallback = (chosenHeroId) => {
+          if (chosenHeroId) {
+            const h = session.players.find(p => p.id === chosenHeroId);
+            if (h && h.life > 0 && h.life <= 8) {
+              applyHealToHero(session, h, 5, "Cura de Emergência");
+              session.log.unshift(`[Reação] Cura de Emergência: ${h.name} curou 5 de Vida.`);
+            }
+          }
+          resolveEnemyAttackStage6(session, enemy, target, damage);
+        };
+        session.log.unshift(`[Reação] Cura de Emergência pode ser usada. Reações abertas.`);
+        return;
+      }
+    }
+  }
+  
+  resolveEnemyAttackStage6(session, enemy, target, damage);
+}
+
+function resolveEnemyAttackStage6(session, enemy, target, damage) {
+  if (damage > 0 && target.life > 0 && target.profecia_tokens && target.profecia_tokens.length > 0) {
+    const totalHeal = target.profecia_tokens.reduce((a, b) => a + b, 0);
+    applyHealToHero(session, target, totalHeal, "Profecia");
+    session.log.unshift(`[Profecia] ${target.name} curou ${totalHeal} de Vida.`);
+    target.profecia_tokens = [];
   }
 
-  // Desafio do Guardião return damage trigger
   if (enemy.challengedByGuardiao && enemy.life > 0) {
     const guardiao = session.players.find(p => p.heroId === "guardiao" && p.life > 0);
     if (guardiao && guardiao.shield >= 3) {
@@ -4240,6 +4827,8 @@ function resolveEnemyAttack(session, enemy, target, overrideAttack = null) {
       applyDamageToEnemy(session, enemy, 2, "Desafio do Guardião", false);
     }
   }
+
+  advanceDungeonTurn(session);
 }
 
 function aliveEnemyCount(session) {
@@ -4247,25 +4836,65 @@ function aliveEnemyCount(session) {
 }
 
 function applyEndOfDungeonEffects(session) {
-  if (isRoomComplete(session)) return;
+  if (isRoomComplete(session)) return false;
 
-  if (session.room.effect === "endRoundDamageIfTwoEnemies" && aliveEnemyCount(session) >= 2) {
-    session.players.forEach((player) => applyDamageToHero(session, player, 1, session.room.name));
+  if (!session.roomEffectsApplied) {
+    if (session.room.effect === "endRoundDamageIfTwoEnemies" && aliveEnemyCount(session) >= 2) {
+      session.players.forEach((player) => applyDamageToHero(session, player, 1, session.room.name));
+    }
+    if (session.room.effect === "endRoundLowestLifeDamage") {
+      const target = selectTarget(session.players, "minLife");
+      if (target) applyDamageToHero(session, target, 1, session.room.name);
+    }
+    session.roomEffectsApplied = true;
   }
-  if (session.room.effect === "endRoundLowestLifeDamage") {
-    const target = selectTarget(session.players, "minLife");
-    if (target) applyDamageToHero(session, target, 1, session.room.name);
+
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  if (isTrapActive) {
+    if (session.activeTrap.effect === "endDungeonAllDamage" && !session.trapEffectApplied) {
+      const affectedPlayerIds = session.players.filter(p => p.life > 0).map(p => p.id);
+      const paused = triggerTrapEffect(session, session.activeTrap, affectedPlayerIds, (immuneIds) => {
+        session.players.forEach((player) => {
+          if (player.life > 0 && !immuneIds.includes(player.id)) {
+            applyDamageToHero(session, player, 1, session.activeTrap.name);
+          }
+        });
+        session.trapEffectApplied = true;
+        finishDungeonTurn(session);
+      });
+      if (paused) return true;
+    }
+    if (session.activeTrap.effect === "endRoundLowestLifeDamage" && !session.trapEffectApplied) {
+      const target = selectTarget(session.players, "minLife");
+      if (target) {
+        const paused = triggerTrapEffect(session, session.activeTrap, [target.id], (immuneIds) => {
+          if (!immuneIds.includes(target.id)) {
+            applyDamageToHero(session, target, 1, session.activeTrap.name);
+          }
+          session.trapEffectApplied = true;
+          finishDungeonTurn(session);
+        });
+        if (paused) return true;
+      }
+    }
+    if (session.activeTrap.effect === "endDungeonDamageIfTwoEnemies" && aliveEnemyCount(session) >= 2 && !session.trapEffectApplied) {
+      const affectedPlayerIds = session.players.filter(p => p.life > 0).map(p => p.id);
+      const paused = triggerTrapEffect(session, session.activeTrap, affectedPlayerIds, (immuneIds) => {
+        session.players.forEach((player) => {
+          if (player.life > 0 && !immuneIds.includes(player.id)) {
+            applyDamageToHero(session, player, 1, session.activeTrap.name);
+          }
+        });
+        session.trapEffectApplied = true;
+        finishDungeonTurn(session);
+      });
+      if (paused) return true;
+    }
   }
-  if (session.activeTrap?.effect === "endDungeonAllDamage") {
-    session.players.forEach((player) => applyDamageToHero(session, player, 1, session.activeTrap.name));
-  }
-  if (session.activeTrap?.effect === "endRoundLowestLifeDamage") {
-    const target = selectTarget(session.players, "minLife");
-    if (target) applyDamageToHero(session, target, 1, session.activeTrap.name);
-  }
-  if (session.activeTrap?.effect === "endDungeonDamageIfTwoEnemies" && aliveEnemyCount(session) >= 2) {
-    session.players.forEach((player) => applyDamageToHero(session, player, 1, session.activeTrap.name));
-  }
+  
+  session.roomEffectsApplied = false;
+  session.trapEffectApplied = false;
+  return false;
 }
 
 function sanitizeSession(session, viewerId) {
@@ -4324,6 +4953,7 @@ function sanitizeSession(session, viewerId) {
     pendingEnergyAllocation: session.pendingEnergyAllocation,
     pendingEcoArcano: session.pendingEcoArcano,
     pendingDistorcaoTemporal: session.pendingDistorcaoTemporal,
+    pendingIntentionLook: session.pendingIntentionLook,
     activeTrapDisabledRounds: session.activeTrapDisabledRounds || 0,
     bossSelectOptions: session.bossSelectOptions || [],
     activeTorment: session.activeTorment || null,
@@ -4346,6 +4976,8 @@ function sanitizeSession(session, viewerId) {
       shield: player.shield,
       carga_de_batalha: player.carga_de_batalha !== undefined ? player.carga_de_batalha : null,
       statusEffects: player.statusEffects,
+      profecia_tokens: player.profecia_tokens || [],
+      proxima_carta_desconto_1: player.proxima_carta_desconto_1 || false,
       roundStats: player.roundStats,
       deckCount: player.deck.length,
       handCount: player.hand.length,
@@ -4358,6 +4990,7 @@ function sanitizeSession(session, viewerId) {
       chosenRewards: player.chosenRewards || [],
       hasClaimedRoomReward: player.hasClaimedRoomReward || false,
       hasRedrawAvailable: player.hasRedrawAvailable || false,
+      skipReactionsThisRound: player.skipReactionsThisRound || false,
       hand: player.id === viewerId ? player.hand : []
     }))
   };
@@ -4637,6 +5270,7 @@ async function handleApi(req, res) {
             p.chosenRewards = [];
             p.hasClaimedRoomReward = false;
             p.hasRedrawAvailable = false;
+            p.skipReactionsThisRound = false;
             p.statusEffects = makeStatusEffects();
             p.heroId = null;
           });
@@ -4677,6 +5311,8 @@ async function handleApi(req, res) {
           playReaction(session, player, body);
         } else if (body.type === "skipReaction") {
           skipReaction(session, player);
+        } else if (body.type === "skipReactionsThisRound") {
+          skipReactionsThisRound(session, player);
         } else if (body.type === "endTurn") {
           endTurn(session, player);
         } else if (body.type === "useSupreme") {
@@ -4693,14 +5329,21 @@ async function handleApi(req, res) {
           // Execute supreme effects directly
           if (sc.supremeEffects) {
             session.players.filter((ally) => ally.life > 0).forEach((ally) => {
-              applyHealToHero(session, ally, 5, sc.name);
+              applyHealToHero(session, ally, 8, sc.name);
               ally.shield += 5;
               ally.roundStats.shieldReceived = (ally.roundStats.shieldReceived || 0) + 5;
-              ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
+              if (ally.statusEffects) {
+                ally.statusEffects.veneno = 0;
+                ally.statusEffects.queimadura = { value: 0, duration: 0 };
+                ally.statusEffects.vacuo = false;
+                ally.statusEffects.enfraquecido = 0;
+                ally.statusEffects.exposto = false;
+              }
+              ally.energy = Math.min(ally.maxEnergy, ally.energy + 2);
               pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: ally.id, amount: 5, source: sc.name });
               drawCards(ally, 1);
             });
-            session.log.unshift(`${player.name} usou ${sc.name}! Todos receberam Cura 5, Escudo 5, Energia +2 e compraram 1 carta.`);
+            session.log.unshift(`${player.name} usou ${sc.name}! Todos os aliados receberam Cura 8, Escudo 5, remoção de status, Energia +2 e compraram 1 carta.`);
           } else if (sc.id === "tempestade-de-flechas") {
             const targets = session.enemies.filter((enemy) => enemy.life > 0);
             const penalty = getHeroAttackPenalty(session);
@@ -4821,6 +5464,40 @@ async function handleApi(req, res) {
           session.pendingEcoArcano = null;
           session.log.unshift(`${player.name} usou Eco Arcano para repetir os efeitos de ${copiedCard.name}!`);
           executeCardEffects(session, player, copiedCard, { targetId }, 0);
+        } else if (body.type === "confirmIntentionLook") {
+          if (!session.pendingIntentionLook) throw new Error("Não há visualização de intenções pendente.");
+          if (session.pendingIntentionLook.casterId !== player.id) throw new Error("Apenas o conjurador do efeito pode responder.");
+
+          const { discardedCardId, reorderedCardIds } = body;
+          const look = session.pendingIntentionLook;
+
+          if (look.canDiscard && discardedCardId) {
+            const discardedIdx = session.intentionDeck.findIndex(c => c.id === discardedCardId);
+            if (discardedIdx === -1 || discardedIdx >= look.maxCards) {
+              throw new Error("Carta para descarte inválida.");
+            }
+            const [discardedCard] = session.intentionDeck.splice(discardedIdx, 1);
+            session.intentionDeck.push(discardedCard);
+            session.log.unshift(`${player.name} descartou ${discardedCard.name} para o fundo do baralho de Intenções.`);
+          }
+
+          const remainingCount = look.canDiscard && discardedCardId ? look.maxCards - 1 : look.maxCards;
+          const originalRemaining = session.intentionDeck.slice(0, remainingCount);
+          if (reorderedCardIds.length !== remainingCount) {
+            throw new Error(`Deve reordenar exatamente ${remainingCount} cartas.`);
+          }
+
+          const newTop = [];
+          for (const id of reorderedCardIds) {
+            const idx = originalRemaining.findIndex(c => c.id === id);
+            if (idx === -1) throw new Error("ID de carta reordenada inválido.");
+            newTop.push(originalRemaining[idx]);
+            originalRemaining.splice(idx, 1);
+          }
+
+          session.intentionDeck.splice(0, remainingCount, ...newTop);
+          session.pendingIntentionLook = null;
+          session.log.unshift(`${player.name} reorganizou o topo do baralho de Intenções.`);
         } else if (body.type === "cancelEcoArcano") {
           if (!session.pendingEcoArcano) throw new Error("Nao ha Eco Arcano pendente.");
           if (session.pendingEcoArcano.casterId !== player.id) throw new Error("Apenas o conjurador pode cancelar.");
