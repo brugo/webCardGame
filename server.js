@@ -151,7 +151,9 @@ function makeStatusEffects() {
     queimadura: { value: 0, duration: 0 },
     vacuo: false,
     enfraquecido: 0,
-    exposto: false
+    exposto: false,
+    marcado: false,
+    envenenamento: 0
   };
 }
 
@@ -695,18 +697,29 @@ const heroes = {
     energy: 4,
     supreme: "tempestade-de-flechas",
     deck: [
-      ["flecha-precisa", 2],
-      ["disparo-poderoso", 2],
-      ["chuva-de-flechas", 2],
-      ["tiro-perfurante", 2],
-      ["mira-perfeita", 2],
-      ["companheiro-animal", 2],
-      ["flecha-explosiva", 1],
+      ["flechada-de-oportunidade", 1],
+      ["flecha-relampago", 1],
+      ["flecha-precisa", 1],
+      ["mira-perfeita", 1],
       ["disparo-rapido", 1],
-      ["flecha-atordoante", 1],
-      ["execucao", 1],
+      ["flecha-envenenada", 1],
+      ["marcar-alvo", 1],
       ["cacada", 1],
-      ["ultima-flecha", 1]
+      ["flecha-de-abertura", 1],
+      ["chuva-de-flechas", 1],
+      ["flecha-explosiva", 1],
+      ["flecha-atordoante", 1],
+      ["companheiro-animal", 1],
+      ["tiro-duplo", 1],
+      ["concentracao", 1],
+      ["flecha-perfurante", 1],
+      ["rastrear", 1],
+      ["disparo-poderoso", 1],
+      ["tiro-perfurante", 1],
+      ["cacada-implacavel", 1],
+      ["ultima-flecha", 1],
+      ["saraivada-venenosa", 1],
+      ["flecha-letal", 1]
     ]
   },
   mago: {
@@ -1199,38 +1212,27 @@ const cards = {
     supremeEffects: true,
     text: "Suprema. Todos os aliados recebem: Cura 8, Escudo 5, todos os status effects removidos, Energia +2 e compram 1 carta."
   },
+  "flechada-de-oportunidade": {
+    id: "flechada-de-oportunidade",
+    name: "Flechada de Oportunidade",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando qualquer inimigo é derrotado durante a Fase da Masmorra, você imediatamente recupera 1 de Energia e compra 1 carta."
+  },
+  "flecha-relampago": {
+    id: "flecha-relampago",
+    name: "Flecha Relâmpago",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando um inimigo é declarado como atacante, cause 2 de dano a esse inimigo. Se ele morrer, seu ataque é cancelado."
+  },
   "flecha-precisa": {
     id: "flecha-precisa",
     name: "Flecha Precisa",
     type: "attack",
     cost: 1,
-    damage: 4,
-    text: "Cause 4 de dano a um inimigo."
-  },
-  "disparo-poderoso": {
-    id: "disparo-poderoso",
-    name: "Disparo Poderoso",
-    type: "attack",
-    cost: 3,
-    damage: 7,
-    text: "Cause 7 de dano a um inimigo."
-  },
-  "chuva-de-flechas": {
-    id: "chuva-de-flechas",
-    name: "Chuva de Flechas",
-    type: "attack",
-    cost: 2,
-    areaDamage: 2,
-    text: "Cause 2 de dano em todos os inimigos."
-  },
-  "tiro-perfurante": {
-    id: "tiro-perfurante",
-    name: "Tiro Perfurante",
-    type: "attack",
-    cost: 3,
     damage: 5,
-    ignoreShield: true,
-    text: "Cause 5 de dano, ignorando Escudo."
+    text: "Cause 5 de dano a um inimigo."
   },
   "mira-perfeita": {
     id: "mira-perfeita",
@@ -1241,29 +1243,60 @@ const cards = {
     planning: true,
     text: "Compre 2 cartas e depois descarte 1."
   },
-  "companheiro-animal": {
-    id: "companheiro-animal",
-    name: "Companheiro Animal",
-    type: "permanent",
+  "disparo-rapido": {
+    id: "disparo-rapido",
+    name: "Disparo Rápido",
+    type: "energy",
+    cost: 1,
+    energy: 1,
+    draw: 1,
+    text: "Recupere 1 de Energia. Compre 1 carta."
+  },
+  "flecha-envenenada": {
+    id: "flecha-envenenada",
+    name: "Flecha Envenenada",
+    type: "attack",
+    cost: 1,
+    damage: 2,
+    text: "Cause 2 de dano a um inimigo. Aplique Envenenamento 2 a esse inimigo."
+  },
+  "marcar-alvo": {
+    id: "marcar-alvo",
+    name: "Marcar Alvo",
+    type: "control",
+    cost: 1,
+    draw: 1,
+    text: "Aplique Marcado a um inimigo. Compre 1 carta."
+  },
+  "cacada": {
+    id: "cacada",
+    name: "Caçada",
+    type: "draw",
+    cost: 1,
+    text: "Se um inimigo foi derrotado nesta rodada, compre 2 cartas. Caso contrário, compre 1."
+  },
+  "flecha-de-abertura": {
+    id: "flecha-de-abertura",
+    name: "Flecha de Abertura",
+    type: "attack",
+    cost: 1,
+    damage: 3,
+    text: "Cause 3 de dano a um inimigo. Se esta é a primeira carta de Ataque que você jogou nesta rodada, aplique também Marcado a esse inimigo."
+  },
+  "chuva-de-flechas": {
+    id: "chuva-de-flechas",
+    name: "Chuva de Flechas",
+    type: "attack",
     cost: 2,
-    nextAttackBonus: 2,
-    text: "Na proxima carta de ataque que voce jogar nesta rodada, cause +2 de dano."
+    areaDamage: 3,
+    text: "Cause 3 de dano a todos os inimigos."
   },
   "flecha-explosiva": {
     id: "flecha-explosiva",
     name: "Flecha Explosiva",
     type: "attack",
     cost: 2,
-    text: "Cause 4 de dano a um inimigo. Depois cause 2 de dano em todos os outros inimigos."
-  },
-  "disparo-rapido": {
-    id: "disparo-rapido",
-    name: "Disparo Rapido",
-    type: "energy",
-    cost: 1,
-    energy: 1,
-    draw: 1,
-    text: "Recupere 1 de Energia. Compre 1 carta."
+    text: "Cause 4 de dano a um inimigo. Em seguida, cause 2 de dano a todos os outros inimigos."
   },
   "flecha-atordoante": {
     id: "flecha-atordoante",
@@ -1271,37 +1304,99 @@ const cards = {
     type: "attack",
     cost: 2,
     damage: 4,
-    stun: true,
-    text: "Causa 4 de dano. O alvo nao ataca nesta rodada."
+    text: "Cause 4 de dano a um inimigo. Esse inimigo não ataca nesta rodada."
   },
-  "execucao": {
-    id: "execucao",
-    name: "Execucao",
+  "companheiro-animal": {
+    id: "companheiro-animal",
+    name: "Companheiro Animal",
     type: "attack",
-    cost: 4,
-    text: "Derrote imediatamente um Inimigo Comum. Contra Brutais, cause 5 de dano."
+    cost: 2,
+    nextAttackBonus: 3,
+    text: "A próxima carta de Ataque que você jogar nesta rodada causa +3 de dano."
   },
-  "cacada": {
-    id: "cacada",
-    name: "Cacada",
-    type: "draw",
-    cost: 1,
-    text: "Se um inimigo foi derrotado nesta rodada, compre 2 cartas. Se nao, compre 1."
+  "tiro-duplo": {
+    id: "tiro-duplo",
+    name: "Tiro Duplo",
+    type: "attack",
+    cost: 2,
+    text: "Cause 3 de dano a um inimigo. Em seguida, cause 3 de dano a um segundo inimigo diferente. Se houver apenas 1 inimigo, cause 3 de dano a ele duas vezes."
+  },
+  "concentracao": {
+    id: "concentracao",
+    name: "Concentração",
+    type: "control",
+    cost: 2,
+    text: "Escolha um inimigo. Até o início da próxima Fase dos Heróis, todas as suas cartas de Ataque causam +2 de dano a esse inimigo específico."
+  },
+  "flecha-perfurante": {
+    id: "flecha-perfurante",
+    name: "Flecha Perfurante",
+    type: "attack",
+    cost: 2,
+    damage: 4,
+    ignoreShield: true,
+    text: "Cause 4 de dano a um inimigo, ignorando Escudo. Aplique Envenenamento 1 a esse inimigo."
+  },
+  "rastrear": {
+    id: "rastrear",
+    name: "Rastrear",
+    type: "control",
+    cost: 2,
+    draw: 1,
+    text: "Escolha um inimigo. Todos os aliados causam +1 de dano a esse inimigo até o final desta rodada. Compre 1 carta."
+  },
+  "disparo-poderoso": {
+    id: "disparo-poderoso",
+    name: "Disparo Poderoso",
+    type: "attack",
+    cost: 3,
+    damage: 8,
+    text: "Cause 8 de dano a um inimigo."
+  },
+  "tiro-perfurante": {
+    id: "tiro-perfurante",
+    name: "Tiro Perfurante",
+    type: "attack",
+    cost: 3,
+    damage: 7,
+    ignoreShield: true,
+    text: "Cause 7 de dano a um inimigo, ignorando Escudo."
+  },
+  "cacada-implacavel": {
+    id: "cacada-implacavel",
+    name: "Caçada Implacável",
+    type: "attack",
+    cost: 3,
+    text: "Cause 5 de dano a um inimigo. Se esse inimigo possui Marcado, cause 9 de dano em vez disso e remova o Marcado."
   },
   "ultima-flecha": {
     id: "ultima-flecha",
-    name: "Ultima Flecha",
+    name: "Última Flecha",
     type: "attack",
     cost: 3,
-    damage: 10,
-    text: "Causa 10 de dano. Depois descarte toda sua mao."
+    damage: 12,
+    text: "Cause 12 de dano a um inimigo. Depois, descarte toda a sua mão."
+  },
+  "saraivada-venenosa": {
+    id: "saraivada-venenosa",
+    name: "Saraivada Venenosa",
+    type: "attack",
+    cost: 3,
+    text: "Cause 3 de dano a todos os inimigos. Aplique Envenenamento 2 a todos os inimigos vivos após o dano."
+  },
+  "flecha-letal": {
+    id: "flecha-letal",
+    name: "Flecha Letal",
+    type: "attack",
+    cost: 4,
+    text: "Cause dano a um inimigo ignorando Escudo: 14 se tiver Marcado e Envenenamento (remove Marcado); 10 se tiver apenas Marcado (remove Marcado); 6 + Envenenamento 3 se tiver apenas Envenenamento; 6 se não tiver nenhum."
   },
   "tempestade-de-flechas": {
     id: "tempestade-de-flechas",
     name: "Tempestade de Flechas",
     type: "attack",
     cost: 0,
-    text: "Suprema. Cause 6 de dano em todos os inimigos. Depois cause 8 de dano a um inimigo."
+    text: "Suprema. Cause 5 de dano a todos os inimigos. Em seguida, cause 10 de dano a um inimigo escolhido. Se o inimigo possui Marcado ou Envenenamento ativo, cause 15 em vez disso, remova o Marcado e aplique Envenenamento 3 a todos os outros inimigos."
   },
   "bastiao-supremo": {
     id: "bastiao-supremo",
@@ -1602,7 +1697,10 @@ function createEnemy(session, templateId) {
     shield: template.shield + shieldBonus,
     maxShield: template.shield + shieldBonus,
     attack: finalAttack,
-    statusEffects: makeStatusEffects()
+    statusEffects: makeStatusEffects(),
+    marcado: false,
+    envenenamento: 0,
+    atordoado_rodada_atual: false
   };
 }
 
@@ -2175,6 +2273,17 @@ function triggerBossTransition(session, boss) {
 function applyDamageToEnemy(session, target, amount, source, ignoreShield = false, player = null) {
   if (!target || target.life <= 0 || amount <= 0) return 0;
 
+  if (player) {
+    if (player.heroId === "batedor" && player.foco_em === target.uid) {
+      amount += (player.bonus_foco || 0);
+      session.log.unshift(`[Concentração] +${player.bonus_foco} de dano no alvo focado.`);
+    }
+    if (session.alvo_rastreado === target.uid) {
+      amount += (session.bonus_rastreado || 0);
+      session.log.unshift(`[Rastrear] +${session.bonus_rastreado} de dano no alvo rastreado.`);
+    }
+  }
+
   if (target.statusEffects?.exposto) {
     amount += 1;
   }
@@ -2205,7 +2314,7 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   // Pulso Reativo shield gain
   if (target.isBoss && lifeDamage >= 8 && isPulsoReativo && target.life > 0) {
     target.shield += 3;
-    session.log.unshift(`Pulso Reativo: ${target.name} sofreu 8+ de dano e ganhou 3 de Escudo.`);
+    session.log.unshift(`Pulso Reativo: ${target.name} sofreu 8+ de dano and ganhou 3 de Escudo.`);
     pushVisualEvent(session, { type: "shield", targetType: "enemy", targetId: target.uid, amount: 3, source: "Pulso Reativo" });
   }
 
@@ -2218,6 +2327,23 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   if (target.life === 0) {
     if (player) player.roundStats.enemiesDefeated += 1;
     session.log.unshift(`${target.name} foi derrotado.`);
+    
+    // Increment general round defeated counter
+    session.inimigos_derrotados_esta_rodada = (session.inimigos_derrotados_esta_rodada || 0) + 1;
+    
+    // If it's dungeon phase, queue for reaction check
+    if (session.turn === "dungeon") {
+      session.enemiesDefeatedThisDungeonStep = session.enemiesDefeatedThisDungeonStep || [];
+      session.enemiesDefeatedThisDungeonStep.push(target.uid);
+      
+      // Also add to player stats for Caçada/reactions
+      session.players.forEach(p => {
+        if (p.life > 0) {
+          p.roundStats.enemiesDefeated = (p.roundStats.enemiesDefeated || 0) + 1;
+        }
+      });
+    }
+
     if (target.isBoss) {
       session.enemies = session.enemies.filter(e => e.uid === target.uid); // keep only boss
       session.status = "victory";
@@ -3063,6 +3189,9 @@ function startGame(session) {
   session.pendingReaction = null;
   session.pendingShieldAllocation = null;
   session.todos_inimigos_forcam_guardiao = false;
+  session.alvo_rastreado = null;
+  session.bonus_rastreado = 0;
+  session.inimigos_derrotados_esta_rodada = 0;
   session.players.forEach((player) => {
     const hero = heroes[player.heroId];
     player.maxLife = hero.life;
@@ -3079,6 +3208,9 @@ function startGame(session) {
     player.statusEffects = makeStatusEffects();
     player.profecia_tokens = [];
     player.nextAttackBonus = 0;
+    player.foco_em = null;
+    player.bonus_foco = 0;
+    player.ataques_jogados_esta_rodada = 0;
     player.bastiaoSupremoActive = false;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
@@ -3165,11 +3297,14 @@ function startNextRound(session) {
   session.arena = [];
   session.enemies.forEach((enemy) => {
     enemy.isStunned = false;
+    enemy.atordoado_rodada_atual = false;
     if (enemy.statusEffects) {
       enemy.statusEffects.vacuo = false;
     }
   });
   session.todos_inimigos_forcam_guardiao = false;
+  session.alvo_rastreado = null;
+  session.bonus_rastreado = 0;
   session.players.forEach((player) => {
     const toDiscard = player.played.filter(c => !c.exhausted);
     player.discard.push(...toDiscard);
@@ -3181,6 +3316,9 @@ function startNextRound(session) {
     player.reflectDamage = 0;
     player.reduceDamage = 0;
     player.nextAttackBonus = 0;
+    player.foco_em = null;
+    player.bonus_foco = 0;
+    player.ataques_jogados_esta_rodada = 0;
     player.bastiaoSupremoActive = false;
     player.activeShields = [];
     player.turnEnded = player.life <= 0;
@@ -3309,7 +3447,10 @@ function playCard(session, player, payload) {
   player.energy -= finalCost;
   player.roundStats.energySpent += finalCost;
   player.roundStats.cardsPlayed += 1;
-  if (card.type === "attack") player.roundStats.attackCardsPlayed += 1;
+  if (card.type === "attack") {
+    player.roundStats.attackCardsPlayed += 1;
+    player.ataques_jogados_esta_rodada = (player.ataques_jogados_esta_rodada || 0) + 1;
+  }
 
   session.ultima_carta_jogada_na_rodada = card;
 
@@ -3358,7 +3499,7 @@ function playCard(session, player, payload) {
 
   // Consume next attack bonus if it's an attack card
   let attackBuff = 0;
-  const isAttackCard = card.type === "attack" || card.damage || card.areaDamage || card.id === "flecha-explosiva" || card.id === "execucao" || card.id === "tempestade-eletrica";
+  const isAttackCard = (card.type === "attack" || card.damage || card.areaDamage || card.id === "flecha-explosiva" || card.id === "execucao" || card.id === "tempestade-eletrica") && card.id !== "companheiro-animal";
   if (player.nextAttackBonus && isAttackCard) {
     attackBuff = player.nextAttackBonus;
     player.nextAttackBonus = 0;
@@ -3879,6 +4020,30 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     session.log.unshift(`${player.name} jogou ${card.name}. Proxima carta de ataque causara +${card.nextAttackBonus} de dano.`);
   }
 
+  if (card.id === "flecha-envenenada") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      target.statusEffects.envenenamento = (target.statusEffects.envenenamento || 0) + 2;
+      session.log.unshift(`${player.name} aplicou Envenenamento 2 em ${target.name}.`);
+    }
+  }
+
+  if (card.id === "marcar-alvo") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      target.statusEffects.marcado = true;
+      session.log.unshift(`${player.name} marcou ${target.name}.`);
+    }
+  }
+
+  if (card.id === "flecha-de-abertura") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target && player.ataques_jogados_esta_rodada === 1) {
+      target.statusEffects.marcado = true;
+      session.log.unshift(`${player.name} aplicou Marcado em ${target.name} com Flecha de Abertura.`);
+    }
+  }
+
   if (card.id === "flecha-explosiva") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
@@ -3892,37 +4057,81 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     }
   }
 
-  if (card.stun) {
+  if (card.id === "flecha-atordoante") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      if (card.target === "brutal" && target.category !== "brutal") {
-        throw new Error("Esta carta so pode visar Inimigos Brutais.");
-      }
       target.isStunned = true;
-      session.log.unshift(`${player.name} atordoou ${target.name} com ${card.name}. Ele nao atacara nesta rodada.`);
+      target.atordoado_rodada_atual = true;
+      session.log.unshift(`${player.name} atordoou ${target.name} com Flecha Atordoante. Ele nao atacara nesta rodada.`);
     }
   }
 
-  if (card.id === "execucao") {
+  if (card.id === "tiro-duplo") {
+    const target1 = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target1) {
+      const dmg1 = getHeroAttackDamage(player, 3, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target1, dmg1, card.name, false, player);
+      
+      const otherEnemies = session.enemies.filter((enemy) => enemy.uid !== target1.uid && enemy.life > 0);
+      if (otherEnemies.length > 0) {
+        const target2 = otherEnemies[0];
+        const dmg2 = getHeroAttackDamage(player, 3, 0, getHeroAttackPenalty(session));
+        applyDamageToEnemy(session, target2, dmg2, card.name, false, player);
+        session.log.unshift(`${player.name} usou Tiro Duplo: ${dmg1} de dano em ${target1.name} e ${dmg2} de dano em ${target2.name}.`);
+      } else {
+        const dmg2 = getHeroAttackDamage(player, 3, 0, getHeroAttackPenalty(session));
+        applyDamageToEnemy(session, target1, dmg2, card.name, false, player);
+        session.log.unshift(`${player.name} usou Tiro Duplo no mesmo alvo: ${dmg1} + ${dmg2} de dano em ${target1.name}.`);
+      }
+    }
+  }
+
+  if (card.id === "concentracao") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      if (target.category === "common") {
-        const damageNeeded = target.life;
-        applyDamageToEnemy(session, target, damageNeeded, card.name, true, player);
-        session.log.unshift(`${player.name} executou ${target.name} instantaneamente!`);
-      } else {
-        const dmg = getHeroAttackDamage(player, 5, attackBuff, getHeroAttackPenalty(session));
-        applyDamageToEnemy(session, target, dmg, card.name, false, player);
-        session.log.unshift(`${player.name} usou Execucao em ${target.name} (Brutal) e causou ${dmg} de dano.`);
-      }
+      player.foco_em = target.uid;
+      player.bonus_foco = 2;
+      session.log.unshift(`${player.name} concentrou o foco em ${target.name}. Ataques contra ele causam +2 de dano.`);
+    }
+  }
+
+  if (card.id === "flecha-perfurante") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      target.statusEffects.envenenamento = (target.statusEffects.envenenamento || 0) + 1;
+      session.log.unshift(`${player.name} aplicou Envenenamento 1 em ${target.name} com Flecha Perfurante.`);
+    }
+  }
+
+  if (card.id === "rastrear") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      session.alvo_rastreado = target.uid;
+      session.bonus_rastreado = 1;
+      session.log.unshift(`${player.name} rastreou ${target.name}. Todos os heróis causam +1 de dano a ele.`);
     }
   }
 
   if (card.id === "cacada") {
-    const enemyDefeatedThisRound = session.players.some((p) => (p.roundStats?.enemiesDefeated || 0) > 0);
+    const enemyDefeatedThisRound = (session.inimigos_derrotados_esta_rodada || 0) > 0;
     const count = enemyDefeatedThisRound ? 2 : 1;
     const drawn = drawCards(player, count);
     session.log.unshift(`${player.name} jogou Cacada. Como ${enemyDefeatedThisRound ? "um" : "nenhum"} inimigo foi derrotado nesta rodada, comprou ${drawn} carta(s).`);
+  }
+
+  if (card.id === "cacada-implacavel") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      const isMarcado = Boolean(target.statusEffects.marcado);
+      const baseVal = isMarcado ? 9 : 5;
+      const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      if (isMarcado) {
+        target.statusEffects.marcado = false;
+        session.log.unshift(`${player.name} consumiu o Marcado de ${target.name} com Caçada Implacável.`);
+      }
+      session.log.unshift(`${player.name} usou Caçada Implacável em ${target.name} e causou ${dmg} de dano.`);
+    }
   }
 
   if (card.id === "ultima-flecha") {
@@ -3931,6 +4140,58 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
       player.discard.push(...player.hand);
       player.hand = [];
       session.log.unshift(`${player.name} descartou toda a mao (${count} cartas) devido ao efeito de Ultima Flecha.`);
+    }
+  }
+
+  if (card.id === "saraivada-venenosa") {
+    const targets = session.enemies.filter((enemy) => enemy.life > 0);
+    targets.forEach((enemy) => {
+      const dmg = getHeroAttackDamage(player, 3, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, enemy, dmg, card.name, false, player);
+    });
+    const survivors = session.enemies.filter((enemy) => enemy.life > 0);
+    survivors.forEach((enemy) => {
+      enemy.statusEffects.envenenamento = (enemy.statusEffects.envenenamento || 0) + 2;
+    });
+    if (survivors.length > 0) {
+      session.log.unshift(`Saraivada Venenosa aplicou Envenenamento 2 a ${survivors.length} inimigo(s) sobrevivente(s).`);
+    }
+  }
+
+  if (card.id === "flecha-letal") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      const hasMarcado = Boolean(target.statusEffects.marcado);
+      const hasEnvenenamento = (target.statusEffects.envenenamento || 0) > 0;
+      let baseDmg = 6;
+      let removeMarcado = false;
+      let addEnvenenamento = 0;
+      
+      if (hasMarcado && hasEnvenenamento) {
+        baseDmg = 14;
+        removeMarcado = true;
+      } else if (hasMarcado) {
+        baseDmg = 10;
+        removeMarcado = true;
+      } else if (hasEnvenenamento) {
+        baseDmg = 6;
+        addEnvenenamento = 3;
+      } else {
+        baseDmg = 6;
+      }
+      
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, true, player);
+      
+      if (removeMarcado) {
+        target.statusEffects.marcado = false;
+        session.log.unshift(`Flecha Letal consumiu o Marcado de ${target.name}.`);
+      }
+      if (addEnvenenamento > 0) {
+        target.statusEffects.envenenamento = (target.statusEffects.envenenamento || 0) + addEnvenenamento;
+        session.log.unshift(`Flecha Letal aplicou Envenenamento ${addEnvenenamento} em ${target.name}.`);
+      }
+      session.log.unshift(`${player.name} usou Flecha Letal em ${target.name} e causou ${dmg} de dano ignorando Escudo.`);
     }
   }
 
@@ -4050,12 +4311,57 @@ function endTurn(session, player) {
   }
 }
 
+function resolveEnvenenamentoTick(session) {
+  session.enemies.forEach((enemy) => {
+    if (enemy.life > 0 && enemy.statusEffects?.envenenamento > 0) {
+      const damage = enemy.statusEffects.envenenamento;
+      applyDamageToEnemy(session, enemy, damage, "Envenenamento", true, null);
+    }
+  });
+}
+
+function checkFlechadaOportunidade(session, callback) {
+  if (!session.enemiesDefeatedThisDungeonStep || session.enemiesDefeatedThisDungeonStep.length === 0) {
+    return false;
+  }
+
+  const batedor = session.players.find(p => p.heroId === "batedor" && p.life > 0 && !p.skipReactionsThisRound);
+  const hasFlechada = batedor && batedor.hand.some(c => c.id === "flechada-de-oportunidade");
+
+  if (hasFlechada) {
+    session.enemiesDefeatedThisDungeonStep.shift();
+
+    session.pendingReaction = {
+      id: randomUUID(),
+      type: "flechada_oportunidade",
+      eligiblePlayerIds: [batedor.id],
+      skippedPlayerIds: [],
+      ruleText: `Flechada de Oportunidade: Um inimigo foi derrotado. Reaja para recuperar 1 de Energia e comprar 1 carta.`,
+      playableCardUids: {
+        [batedor.id]: batedor.hand.filter(c => c.id === "flechada-de-oportunidade").map(c => c.uid)
+      }
+    };
+    session.pendingFlechadaCallback = () => {
+      if (!checkFlechadaOportunidade(session, callback)) {
+        callback();
+      }
+    };
+    session.log.unshift(`[Reação] Flechada de Oportunidade pode ser usada. Reações abertas.`);
+    return true;
+  } else {
+    session.enemiesDefeatedThisDungeonStep = [];
+    return false;
+  }
+}
+
 function startDungeonTurn(session) {
   session.turn = "dungeon";
   session.dungeonResolved = false;
   session.pendingReaction = null;
   session.dungeonQueue = [];
-  session.represaliaChecked = false; // Reset for colossus BOSSCOL-001 Represália check
+  session.represaliaChecked = false;
+  session.enemiesDefeatedThisDungeonStep = [];
+  session.inimigos_derrotados_esta_rodada = 0;
   session.enemies.forEach(e => {
     e.currentTargetId = null;
   });
@@ -4079,27 +4385,37 @@ function startDungeonTurn(session) {
     }
   }
 
-  if (!isRoomComplete(session)) {
-    if (session.room?.effect === "bossRoom") {
-      // 1. Queue Commons (minions)
-      queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
-      // 2. Queue Boss
-      queueEnemyGroup(session, "boss", intention.commonTarget, intention.commonText);
-    } else {
-      const brutalsFirst = (session.room.effect === "brutalsFirst" || session.activeTrap?.effect === "brutalsFirst") && session.activeIntention?.id !== "INT_013";
-      if (brutalsFirst) {
-        queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
+  // Resolve Envenenamento
+  resolveEnvenenamentoTick(session);
+
+  const continueTurn = () => {
+    if (!isRoomComplete(session)) {
+      if (session.room?.effect === "bossRoom") {
         queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
+        queueEnemyGroup(session, "boss", intention.commonTarget, intention.commonText);
       } else {
-        queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
-        queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
+        const brutalsFirst = (session.room.effect === "brutalsFirst" || session.activeTrap?.effect === "brutalsFirst") && session.activeIntention?.id !== "INT_013";
+        if (brutalsFirst) {
+          queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
+          queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
+        } else {
+          queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
+          queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
+        }
       }
     }
+    advanceDungeonTurn(session);
+  };
+
+  if (checkFlechadaOportunidade(session, continueTurn)) {
+    return;
   }
+
+  continueTurn();
 }
 
 function queueEnemyGroup(session, category, targetCriterion, ruleText) {
-  const enemies = session.enemies.filter((enemy) => enemy.category === category && enemy.life > 0 && !enemy.isStunned);
+  const enemies = session.enemies.filter((enemy) => enemy.life > 0 && enemy.category === category && !enemy.isStunned && !enemy.atordoado_rodada_atual);
   enemies.forEach((enemy) => {
     session.dungeonQueue.push({
       type: "enemyAttack",
@@ -4114,6 +4430,10 @@ function queueEnemyGroup(session, category, targetCriterion, ruleText) {
 function advanceDungeonTurn(session) {
   if (session.pendingReaction || session.dungeonResolved) return;
 
+  if (checkFlechadaOportunidade(session, () => advanceDungeonTurn(session))) {
+    return;
+  }
+
   while (session.dungeonQueue.length > 0) {
     const step = session.dungeonQueue.shift();
     if (step.type !== "enemyAttack") continue;
@@ -4127,6 +4447,32 @@ function advanceDungeonTurn(session) {
     const isRetaliacaoBrutal = enemy.category === "brutal" && session.activeIntention?.id === "INT_007";
     const isBossReactionImmune = enemy.isBoss && session.bossReactionImmune;
     const isReactionSkipped = isRetaliacaoBrutal || isBossReactionImmune;
+
+    // Check for Flecha Relâmpago (Reaction)
+    const batedor = session.players.find(p => p.heroId === "batedor" && p.life > 0 && !p.skipReactionsThisRound);
+    const hasRelampago = batedor && batedor.hand.some(c => c.id === "flecha-relampago");
+
+    if (hasRelampago && !isReactionSkipped) {
+      session.pendingReaction = {
+        id: randomUUID(),
+        type: "flecha_relampago",
+        enemyUid: enemy.uid,
+        enemyName: enemy.name,
+        enemyCategory: enemy.category,
+        targetId: target.id,
+        targetName: target.name,
+        attack,
+        ruleText: step.ruleText,
+        eligiblePlayerIds: [batedor.id],
+        skippedPlayerIds: [],
+        playableCardUids: {
+          [batedor.id]: batedor.hand.filter(c => c.id === "flecha-relampago").map(c => c.uid)
+        }
+      };
+      session.log.unshift(`[Reação] Flecha Relâmpago pode ser usada contra ${enemy.name}. Reações abertas.`);
+      return; // paused
+    }
+
     const tempPending = {
       enemyUid: enemy.uid,
       enemyName: enemy.name,
@@ -4192,6 +4538,56 @@ function advanceDungeonTurn(session) {
   }
 
   finishDungeonTurn(session);
+}
+
+function proceedToStandardReactions(session, pending) {
+  const enemy = session.enemies.find((candidate) => candidate.uid === pending.enemyUid && candidate.life > 0);
+  if (!enemy) {
+    session.pendingReaction = null;
+    advanceDungeonTurn(session);
+    return;
+  }
+  const target = session.players.find((candidate) => candidate.id === pending.targetId && candidate.life > 0);
+  if (!target) {
+    session.pendingReaction = null;
+    advanceDungeonTurn(session);
+    return;
+  }
+  const isRetaliacaoBrutal = pending.enemyCategory === "brutal" && session.activeIntention?.id === "INT_007";
+  const isBossReactionImmune = enemy.isBoss && session.bossReactionImmune;
+  const isReactionSkipped = isRetaliacaoBrutal || isBossReactionImmune;
+
+  const tempPending = {
+    enemyUid: pending.enemyUid,
+    enemyName: pending.enemyName,
+    enemyCategory: pending.enemyCategory,
+    targetId: pending.targetId,
+    targetName: pending.targetName,
+    attack: pending.attack,
+    ruleText: pending.ruleText
+  };
+  const eligiblePlayerIds = isReactionSkipped ? [] : getReactionEligiblePlayers(session, tempPending).map((player) => player.id);
+
+  if (eligiblePlayerIds.length > 0) {
+    session.pendingReaction = {
+      id: randomUUID(),
+      enemyUid: pending.enemyUid,
+      enemyName: pending.enemyName,
+      enemyCategory: pending.enemyCategory,
+      targetId: pending.targetId,
+      targetName: pending.targetName,
+      attack: pending.attack,
+      ruleText: pending.ruleText,
+      eligiblePlayerIds,
+      skippedPlayerIds: []
+    };
+    enemy.currentTargetId = pending.targetId;
+    session.log.unshift(`${pending.enemyName} esta prestes a atacar ${pending.targetName} com ${pending.attack} de dano. Reacoes abertas.`);
+  } else {
+    session.pendingReaction = null;
+    session.log.unshift(`${pending.ruleText} Alvo: ${pending.targetName}.`);
+    resolveEnemyAttack(session, enemy, target, pending.attack);
+  }
 }
 
 function applyQueimaduraTick(session) {
@@ -4304,6 +4700,12 @@ function canPlayReactionCard(session, player, card, pending) {
   if (card.id === "cura-de-emergencia") {
     return pending.type === "cura_emergencia";
   }
+  if (card.id === "flechada-de-oportunidade") {
+    return pending.type === "flechada_oportunidade";
+  }
+  if (card.id === "flecha-relampago") {
+    return pending.type === "flecha_relampago";
+  }
   return false;
 }
 
@@ -4316,6 +4718,21 @@ function getReactionEligiblePlayers(session, tempPending) {
 }
 
 function resolvePendingSpecialReaction(session) {
+  if (session.pendingReaction && session.pendingReaction.type === "flechada_oportunidade") {
+    session.pendingReaction = null;
+    const callback = session.pendingFlechadaCallback;
+    session.pendingFlechadaCallback = null;
+    if (callback) {
+      callback();
+    }
+    return true;
+  }
+  if (session.pendingReaction && session.pendingReaction.type === "flecha_relampago") {
+    const pending = session.pendingReaction;
+    session.pendingReaction = null;
+    proceedToStandardReactions(session, pending);
+    return true;
+  }
   if (session.pendingTrapCallback) {
     const callback = session.pendingTrapCallback;
     session.pendingTrapCallback = null;
@@ -4410,6 +4827,35 @@ function playReaction(session, player, payload) {
 
   if (player.proxima_carta_desconto_1) {
     player.proxima_carta_desconto_1 = false;
+  }
+
+  if (card.id === "flechada-de-oportunidade") {
+    session.pendingReaction = null;
+    player.energy = Math.min(player.maxEnergy, player.energy + 1);
+    const drawn = drawCards(player, 1);
+    session.log.unshift(`${player.name} usou Flechada de Oportunidade: recuperou 1 de Energia e comprou ${drawn} carta.`);
+    const callback = session.pendingFlechadaCallback;
+    session.pendingFlechadaCallback = null;
+    if (callback) {
+      callback();
+    }
+    return;
+  }
+
+  if (card.id === "flecha-relampago") {
+    const enemy = session.enemies.find((candidate) => candidate.uid === pending.enemyUid && candidate.life > 0);
+    if (enemy) {
+      applyDamageToEnemy(session, enemy, 2, "Flecha Relâmpago", false, player);
+    }
+    
+    if (!enemy || enemy.life <= 0) {
+      session.log.unshift(`${pending.enemyName} foi derrotado por Flecha Relâmpago. O ataque foi cancelado.`);
+      session.pendingReaction = null;
+      advanceDungeonTurn(session);
+    } else {
+      proceedToStandardReactions(session, pending);
+    }
+    return;
   }
 
   if (card.id === "voz-do-oraculo") {
@@ -5158,7 +5604,10 @@ async function handleApi(req, res) {
             shield: chosenBossTemplate.shield,
             fase_atual: 1,
             transicao_ocorrida: false,
-            isBoss: true
+            isBoss: true,
+            marcado: false,
+            envenenamento: 0,
+            atordoado_rodada_atual: false
           };
           session.enemies = [session.boss];
 
@@ -5347,21 +5796,43 @@ async function handleApi(req, res) {
           } else if (sc.id === "tempestade-de-flechas") {
             const targets = session.enemies.filter((enemy) => enemy.life > 0);
             const penalty = getHeroAttackPenalty(session);
-            const dmgAll = getHeroAttackDamage(player, 6, 0, penalty);
-            const dmgSingle = getHeroAttackDamage(player, 8, 0, penalty);
-            // 6 area damage
+            const dmgAll = getHeroAttackDamage(player, 5, 0, penalty);
+            
+            // 5 area damage
             targets.forEach((enemy) =>
               applyDamageToEnemy(session, enemy, dmgAll, sc.name, false, player)
             );
-            // 8 single target damage to highest current life enemy
-            const aliveTargets = session.enemies.filter((enemy) => enemy.life > 0);
-            let singleTarget = null;
-            if (aliveTargets.length > 0) {
-              aliveTargets.sort((a, b) => b.life - a.life);
-              singleTarget = aliveTargets[0];
+            
+            // 10 single target damage (15 if marked/poisoned, consumes marked, applies Poison 3 to others)
+            const selectedTargetId = body.targetId;
+            const singleTarget = session.enemies.find((enemy) => enemy.uid === selectedTargetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+            
+            if (singleTarget) {
+              const hasMarcado = Boolean(singleTarget.statusEffects.marcado);
+              const hasEnvenenamento = (singleTarget.statusEffects.envenenamento || 0) > 0;
+              const hasBonus = hasMarcado || hasEnvenenamento;
+              const baseVal = hasBonus ? 15 : 10;
+              const dmgSingle = getHeroAttackDamage(player, baseVal, 0, penalty);
+              
               applyDamageToEnemy(session, singleTarget, dmgSingle, sc.name, false, player);
+              
+              if (hasBonus) {
+                if (hasMarcado) {
+                  singleTarget.statusEffects.marcado = false;
+                  session.log.unshift(`Tempestade de Flechas consumiu o Marcado de ${singleTarget.name}.`);
+                }
+                const otherEnemies = session.enemies.filter((enemy) => enemy.uid !== singleTarget.uid && enemy.life > 0);
+                otherEnemies.forEach((other) => {
+                  other.statusEffects.envenenamento = (other.statusEffects.envenenamento || 0) + 3;
+                });
+                if (otherEnemies.length > 0) {
+                  session.log.unshift(`Tempestade de Flechas aplicou Envenenamento 3 em todos os outros ${otherEnemies.length} inimigo(s).`);
+                }
+              }
+              session.log.unshift(`${player.name} usou Tempestade de Flechas! Causou 5 de dano (modificado para ${dmgAll}) em todos os inimigos e ${baseVal} de dano adicional (modificado para ${dmgSingle}) em ${singleTarget.name}.`);
+            } else {
+              session.log.unshift(`${player.name} usou Tempestade de Flechas! Causou 5 de dano (modificado para ${dmgAll}) em todos os inimigos.`);
             }
-            session.log.unshift(`${player.name} usou ${sc.name}! Causou 6 de dano (modificado para ${dmgAll}) em todos os inimigos e 8 de dano adicional (modificado para ${dmgSingle}) em ${singleTarget ? singleTarget.name : "nenhum inimigo"}.`);
             
             // Consume Enfraquecido
             if (player.statusEffects && player.statusEffects.enfraquecido > 0) {

@@ -33,7 +33,8 @@ const local = {
   revealedEnemyUids: new Set(),
   roomStartInProgress: false,
   visualLife: {},
-  visualShield: {}
+  visualShield: {},
+  quitConfirmOpen: false
 };
 
 const cardArt = "/assets/hero-card-example.png";
@@ -132,6 +133,14 @@ function clearAuth() {
   local.error = "";
   local.seenVisualEventIds.clear();
   local.previousMeters = {};
+  local.quitConfirmOpen = false;
+  local.animQueue = [];
+  local.animRunning = false;
+  const overlay = document.getElementById("cinematic-overlay");
+  if (overlay) {
+    overlay.style.display = "none";
+    overlay.innerHTML = "";
+  }
   window.localStorage.removeItem("tcg.sessionId");
   window.localStorage.removeItem("tcg.playerId");
   window.localStorage.removeItem("tcg.token");
@@ -230,6 +239,14 @@ function clearSavedSession() {
   local.playerId = "";
   local.token = "";
   local.state = null;
+  local.quitConfirmOpen = false;
+  local.animQueue = [];
+  local.animRunning = false;
+  const overlay = document.getElementById("cinematic-overlay");
+  if (overlay) {
+    overlay.style.display = "none";
+    overlay.innerHTML = "";
+  }
   window.localStorage.removeItem("tcg.sessionId");
   window.localStorage.removeItem("tcg.playerId");
   window.localStorage.removeItem("tcg.token");
@@ -256,6 +273,10 @@ async function runCinematic(fn) {
   local.animRunning = true;
   try {
     await fn();
+  } catch (err) {
+    if (err.message !== "CinematicAborted") {
+      console.error(err);
+    }
   } finally {
     local.animRunning = false;
     // Overwrite visual state with actual state to guarantee sync
@@ -272,7 +293,7 @@ async function runCinematic(fn) {
     render();
 
     // Process next queued state if any
-    if (local.animQueue.length > 0) {
+    if (local.animQueue.length > 0 && local.sessionId) {
       const nextQueuedState = local.animQueue.shift();
       window.setTimeout(() => {
         setState(nextQueuedState);
@@ -583,7 +604,15 @@ function escapeHtml(value) {
 // ============================================================
 
 function sleep(ms) {
-  return new Promise(function(resolve) { window.setTimeout(resolve, ms); });
+  return new Promise(function(resolve, reject) {
+    window.setTimeout(() => {
+      if (!local.sessionId) {
+        reject(new Error("CinematicAborted"));
+      } else {
+        resolve();
+      }
+    }, ms);
+  });
 }
 
 function getCinematicOverlay() {
@@ -1300,7 +1329,15 @@ function renderGame() {
       action({ type: "playReaction", cardUid, targetId });
     });
   });
-  document.querySelector("#useSupreme")?.addEventListener("click", () => action({ type: "useSupreme" }));
+  document.querySelector("#useSupreme")?.addEventListener("click", () => {
+    const me = getMe();
+    if (me && me.heroId === "batedor" && me.supremeCard) {
+      local.selectedCardUid = me.supremeCard.uid;
+      render();
+    } else {
+      action({ type: "useSupreme" });
+    }
+  });
   document.querySelector("#buyCard")?.addEventListener("click", () => action({ type: "buyCard" }));
   // pending discard: clicking a card in discard-mode selects it for discard
   document.querySelectorAll("[data-discard-card]").forEach((el) => {
@@ -1402,9 +1439,14 @@ function setupHandCarousel() {
 
 function playSelectedCard() {
   const me = getMe();
-  const card = me?.hand.find((candidate) => candidate.uid === local.selectedCardUid);
+  let card = me?.hand.find((candidate) => candidate.uid === local.selectedCardUid);
+  let isSupreme = false;
+  if (!card && me && me.supremeCard && me.supremeCard.uid === local.selectedCardUid) {
+    card = me.supremeCard;
+    isSupreme = true;
+  }
   if (!card) {
-    showToast("Carta nao encontrada na mao.");
+    showToast("Carta nao encontrada.");
     return;
   }
   if (local.state.turn !== "players") {
@@ -1423,7 +1465,7 @@ function playSelectedCard() {
     showToast("Voce ja finalizou seu turno.");
     return;
   }
-  if (me.energy < card.cost) {
+  if (!isSupreme && me.energy < card.cost) {
     showToast("Energia insuficiente.");
     return;
   }
@@ -1433,13 +1475,21 @@ function playSelectedCard() {
     const target = document.querySelector("#selectedCardTarget");
     const fromTarget = document.querySelector("#selectedCardFrom");
     const amountInput = document.querySelector("#shieldMoveAmount");
-    action({
-      type: "playCard",
-      cardUid: card.uid,
-      targetId: target?.value,
-      fromId: fromTarget?.value,
-      shieldAmount: amountInput ? Number(amountInput.value) : undefined
-    });
+    if (isSupreme) {
+      action({
+        type: "useSupreme",
+        targetId: target?.value
+      });
+      local.selectedCardUid = null;
+    } else {
+      action({
+        type: "playCard",
+        cardUid: card.uid,
+        targetId: target?.value,
+        fromId: fromTarget?.value,
+        shieldAmount: amountInput ? Number(amountInput.value) : undefined
+      });
+    }
   }, 120);
 }
 
@@ -1709,10 +1759,13 @@ function renderHandDock(me, state) {
 
 function renderSelectedCardModal(state, me) {
   if (local.animRunning) return "";
-  const card = me.hand.find((candidate) => candidate.uid === local.selectedCardUid);
+  let card = me.hand.find((candidate) => candidate.uid === local.selectedCardUid);
+  if (!card && me.supremeCard && me.supremeCard.uid === local.selectedCardUid) {
+    card = me.supremeCard;
+  }
   if (!card) return "";
 
-  const canTargetMonster = (card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge;
+  const canTargetMonster = ((card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge) && card.id !== "companheiro-animal";
   const needsReviveTarget = Boolean(card.revive);
   const canTargetDefeated = needsReviveTarget;
   const canTargetPlayer = (card.type === "heal" && !card.allHeal && !card.revive) || card.target === "ally" || card.provoke || (card.planning && card.target === "ally");
@@ -2007,6 +2060,12 @@ function renderStatusEffects(statusEffects) {
   }
   if (statusEffects.exposto) {
     badges.push(`<span class="status-badge exposto" title="Exposto: sofre +1 de dano de todas as fontes.">🎯 Exposto</span>`);
+  }
+  if (statusEffects.marcado) {
+    badges.push(`<span class="status-badge marcado" title="Marcado: sofre efeitos adicionais de certas habilidades.">🎯 Marcado</span>`);
+  }
+  if (statusEffects.envenenamento > 0) {
+    badges.push(`<span class="status-badge envenenamento" title="Envenenamento: sofre ${statusEffects.envenenamento} de dano (ignora Escudo) no início da Fase da Masmorra.">🧪 Envenenamento ${statusEffects.envenenamento}</span>`);
   }
   if (badges.length === 0) return "";
   return `<div class="status-effects-list">${badges.join("")}</div>`;
@@ -2873,6 +2932,25 @@ function normalizeSearch(value) {
     .toLowerCase();
 }
 
+function renderQuitConfirmModal() {
+  if (!local.quitConfirmOpen) return "";
+  return `
+    <div id="quit-confirm-overlay" class="quit-confirm-overlay animate-fade-in">
+      <div class="quit-confirm-card glass-panel">
+        <div class="quit-confirm-header">
+          <span class="warning-icon">⚠️</span>
+          <h2>Abandonar Partida</h2>
+        </div>
+        <p>Você tem certeza que deseja sair da partida? Todo o seu progresso nesta sala será perdido.</p>
+        <div class="quit-confirm-actions">
+          <button id="quitConfirmYes" class="btn-quit-confirm danger">Sim, Sair</button>
+          <button id="quitConfirmNo" class="btn-quit-confirm secondary">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderRulesModal() {
   if (!local.rulesOpen) return "";
   
@@ -3098,7 +3176,30 @@ function renderRulesModal() {
 }
 
 function bindGlobalControls() {
-  document.querySelector("#leave")?.addEventListener("click", clearAuth);
+  document.querySelectorAll("#leave").forEach(el => {
+    el.addEventListener("click", () => {
+      local.quitConfirmOpen = true;
+      render();
+    });
+  });
+
+  document.querySelector("#quitConfirmYes")?.addEventListener("click", () => {
+    local.quitConfirmOpen = false;
+    clearAuth();
+  });
+
+  document.querySelector("#quitConfirmNo")?.addEventListener("click", () => {
+    local.quitConfirmOpen = false;
+    render();
+  });
+
+  document.querySelector("#quit-confirm-overlay")?.addEventListener("click", (event) => {
+    if (event.target.id === "quit-confirm-overlay") {
+      local.quitConfirmOpen = false;
+      render();
+    }
+  });
+
   document.querySelector("#rulesToggle")?.addEventListener("click", () => {
     local.rulesOpen = true;
     render();
@@ -3449,7 +3550,27 @@ function render() {
 
   app.insertAdjacentHTML("beforeend", renderRulesModal());
   app.insertAdjacentHTML("beforeend", renderToast());
+  app.insertAdjacentHTML("beforeend", renderQuitConfirmModal());
   bindGlobalControls();
 }
 
 render();
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" || event.key === "Esc") {
+    if (local.rulesOpen) {
+      local.rulesOpen = false;
+      render();
+      return;
+    }
+    if (local.selectedCardUid) {
+      local.selectedCardUid = "";
+      render();
+      return;
+    }
+    if (local.sessionId) {
+      local.quitConfirmOpen = !local.quitConfirmOpen;
+      render();
+    }
+  }
+});

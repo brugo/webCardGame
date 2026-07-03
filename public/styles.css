@@ -3419,6 +3419,16 @@ body.is-game-screen .right-rail .new-intention-v2 .section-v2 {
   border-color: rgba(59, 130, 246, 0.3);
   color: #60a5fa;
 }
+.status-badge.marcado {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: rgba(236, 72, 153, 0.3);
+  color: #f472b6;
+}
+.status-badge.envenenamento {
+  background: rgba(132, 204, 22, 0.15);
+  border-color: rgba(132, 204, 22, 0.3);
+  color: #a3e635;
+}
 
 .monster-keywords {
   display: flex;
@@ -4376,5 +4386,95 @@ body.is-game-screen .monster-card .monster-target-badge {
   border-color: rgba(255,215,133,0.45) !important;
   box-shadow: 0 0 56px rgba(255,215,133,0.22), 0 24px 64px rgba(0,0,0,0.64) !important;
   animation: glowPulse 2s infinite !important;
+}
+
+/* ── Quit Confirmation Modal ── */
+.quit-confirm-overlay {
+  position: fixed;
+  z-index: 9500;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 2, 8, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.quit-confirm-card {
+  width: min(440px, 100%);
+  padding: 30px;
+  background: linear-gradient(135deg, rgba(30, 15, 20, 0.95), rgba(12, 12, 16, 0.98));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.15), 0 30px 60px rgba(0, 0, 0, 0.85);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.quit-confirm-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.quit-confirm-header .warning-icon {
+  font-size: 3rem;
+  animation: pulseWarning 1.5s infinite alternate;
+}
+
+.quit-confirm-header h2 {
+  font-family: Georgia, serif;
+  font-size: 1.8rem;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.quit-confirm-card p {
+  color: #bfb5c7;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 28px 0;
+}
+
+.quit-confirm-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+}
+
+.btn-quit-confirm {
+  flex: 1;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-quit-confirm.danger {
+  background: linear-gradient(135deg, #b91c1c, #ef4444);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.btn-quit-confirm.danger:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.7);
+}
+
+.btn-quit-confirm.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #d1c8db;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-quit-confirm.secondary:hover {
+  transform: scale(1.03);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
