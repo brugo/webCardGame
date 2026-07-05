@@ -189,7 +189,7 @@ const monsterTemplates = {
     attack: 2,
     shield: 3,
     icon: "moon",
-    keywords: ["Peçonhenta"]
+    keywords: []
   },
   carcereiro: {
     id: "carcereiro",
@@ -211,7 +211,7 @@ const monsterTemplates = {
     attack: 1,
     shield: 1,
     icon: "star",
-    keywords: ["Curandeira"],
+    keywords: [],
     curandeiraValue: 3
   },
   arauto: {
@@ -223,7 +223,7 @@ const monsterTemplates = {
     attack: 2,
     shield: 2,
     icon: "shield",
-    keywords: ["Guardiã"],
+    keywords: [],
     guardiaValue: 2
   },
   colosso: {
@@ -246,7 +246,7 @@ const monsterTemplates = {
     attack: 8,
     shield: 3,
     icon: "blade",
-    keywords: ["Sanguinária"]
+    keywords: []
   },
   basilisco: {
     id: "basilisco",
@@ -257,7 +257,7 @@ const monsterTemplates = {
     attack: 6,
     shield: 7,
     icon: "moon",
-    keywords: ["Paralisante"]
+    keywords: []
   }
 };
 
@@ -729,17 +729,28 @@ const heroes = {
     energy: 6,
     supreme: "cataclismo-arcano",
     deck: [
-      ["raio-arcano", 2],
-      ["bola-de-fogo", 2],
-      ["raio-congelante", 2],
-      ["tempestade-eletrica", 2],
-      ["fluxo-arcano", 2],
-      ["manipular-energia", 2],
-      ["prisao-de-gelo", 1],
-      ["campo-antimagia", 1],
+      ["absorcao-arcana", 1],
+      ["contra-feitico", 1],
+      ["raio-arcano", 1],
+      ["fluxo-arcano", 1],
       ["teleporte-arcano", 1],
-      ["explosao-de-mana", 1],
+      ["chama-menor", 1],
+      ["toque-glacial", 1],
+      ["marca-arcana", 1],
+      ["bola-de-fogo", 1],
+      ["espelho-arcano", 1],
+      ["amplificar", 1],
+      ["manipular-energia", 1],
+      ["detonacao-arcana", 1],
+      ["campo-antimagia", 1],
+      ["escudo-etereo", 1],
+      ["no-temporal", 1],
+      ["tempestade-eletrica", 1],
+      ["raio-congelante", 1],
       ["eco-arcano", 1],
+      ["sobrecarga-ignea", 1],
+      ["explosao-de-mana", 1],
+      ["terreno-chao-de-gelo", 1],
       ["distorcao-temporal", 1]
     ]
   }
@@ -1409,40 +1420,38 @@ const cards = {
     id: "raio-arcano",
     name: "Raio Arcano",
     type: "attack",
-    cost: 2,
-    damage: 5,
-    text: "Cause 5 de dano a um inimigo."
+    cost: 1,
+    damage: 4,
+    text: "Cause 4 de dano a um inimigo."
   },
   "bola-de-fogo": {
     id: "bola-de-fogo",
     name: "Bola de Fogo",
     type: "attack",
-    cost: 3,
-    areaDamage: 3,
-    text: "Cause 3 de dano em todos os inimigos."
+    cost: 2,
+    areaDamage: 4,
+    text: "Cause 4 de dano a todos os inimigos."
   },
   "raio-congelante": {
     id: "raio-congelante",
     name: "Raio Congelante",
     type: "attack",
     cost: 3,
-    damage: 4,
-    stun: true,
-    text: "Cause 4 de dano. O alvo nao ataca nesta rodada."
+    text: "Cause 5 de dano a um inimigo. Aplique Reduzir Ofensiva 4 e Queimadura 1 a esse inimigo."
   },
   "tempestade-eletrica": {
     id: "tempestade-eletrica",
     name: "Tempestade Eletrica",
     type: "attack",
     cost: 3,
-    text: "Cause 6 de dano. Depois cause 2 de dano em outro inimigo."
+    text: "Cause 6 de dano a um inimigo. Em seguida, cause 3 de dano a outro inimigo (à sua escolha)."
   },
   "fluxo-arcano": {
     id: "fluxo-arcano",
     name: "Fluxo Arcano",
     type: "energy",
     target: "ally",
-    cost: 2,
+    cost: 1,
     energy: 2,
     text: "Um aliado recupera 2 de Energia."
   },
@@ -1453,20 +1462,11 @@ const cards = {
     cost: 2,
     text: "Transfira ate 2 de Energia de um aliado para outro."
   },
-  "prisao-de-gelo": {
-    id: "prisao-de-gelo",
-    name: "Prisao de Gelo",
-    type: "attack",
-    cost: 4,
-    target: "brutal",
-    stun: true,
-    text: "Escolha um Inimigo Brutal. Ele nao pode atacar durante esta rodada."
-  },
   "campo-antimagia": {
     id: "campo-antimagia",
     name: "Campo Antimagia",
     type: "control",
-    cost: 3,
+    cost: 2,
     disableTrap: 2,
     text: "Desative uma Armadilha por 2 rodadas. Depois ela volta normalmente."
   },
@@ -1475,7 +1475,7 @@ const cards = {
     name: "Teleporte Arcano",
     type: "control",
     target: "ally",
-    cost: 2,
+    cost: 1,
     text: "Escolha um aliado. Ele recupera 1 Energia e compra 1 carta."
   },
   "explosao-de-mana": {
@@ -1485,29 +1485,122 @@ const cards = {
     cost: 4,
     damage: 8,
     ignoreShield: true,
-    text: "Cause 8 de dano, ignorando Escudo."
+    text: "Cause 8 de dano a um inimigo, ignorando Escudo."
   },
   "eco-arcano": {
     id: "eco-arcano",
     name: "Eco Arcano",
     type: "control",
     cost: 3,
-    text: "Escolha uma carta que voce jogou nesta rodada. Resolva novamente seus efeitos. (Nao copia Cartas Supremas.)"
+    text: "Escolha uma carta que voce jogou nesta rodada. Resolva novamente seus efeitos com os mesmos alvos. (Nao copia Cartas Supremas ou Eco Arcano.)"
   },
   "distorcao-temporal": {
     id: "distorcao-temporal",
     name: "Distorcao Temporal",
     type: "control",
     target: "ally",
-    cost: 4,
-    text: "Escolha um aliado. Ele pode jogar imediatamente uma carta de custo 2 ou menos sem gastar Energia."
+    cost: 5,
+    text: "Escolha um aliado. Ele pode jogar imediatamente uma carta de custo 3 ou menos sem gastar Energia."
   },
   "cataclismo-arcano": {
     id: "cataclismo-arcano",
     name: "Cataclismo Arcano",
     type: "attack",
     cost: 0,
-    text: "Suprema. Cause 6 de dano em todos os inimigos. Todos os aliados recuperam 2 de Energia. Desative todas as Armadilhas ate o fim da rodada. O Inimigo Brutal nao pode atacar nesta rodada."
+    text: "Suprema. Cause 8 de dano a todos os inimigos. Todos os aliados recuperam 2 de Energia. Substitui/cria um Terreno Arcano à sua escolha."
+  },
+  "absorcao-arcana": {
+    id: "absorcao-arcana",
+    name: "Absorcao Arcana",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando uma Armadilha ativa aplicaria seu efeito, negue esse efeito nesta instância para todos os heróis. O Arcanista recupera 2 de Energia."
+  },
+  "contra-feitico": {
+    id: "contra-feitico",
+    name: "Contra-Feitico",
+    type: "reaction",
+    cost: 0,
+    text: "Reação. Quando uma keyword de monstro seria ativada, negue essa ativação e suprima a keyword do monstro por 1 rodada."
+  },
+  "chama-menor": {
+    id: "chama-menor",
+    name: "Chama Menor",
+    type: "attack",
+    cost: 1,
+    damage: 2,
+    text: "Cause 2 de dano a um inimigo. Aplique Queimadura 1 a esse inimigo."
+  },
+  "toque-glacial": {
+    id: "toque-glacial",
+    name: "Toque Glacial",
+    type: "control",
+    target: "enemy",
+    cost: 1,
+    damage: 1,
+    text: "Cause 1 de dano a um inimigo. Esse inimigo causa 1 de dano a menos em seu próximo ataque esta rodada (mínimo 1)."
+  },
+  "marca-arcana": {
+    id: "marca-arcana",
+    name: "Marca Arcana",
+    type: "control",
+    target: "enemy",
+    cost: 1,
+    text: "Aplique 2 Marcas Arcanas a um inimigo. Compre 1 carta."
+  },
+  "espelho-arcano": {
+    id: "espelho-arcano",
+    name: "Espelho Arcano",
+    type: "control",
+    cost: 2,
+    text: "Até o início da próxima Fase dos Heróis, o próximo inimigo que declarar um ataque tem seu ataque redirecionado para outro inimigo à sua escolha."
+  },
+  "amplificar": {
+    id: "amplificar",
+    name: "Amplificar",
+    type: "control",
+    cost: 2,
+    text: "Escolha uma carta jogada nesta rodada por qualquer herói. Resolve seus efeitos mais uma vez com os mesmos alvos."
+  },
+  "detonacao-arcana": {
+    id: "detonacao-arcana",
+    name: "Detonacao Arcana",
+    type: "attack",
+    target: "enemy",
+    cost: 2,
+    text: "Consuma todas as Marcas Arcanas de um inimigo. Cause 3 de dano por Marca consumida (ignora Escudo)."
+  },
+  "escudo-etereo": {
+    id: "escudo-etereo",
+    name: "Escudo Etereo",
+    type: "defense",
+    target: "ally",
+    cost: 2,
+    text: "Um aliado recebe 5 de Escudo com propriedade Refletir 2 (enquanto possuir este Escudo)."
+  },
+  "no-temporal": {
+    id: "no-temporal",
+    name: "No Temporal",
+    type: "control",
+    target: "enemy",
+    cost: 2,
+    text: "Aplique Reduzir Ofensiva 3 a um inimigo."
+  },
+  "sobrecarga-ignea": {
+    id: "sobrecarga-ignea",
+    name: "Sobrecarga Ignea",
+    type: "attack",
+    target: "enemy",
+    cost: 3,
+    sobrecarga: 2,
+    text: "Cause 10 de dano a um inimigo, ignorando Escudo. Começa a próxima rodada com 2 de Energia a menos."
+  },
+  "terreno-chao-de-gelo": {
+    id: "terreno-chao-de-gelo",
+    name: "Terreno: Chao de Gelo",
+    type: "terrain",
+    cost: 4,
+    text: "Crie o Terreno Chão de Gelo. Enquanto ativo, todos os ataques inimigos causam 1 de dano a menos (mínimo 1). Persiste até o fim da sala."
   }
 };
 
@@ -1700,7 +1793,19 @@ function createEnemy(session, templateId) {
     statusEffects: makeStatusEffects(),
     marcado: false,
     envenenamento: 0,
-    atordoado_rodada_atual: false
+    atordoado_rodada_atual: false,
+    marcas_arcanas: 0,
+    queimadura: 0,
+    queimadura_rodadas: 0,
+    reduzir_ofensiva: 0,
+    reducao_proximo_ataque: 0,
+    keyword_peconhenta_suprimida_rodada: false,
+    keyword_paralisante_suprimida_rodada: false,
+    keyword_curandeira_suprimida_rodada: false,
+    keyword_guardia_suprimida_rodada: false,
+    keyword_sanguinaria_suprimida_rodada: false,
+    keyword_explodir_suprimida_rodada: false,
+    keyword_invocar_suprimida_rodada: false
   };
 }
 
@@ -1774,47 +1879,80 @@ function createEnemiesForRoom(session) {
   return enemies;
 }
 
+function drawAndCreateMonster(session) {
+  const isCommon = session.roomNumber <= 4;
+  let deck = isCommon ? session.commonEnemyDeck : session.brutalEnemyDeck;
+  let discard = isCommon ? session.commonEnemyDiscard : session.brutalEnemyDiscard;
+  
+  if (deck.length === 0) {
+    if (discard.length > 0) {
+      deck.push(...shuffle(discard));
+      discard.length = 0;
+    } else {
+      deck.push(isCommon ? "sentinela" : "colosso");
+    }
+  }
+  
+  const templateId = deck.shift();
+  return createEnemy(session, templateId);
+}
+
 function drawNextRoom(session) {
   session.roomRound = 1;
   session.roomRewardClaimed = false;
   session.roomNumber = (session.roomNumber || 1) + 1;
 
-  if (session.roomNumber === 4) {
+  if (session.roomNumber === 9) {
     session.status = "boss_selection";
     const keys = ["inquisidor", "bruxa", "colosso", "oraculo"];
     const chosen = shuffle(keys).slice(0, 2);
     session.bossSelectOptions = chosen.map(key => bossTemplates[key]);
-    session.log.unshift("[Sala 4] A masmorra treme... Escolham o Chefe que irão enfrentar.");
+    session.log.unshift("[Sala 9] A masmorra treme... Escolham o Chefe que irão enfrentar.");
+    session.room = {
+      id: "SALA_BOSS",
+      name: "Câmara do Chefe",
+      subtitle: "Confronte o Mal Supremo",
+      theme: "sanctum",
+      setup: { common: 0, brutal: 0 },
+      objective: "Escolham o Chefe que irão enfrentar.",
+      rule: "Sem regras especiais da sala.",
+      reward: "",
+      effect: "bossRoom"
+    };
     return;
   }
 
-  if (session.roomDeck.length === 0) {
-    session.roomDeck = shuffle(session.roomDiscard.length ? session.roomDiscard : roomCards);
-    session.roomDiscard = [];
-  }
-  if (session.room) session.roomDiscard.push(session.room);
-  session.room = session.roomDeck.shift() || roomCards[0];
-  drawTrap(session);
-  session.enemies = createEnemiesForRoom(session);
-  const roomNum = session.roomNumber;
-  const threatLevel = Math.max(0, roomNum - 1);
-  const attackMod = threatLevel === 1 ? "+2" : (threatLevel >= 2 ? "+4" : "+0");
-  const lifeModCommon = threatLevel === 1 ? "+4" : (threatLevel >= 2 ? "+8" : "+0");
-  const lifeModBrutal = threatLevel === 1 ? "+6" : (threatLevel >= 2 ? "+12" : "+0");
-  session.log.unshift(`[Sala ${roomNum}] Sala revelada: ${session.room.name}. Nível de Ameaça: ${threatLevel} (Ataque: ${attackMod}, Vida Comum: ${lifeModCommon}, Vida Brutal: ${lifeModBrutal}). ${session.room.objective}`);
+  setupCurrentRoom(session);
 }
 
 function setupCurrentRoom(session) {
   session.roomRound = 1;
   session.roomRewardClaimed = false;
+  
+  const isCommon = session.roomNumber <= 4;
+  session.room = {
+    id: "SALA_" + session.roomNumber,
+    name: isCommon ? "Masmorra - Setor Comum" : "Masmorra - Setor Brutal",
+    subtitle: `Sala ${session.roomNumber}`,
+    theme: isCommon ? "forest" : "crypt",
+    setup: { common: isCommon ? 1 : 0, brutal: isCommon ? 0 : 1 },
+    objective: isCommon ? "Derrote o monstro comum para avançar." : "Derrote o monstro brutal para avançar.",
+    rule: "Dano em Área: O ataque deste monstro atinge todos os heróis ao mesmo tempo.",
+    reward: "Escolha uma recompensa de fim de sala ao vencer.",
+    effect: isCommon ? "commonRoom" : "brutalRoom"
+  };
+
   drawTrap(session);
-  session.enemies = createEnemiesForRoom(session);
+  session.enemies = [drawAndCreateMonster(session)];
+
   const roomNum = session.roomNumber || 1;
   const threatLevel = Math.max(0, roomNum - 1);
   const attackMod = threatLevel === 1 ? "+2" : (threatLevel >= 2 ? "+4" : "+0");
-  const lifeModCommon = threatLevel === 1 ? "+4" : (threatLevel >= 2 ? "+8" : "+0");
-  const lifeModBrutal = threatLevel === 1 ? "+6" : (threatLevel >= 2 ? "+12" : "+0");
-  session.log.unshift(`[Sala ${roomNum}] Sala revelada: ${session.room.name}. Nível de Ameaça: ${threatLevel} (Ataque: ${attackMod}, Vida Comum: ${lifeModCommon}, Vida Brutal: ${lifeModBrutal}). ${session.room.objective}`);
+  const lifeMod = isCommon 
+    ? (threatLevel === 1 ? "+4" : (threatLevel >= 2 ? "+8" : "+0"))
+    : (threatLevel === 1 ? "+6" : (threatLevel >= 2 ? "+12" : "+0"));
+
+  session.log.unshift(`[Sala ${roomNum}] Monstro revelado: ${session.enemies[0].name}. Nível de Ameaça: ${threatLevel} (Ataque: ${attackMod}, Vida: ${lifeMod}).`);
 }
 
 function isRoomComplete(session) {
@@ -1834,6 +1972,31 @@ function getRoundDrawCount(session) {
   }
   const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
   return (isTrapActive && session.activeTrap.effect === "drawTwo") ? 0 : 1;
+}
+
+function checkContraFeitico(session, enemy, keywordType, executeFn) {
+  const vince = session.players.find(p => p.heroId === "mago" && p.life > 0 && !p.skipReactionsThisRound);
+  const hasContra = vince && vince.hand.some(c => c.id === "contra-feitico");
+  
+  if (hasContra && !enemy[`keyword_${keywordType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}_suprimida_rodada`]) {
+    session.pendingReaction = {
+      id: randomUUID(),
+      type: "keyword_activation",
+      keywordType,
+      enemyUid: enemy.uid,
+      enemyName: enemy.name,
+      eligiblePlayerIds: [vince.id],
+      skippedPlayerIds: [],
+      ruleText: `Contra-Feitico: ${enemy.name} esta prestes a ativar a keyword ${keywordType}.`,
+      playableCardUids: {
+        [vince.id]: vince.hand.filter(c => c.id === "contra-feitico").map(c => c.uid)
+      }
+    };
+    session.pendingKeywordCallback = executeFn;
+    session.log.unshift(`[Reação] Contra-Feitico pode ser usado para anular a keyword ${keywordType} de ${enemy.name}.`);
+    return true; // paused
+  }
+  return false;
 }
 
 function applyStartOfRoundEffects(session) {
@@ -1970,54 +2133,68 @@ function applyStartOfRoundEffects(session) {
   }
 
   // Trigger Curandeira and Guardiã keywords for monsters
-  session.enemies.forEach((enemy) => {
-    if (enemy.life > 0 && enemy.keywords?.includes("Curandeira")) {
-      const healVal = enemy.curandeiraValue || 3;
-      const aliveMonsters = session.enemies.filter((m) => m.life > 0);
-      const needsHealing = aliveMonsters.filter((m) => m.life < m.maxLife);
-      if (needsHealing.length > 0) {
-        needsHealing.sort((a, b) => a.life - b.life);
-        const targetMonster = needsHealing[0];
-        const before = targetMonster.life;
-        targetMonster.life = Math.min(targetMonster.maxLife, targetMonster.life + healVal);
-        const healed = targetMonster.life - before;
-        
-        if (targetMonster.statusEffects && targetMonster.statusEffects.veneno > 0) {
-          targetMonster.statusEffects.veneno = 0;
-          session.log.unshift(`Curandeira: ${enemy.name} curou ${targetMonster.name} e todo o seu Veneno foi removido.`);
+  for (const enemy of session.enemies) {
+    if (enemy.life > 0 && enemy.keywords?.includes("Curandeira") && !enemy.curandeira_resolved_this_round && !enemy.keyword_curandeira_suprimida_rodada) {
+      const paused = checkContraFeitico(session, enemy, "Curandeira", (negated) => {
+        enemy.curandeira_resolved_this_round = true;
+        if (!negated) {
+          const healVal = enemy.curandeiraValue || 3;
+          const aliveMonsters = session.enemies.filter((m) => m.life > 0);
+          const needsHealing = aliveMonsters.filter((m) => m.life < m.maxLife);
+          if (needsHealing.length > 0) {
+            needsHealing.sort((a, b) => a.life - b.life);
+            const targetMonster = needsHealing[0];
+            const before = targetMonster.life;
+            targetMonster.life = Math.min(targetMonster.maxLife, targetMonster.life + healVal);
+            const healed = targetMonster.life - before;
+            
+            if (targetMonster.statusEffects && targetMonster.statusEffects.veneno > 0) {
+              targetMonster.statusEffects.veneno = 0;
+              session.log.unshift(`Curandeira: ${enemy.name} curou ${targetMonster.name} e todo o seu Veneno foi removido.`);
+            }
+            
+            if (healed > 0) {
+              pushVisualEvent(session, {
+                type: "heal",
+                targetType: "enemy",
+                targetId: targetMonster.uid,
+                amount: healed,
+                source: enemy.name
+              });
+              session.log.unshift(`Curandeira: ${enemy.name} curou ${healed} de Vida em ${targetMonster.name}.`);
+            }
+          }
         }
-        
-        if (healed > 0) {
-          pushVisualEvent(session, {
-            type: "heal",
-            targetType: "enemy",
-            targetId: targetMonster.uid,
-            amount: healed,
-            source: enemy.name
-          });
-          session.log.unshift(`Curandeira: ${enemy.name} curou ${healed} de Vida em ${targetMonster.name}.`);
-        }
-      }
+        applyStartOfRoundEffects(session);
+      });
+      if (paused) return;
     }
 
-    if (enemy.life > 0 && enemy.keywords?.includes("Guardiã")) {
-      const shieldVal = enemy.guardiaValue || 2;
-      const aliveMonsters = session.enemies.filter((m) => m.life > 0);
-      if (aliveMonsters.length > 0) {
-        aliveMonsters.sort((a, b) => (a.shield || 0) - (b.shield || 0));
-        const targetMonster = aliveMonsters[0];
-        targetMonster.shield += shieldVal;
-        pushVisualEvent(session, {
-          type: "shield",
-          targetType: "enemy",
-          targetId: targetMonster.uid,
-          amount: shieldVal,
-          source: enemy.name
-        });
-        session.log.unshift(`Guardiã: ${enemy.name} concedeu ${shieldVal} de Escudo a ${targetMonster.name}.`);
-      }
+    if (enemy.life > 0 && enemy.keywords?.includes("Guardiã") && !enemy.guardia_resolved_this_round && !enemy.keyword_guardia_suprimida_rodada) {
+      const paused = checkContraFeitico(session, enemy, "Guardiã", (negated) => {
+        enemy.guardia_resolved_this_round = true;
+        if (!negated) {
+          const shieldVal = enemy.guardiaValue || 2;
+          const aliveMonsters = session.enemies.filter((m) => m.life > 0);
+          if (aliveMonsters.length > 0) {
+            aliveMonsters.sort((a, b) => (a.shield || 0) - (b.shield || 0));
+            const targetMonster = aliveMonsters[0];
+            targetMonster.shield += shieldVal;
+            pushVisualEvent(session, {
+              type: "shield",
+              targetType: "enemy",
+              targetId: targetMonster.uid,
+              amount: shieldVal,
+              source: enemy.name
+            });
+            session.log.unshift(`Guardiã: ${enemy.name} concedeu ${shieldVal} de Escudo a ${targetMonster.name}.`);
+          }
+        }
+        applyStartOfRoundEffects(session);
+      });
+      if (paused) return;
     }
-  });
+  }
 }
 
 function adjustActiveShields(target) {
@@ -2176,7 +2353,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   }
   session.log.unshift(`${source} causou ${damage} de dano em ${target.name}${blocked ? ` (${blocked} bloqueado)` : ""}.${target.statusEffects?.exposto ? " (+1 por estar Exposto)" : ""}`);
   
-  if (damage > 0 && sourceEnemy && sourceEnemy.life > 0 && sourceEnemy.keywords?.includes("Sanguinária")) {
+  if (damage > 0 && sourceEnemy && sourceEnemy.life > 0 && sourceEnemy.keywords?.includes("Sanguinária") && !sourceEnemy.keyword_sanguinaria_suprimida_rodada) {
     const before = sourceEnemy.life;
     sourceEnemy.life = Math.min(sourceEnemy.maxLife, sourceEnemy.life + 1);
     const healed = sourceEnemy.life - before;
@@ -2367,408 +2544,11 @@ function applyRoomReward(session) {
 }
 
 function drawIntention(session) {
-  if (session.intentionDeck.length === 0) {
-    session.intentionDeck = shuffle(session.intentionDiscard);
-    session.intentionDiscard = [];
-  }
-  const card = session.intentionDeck.shift() || intentionCards[0];
-  if (session.activeIntention) session.intentionDiscard.push(session.activeIntention);
-  session.activeIntention = card;
-  session.log.unshift(`Intencao revelada: ${card.name}.`);
+  session.activeIntention = null;
 }
 
 function applyIntentionPresagio(session) {
-  const card = session.activeIntention;
-  if (!card) return;
-
-  session.log.unshift(`⚡ [Presságio] Ativando Presságio de ${card.name}: ${card.presagioText}`);
-
-  switch (card.id) {
-    case "BOSSINQ-001": {
-      const target = selectTarget(session.players, "maxShield");
-      if (target && target.shield > 0) {
-        target.shield = 0;
-        session.log.unshift(`[Presságio] Julgamento dos Escudos: ${target.name} perdeu todo o seu Escudo.`);
-      }
-      break;
-    }
-    case "BOSSINQ-002": {
-      session.bossReactionImmune = true;
-      session.log.unshift("[Presságio] Sentença de Morte: Inquisidor imune a Reações nesta rodada.");
-      break;
-    }
-    case "BOSSINQ-003": {
-      const healAmt = session.boss.fase_atual === 2 ? 10 : 6;
-      const before = session.boss.life;
-      session.boss.life = Math.min(session.boss.maxLife, session.boss.life + healAmt);
-      const healed = session.boss.life - before;
-      if (healed > 0) {
-        session.log.unshift(`[Presságio] Absolvição Perversa: Inquisidor recupera ${healed} de Vida.`);
-        pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Absolvição Perversa" });
-      }
-      break;
-    }
-    case "BOSSINQ-004": {
-      session.players.forEach(p => {
-        if (p.life > 0 && p.shield > 0) {
-          applyDamageToHero(session, p, 2, "Veredicto Final (Presságio)", session.boss, { ignoreShield: true });
-        }
-      });
-      break;
-    }
-    case "BOSSBRT-001": {
-      const pts = session.boss.fase_atual === 2 ? 2 : 1;
-      session.maldicao_contador = Math.max(0, session.maldicao_contador - pts);
-      session.log.unshift(`[Presságio] Maldicao Acelerada: Maldicao do Relogio perdeu ${pts} pontos adicionais (atual: ${session.maldicao_contador}).`);
-      if (session.maldicao_contador === 0) {
-        session.maldicao_triggered_this_round = true;
-        session.log.unshift("⌛ A Maldicao do Relogio atingiu 0 via Presságio! Todos os herois sofrem 7 de dano.");
-        session.players.forEach((p) => {
-          if (p.life > 0) applyDamageToHero(session, p, 7, "Maldicao do Relogio", session.boss, { ignoreShield: true });
-        });
-        session.maldicao_contador = session.boss.fase_atual === 2 ? 3 : 5;
-      }
-      break;
-    }
-    case "BOSSBRT-002": {
-      const target = selectTarget(session.players, "maxHand");
-      if (target) {
-        target.pendingDiscard = (target.pendingDiscard || 0) + 2;
-        session.log.unshift(`[Presságio] Distorcao: ${target.name} deve descartar 2 cartas.`);
-      }
-      break;
-    }
-    case "BOSSBRT-003": {
-      const pts = session.boss.fase_atual === 2 ? 2 : 1;
-      session.players.forEach(p => {
-        if (p.life > 0) {
-          p.energy = Math.max(1, p.energy - pts);
-        }
-      });
-      session.log.unshift(`[Presságio] Inversao da Mare: Todos os herois perderam ${pts} de Energia (minimo 1).`);
-      break;
-    }
-    case "BOSSBRT-004": {
-      session.revealedNextIntentionCards = session.intentionDeck.slice(0, 2);
-      session.log.unshift("[Presságio] Ecos do Amanha: Proximas 2 intencoes reveladas.");
-      break;
-    }
-    case "BOSSCOL-001": {
-      session.boss.shield += 3;
-      session.log.unshift("[Presságio] Esmagamento: Colosso ganha 3 de Escudo.");
-      pushVisualEvent(session, { type: "shield", targetType: "enemy", targetId: session.boss.uid, amount: 3, source: "Esmagamento" });
-      break;
-    }
-    case "BOSSCOL-002": {
-      session.bossStunImmune = true;
-      session.bossRedirectImmune = true;
-      session.boss.isStunned = false;
-      session.log.unshift("[Presságio] Furia Inabalavel: Colosso imune a atordoamento e redirecionamentos.");
-      break;
-    }
-    case "BOSSCOL-003": {
-      const preDmg = Math.floor(session.boss.attack / 2);
-      session.players.forEach(p => {
-        if (p.life > 0) {
-          session.dungeonQueue.push({
-            type: "enemyAttack",
-            enemyUid: session.boss.uid,
-            category: "boss",
-            targetCriterion: "fixedPlayer_" + p.id,
-            ruleText: `Pisoteio (Pre-ataque contra ${p.name})`,
-            overrideAttack: preDmg
-          });
-        }
-      });
-      session.resolvingOmenAttacks = true;
-      advanceDungeonTurn(session);
-      break;
-    }
-    case "BOSSCOL-004": {
-      session.enemies.forEach(e => {
-        if (e.id === "carcereiro" && e.life > 0) {
-          const before = e.life;
-          e.life = Math.min(e.maxLife, e.life + 6);
-          const healed = e.life - before;
-          if (healed > 0) {
-            session.log.unshift(`[Presságio] Muralha Eterna: ${e.name} curado em ${healed}.`);
-            pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: e.uid, amount: healed, source: "Muralha Eterna" });
-          }
-        }
-      });
-      break;
-    }
-    case "BOSSORC-001": {
-      const target = selectTarget(session.players, "maxLife");
-      if (target) {
-        applyDamageToHero(session, target, 3, "Drenagem Vital (Pressagio)", session.boss, { ignoreShield: true });
-        const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + 3);
-        const healed = session.boss.life - before;
-        if (healed > 0) {
-          session.log.unshift(`[Presságio] Drenagem Vital: Oraculo Corrompido curou ${healed}.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Drenagem Vital" });
-        }
-      }
-      break;
-    }
-    case "BOSSORC-002": {
-      const active = session.players.filter(p => p.life > 0);
-      if (active.length > 0) {
-        const target = active[Math.floor(Math.random() * active.length)];
-        target.statusEffects.veneno = (target.statusEffects.veneno || 0) + 2;
-        session.log.unshift(`[Presságio] Contaminacao Sombria: ${target.name} recebe Veneno 2.`);
-      }
-      break;
-    }
-    case "BOSSORC-003": {
-      const lastCard = session.ultima_carta_jogada_na_rodada;
-      if (lastCard) {
-        session.log.unshift(`[Presságio] Espelho Sombrio reflete a carta ${lastCard.name} (${lastCard.type.toUpperCase()}) de forma invertida.`);
-        if (lastCard.type === "heal") {
-          const x = lastCard.heal || lastCard.allHeal || lastCard.revive || 3;
-          const active = session.players.filter(p => p.life > 0);
-          if (active.length > 0) {
-            const target = active[Math.floor(Math.random() * active.length)];
-            session.log.unshift(`[Presságio] Espelho Sombrio: ${target.name} sofre ${x} de dano (ignora Escudo).`);
-            applyDamageToHero(session, target, x, "Espelho Sombrio (Pressagio)", session.boss, { ignoreShield: true });
-          }
-        } else if (lastCard.type === "attack" || lastCard.damage || lastCard.areaDamage) {
-          const x = lastCard.damage || lastCard.areaDamage || 3;
-          const before = session.boss.life;
-          session.boss.life = Math.min(session.boss.maxLife, session.boss.life + x);
-          const healed = session.boss.life - before;
-          if (healed > 0) {
-            session.log.unshift(`[Presságio] Espelho Sombrio: Oraculo Corrompido curou ${healed}.`);
-            pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Espelho Sombrio" });
-            session.oracleMirrorHealedThisRound = true;
-          }
-        } else if (lastCard.type === "defense" || lastCard.block || lastCard.selfBlock || lastCard.allBlock) {
-          const x = lastCard.block || lastCard.selfBlock || lastCard.allBlock || 3;
-          session.boss.shield += x;
-          session.log.unshift(`[Presságio] Espelho Sombrio: Oraculo Corrompido ganha ${x} de Escudo.`);
-          pushVisualEvent(session, { type: "shield", targetType: "enemy", targetId: session.boss.uid, amount: x, source: "Espelho Sombrio" });
-        } else {
-          const active = session.players.filter(p => p.life > 0);
-          if (active.length > 0) {
-            const target = active[Math.floor(Math.random() * active.length)];
-            target.statusEffects.vacuo = true;
-            session.log.unshift(`[Presságio] Espelho Sombrio: ${target.name} recebe Vacuo.`);
-          }
-        }
-      } else {
-        session.log.unshift("[Presságio] Espelho Sombrio: Nenhuma carta jogada nesta rodada para refletir.");
-      }
-      break;
-    }
-    case "BOSSORC-004": {
-      let lostCount = 0;
-      session.players.forEach(p => {
-        if (p.life > 0) {
-          const oldEnergy = p.energy;
-          p.energy = Math.max(1, p.energy - 1);
-          if (p.energy < oldEnergy) {
-            lostCount += 1;
-          }
-        }
-      });
-      const healAmt = lostCount * 2;
-      if (healAmt > 0) {
-        const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + healAmt);
-        const healed = session.boss.life - before;
-        if (healed > 0) {
-          session.log.unshift(`[Presságio] Absorcao Total: ${lostCount} herois perderam Energia. Oraculo recupera ${healed} de Vida.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Absorcao Total" });
-        }
-      }
-      break;
-    }
-    case "INT_001": {
-      // INT-001 (Caçada ao Sangue):
-      // "Revele a próxima carta do baralho de Armadilhas (sem ativá-la). O grupo vê o que está por vir."
-      const nextTrap = session.trapDeck[0] || trapCards[0];
-      session.revealedNextTrap = nextTrap;
-      session.log.unshift(`[Presságio] A próxima armadilha revelada é: ${nextTrap.name} (${nextTrap.text})`);
-      break;
-    }
-    case "INT_002": {
-      // INT-002 (Pressão Crescente):
-      // "O Inimigo Brutal recebe +2 de Vida máxima e atual imediatamente."
-      session.enemies.forEach((enemy) => {
-        if (enemy.category === "brutal" && enemy.life > 0) {
-          enemy.maxLife += 2;
-          enemy.life += 2;
-          session.log.unshift(`[Presságio] ${enemy.name} ganha +2 de Vida máxima e atual.`);
-        }
-      });
-      break;
-    }
-    case "INT_003": {
-      // INT-003 (Fúria Coordenada):
-      // "Todos os inimigos em jogo ganham +1 de dano nesta rodada."
-      // Handled inside computeEnemyAttack.
-      break;
-    }
-    case "INT_004": {
-      // INT-004 (Instinto Predatório):
-      // "Cada herói com 0 de Escudo sofre 1 de dano imediatamente."
-      session.players.forEach((player) => {
-        if (player.life > 0 && player.shield === 0) {
-          applyDamageToHero(session, player, 1, "Instinto Predatorio (Pressagio)");
-        }
-      });
-      break;
-    }
-    case "INT_005": {
-      // INT-005 (Coração Fraco):
-      // "O herói com menos Vida perde 1 de Energia nesta rodada (mínimo 1)."
-      const target = selectTarget(session.players, "minLife");
-      if (target) {
-        target.energy = Math.max(1, target.energy - 1);
-        session.log.unshift(`[Presságio] ${target.name} (menor Vida) perdeu 1 de Energia nesta rodada.`);
-      }
-      break;
-    }
-    case "INT_006": {
-      // INT-006 (Cerco Implacável):
-      // "Cada Inimigo Comum em jogo ganham +1 de Escudo imediatamente."
-      session.enemies.forEach((enemy) => {
-        if (enemy.category === "common" && enemy.life > 0) {
-          enemy.shield += 1;
-          session.log.unshift(`[Presságio] ${enemy.name} recebe +1 de Escudo.`);
-        }
-      });
-      break;
-    }
-    case "INT_007": {
-      // INT-007 (Retaliação):
-      // "O Inimigo Brutal não pode ser alvo de Reações nesta rodada."
-      // Handled in advanceDungeonTurn by skipping reaction phase.
-      break;
-    }
-    case "INT_008": {
-      // INT-008 (Golpe nos Fortes):
-      // "O herói com mais Escudo atual perde metade do seu Escudo (arredondado para baixo)."
-      const target = selectTarget(session.players, "maxShield");
-      if (target && target.shield > 0) {
-        const removed = Math.floor(target.shield / 2);
-        target.shield -= removed;
-        session.log.unshift(`[Presságio] ${target.name} (mais Escudo) perdeu metade do seu Escudo (${removed} removido).`);
-      }
-      break;
-    }
-    case "INT_009": {
-      // INT-009 (Pavor das Sombras):
-      // "Na próxima fase de compra desta sala, cada herói não comprará nenhuma carta."
-      session.skipNextDraw = true;
-      break;
-    }
-    case "INT_010": {
-      // INT-010 (Oportunismo):
-      // "Se houver uma Armadilha ativa, ela aplica seu efeito uma vez adicional agora."
-      const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
-      if (isTrapActive) {
-        const effect = session.activeTrap.effect;
-        if (effect === "energyPenalty") {
-          session.players.forEach((player) => {
-            if (player.life > 0) player.energy = Math.max(0, player.energy - 1);
-          });
-          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (-1 Energia).`);
-        } else if (effect === "shieldDecay") {
-          session.players.forEach((player) => {
-            if (player.life > 0) player.shield = Math.max(0, player.shield - 1);
-          });
-          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (-1 Escudo).`);
-        } else if (effect === "endDungeonAllDamage") {
-          session.players.forEach((player) => {
-            if (player.life > 0) applyDamageToHero(session, player, 1, session.activeTrap.name);
-          });
-          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (1 de dano a todos).`);
-        } else if (effect === "endRoundLowestLifeDamage") {
-          const target = selectTarget(session.players, "minLife");
-          if (target) applyDamageToHero(session, target, 1, session.activeTrap.name);
-          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (1 de dano no herói com menos vida).`);
-        } else if (effect === "endDungeonDamageIfTwoEnemies") {
-          if (aliveEnemyCount(session) >= 2) {
-            session.players.forEach((player) => {
-              if (player.life > 0) applyDamageToHero(session, player, 1, session.activeTrap.name);
-            });
-            session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) aplicou efeito adicional (1 de dano a todos).`);
-          }
-        } else {
-          session.log.unshift(`[Presságio] Oportunismo: Armadilha ativa (${session.activeTrap.name}) tem efeito passivo e não pôde ser ativada de imediato.`);
-        }
-      } else {
-        session.log.unshift(`[Presságio] Oportunismo: Nenhuma armadilha ativa para ativar.`);
-      }
-      break;
-    }
-    case "INT_011": {
-      // INT-011 (Avanço Pesado):
-      // "Todos os Inimigos Comuns em jogo ganham +2 de Vida máxima e atual."
-      session.enemies.forEach((enemy) => {
-        if (enemy.category === "common" && enemy.life > 0) {
-          enemy.maxLife += 2;
-          enemy.life += 2;
-          session.log.unshift(`[Presságio] ${enemy.name} ganha +2 de Vida máxima e atual.`);
-        }
-      });
-      break;
-    }
-    case "INT_012": {
-      // INT-012 (Caçada ao Preparado):
-      // "O herói com mais cartas na mão deve descartar 1 carta agora (à sua escolha)."
-      const target = selectTarget(session.players, "maxHand");
-      if (target && target.hand.length > 0) {
-        target.pendingDiscard = (target.pendingDiscard || 0) + 1;
-        session.log.unshift(`[Presságio] ${target.name} (mais cartas) deve escolher 1 carta para descartar.`);
-      }
-      break;
-    }
-    case "INT_013": {
-      // INT-013 (Execução Coordenada):
-      // "Todos os Inimigos Comuns ganham Veloz nesta rodada (atacam antes do Brutal)."
-      // Handled in startDungeonTurn.
-      break;
-    }
-    case "INT_014": {
-      // INT-014 (Ruptura do Ritmo):
-      // "O herói com mais Escudo transfere metade do seu Escudo (arredondado para baixo) para o herói com menos Vida."
-      const source = selectTarget(session.players, "maxShield");
-      const target = selectTarget(session.players, "minLife");
-      if (source && target && source.id !== target.id && source.shield > 0) {
-        const transferAmount = Math.floor(source.shield / 2);
-        if (transferAmount > 0) {
-          source.shield -= transferAmount;
-          target.shield += transferAmount;
-          target.roundStats.shieldReceived = (target.roundStats.shieldReceived || 0) + transferAmount;
-          session.log.unshift(`[Presságio] Ruptura do Ritmo: ${source.name} transferiu ${transferAmount} de Escudo para ${target.name}.`);
-        }
-      }
-      break;
-    }
-    case "INT_015": {
-      // INT-015 (Sangue e Cura):
-      // "O herói com mais Vida atual perde 2 pontos de Vida (ignora Escudo, não pode matar)."
-      const target = selectTarget(session.players, "maxLife");
-      if (target && target.life > 0) {
-        const damage = Math.min(target.life - 1, 2);
-        if (damage > 0) {
-          target.life -= damage;
-          pushVisualEvent(session, {
-            type: "damage",
-            targetType: "hero",
-            targetId: target.id,
-            amount: damage,
-            source: "Sangue e Cura (Pressagio)"
-          });
-          session.log.unshift(`[Presságio] Sangue e Cura: ${target.name} perdeu ${damage} de Vida.`);
-        }
-      }
-      break;
-    }
-  }
+  // No-op
 }
 
 function applyIntentionRepresalia(session) {
@@ -3110,6 +2890,7 @@ function addPlayer(session, name) {
     reduceDamage: 0,
     statusEffects: makeStatusEffects(),
     profecia_tokens: [],
+    sobrecarga_pendente: 0,
     roundStats: makeRoundStats(),
     deck: [],
     hand: [],
@@ -3177,14 +2958,13 @@ function startGame(session) {
   session.trapDeck = shuffle(trapCards);
   session.trapDiscard = [];
   session.activeTrap = null;
-  session.roomDeck = shuffle(roomCards);
-  session.roomDiscard = [];
-  session.room = session.roomDeck.shift() || roomCards[0];
   session.visualEvents = [];
-  setupCurrentRoom(session);
-  session.intentionDeck = shuffle(intentionCards);
+  session.roomDeck = [];
+  session.roomDiscard = [];
+  session.intentionDeck = [];
   session.intentionDiscard = [];
   session.activeIntention = null;
+  setupCurrentRoom(session);
   session.dungeonQueue = [];
   session.pendingReaction = null;
   session.pendingShieldAllocation = null;
@@ -3207,6 +2987,7 @@ function startGame(session) {
     player.reduceDamage = 0;
     player.statusEffects = makeStatusEffects();
     player.profecia_tokens = [];
+    player.sobrecarga_pendente = 0;
     player.nextAttackBonus = 0;
     player.foco_em = null;
     player.bonus_foco = 0;
@@ -3295,9 +3076,22 @@ function startNextRound(session) {
     session.roomRound += 1;
   }
   session.arena = [];
+  session.espelhos_arcanos_ativos = 0;
+  session.cartas_jogadas_esta_rodada = [];
   session.enemies.forEach((enemy) => {
     enemy.isStunned = false;
     enemy.atordoado_rodada_atual = false;
+    enemy.reduzir_ofensiva = 0;
+    enemy.reducao_proximo_ataque = 0;
+    enemy.curandeira_resolved_this_round = false;
+    enemy.guardia_resolved_this_round = false;
+    enemy.keyword_peconhenta_suprimida_rodada = false;
+    enemy.keyword_paralisante_suprimida_rodada = false;
+    enemy.keyword_curandeira_suprimida_rodada = false;
+    enemy.keyword_guardia_suprimida_rodada = false;
+    enemy.keyword_sanguinaria_suprimida_rodada = false;
+    enemy.keyword_explodir_suprimida_rodada = false;
+    enemy.keyword_invocar_suprimida_rodada = false;
     if (enemy.statusEffects) {
       enemy.statusEffects.vacuo = false;
     }
@@ -3309,7 +3103,13 @@ function startNextRound(session) {
     const toDiscard = player.played.filter(c => !c.exhausted);
     player.discard.push(...toDiscard);
     player.played = [];
-    player.energy = player.maxEnergy;
+    
+    let finalEnergy = Math.max(1, player.maxEnergy - (player.sobrecarga_pendente || 0));
+    if (session.terreno_ativo === "VORTICE_ARCANO") {
+      finalEnergy = Math.min(player.maxEnergy + 2, finalEnergy + 1);
+    }
+    player.energy = finalEnergy;
+    player.sobrecarga_pendente = 0;
     player.carga_de_batalha = 0;
     player.protectingId = null;
     player.interceptReady = false;
@@ -3377,8 +3177,8 @@ function playCard(session, player, payload) {
 
   const isFreePlay = session.pendingDistorcaoTemporal && session.pendingDistorcaoTemporal.targetId === player.id;
   if (isFreePlay) {
-    if (card.cost > 2) {
-      throw new Error("Apenas cartas de custo 2 ou menos podem ser jogadas com Distorcao Temporal.");
+    if (card.cost > 3) {
+      throw new Error("Apenas cartas de custo 3 ou menos podem ser jogadas com Distorcao Temporal.");
     }
   }
 
@@ -3513,7 +3313,23 @@ function playCard(session, player, payload) {
   }
 }
 
-function executeCardEffects(session, player, card, payload, attackBuff) {
+function executeCardEffects(session, player, card, payload, attackBuff, isCopied = false) {
+  if (!isCopied) {
+    if (!session.cartas_jogadas_esta_rodada) {
+      session.cartas_jogadas_esta_rodada = [];
+    }
+    session.cartas_jogadas_esta_rodada.push({
+      cardId: card.id,
+      casterId: player.id,
+      targetId: payload.targetId
+    });
+
+    if (card.sobrecarga) {
+      player.sobrecarga_pendente = Math.max(player.sobrecarga_pendente || 0, card.sobrecarga);
+      session.log.unshift(`${player.name} desencadeou Sobrecarga ${card.sobrecarga} (aplicará na próxima rodada).`);
+    }
+  }
+
   if (card.areaDamage) {
     const targets = session.enemies.filter((enemy) => enemy.life > 0);
     targets.forEach((enemy) =>
@@ -3852,15 +3668,24 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
   }
 
   if (card.id === "pressagio") {
-    const cardsList = session.intentionDeck.slice(0, 2);
+    const isCommon = session.roomNumber <= 4;
+    const currentDeck = isCommon ? session.commonEnemyDeck : session.brutalEnemyDeck;
+    const cardsList = currentDeck.slice(0, 2);
     session.pendingIntentionLook = {
       cardUid: card.uid,
       casterId: player.id,
-      maxCards: 2,
-      cards: cardsList.map(c => ({ id: c.id, name: c.name, presagioText: c.presagioText })),
+      maxCards: Math.min(2, currentDeck.length),
+      cards: cardsList.map(id => {
+        const temp = monsterTemplates[id];
+        return {
+          id: temp.id,
+          name: temp.name,
+          presagioText: `Vida: ${temp.maxLife} | ATK: ${temp.attack} | Categoria: ${temp.category === 'brutal' ? 'Brutal' : 'Comum'}`
+        };
+      }),
       canDiscard: false
     };
-    session.log.unshift(`${player.name} jogou Presságio. Aguardando reordenar o topo do baralho de Intenções.`);
+    session.log.unshift(`${player.name} jogou Presságio. Aguardando reordenar o topo do baralho de Monstros.`);
   }
 
   if (card.id === "toque-sagrado") {
@@ -3947,15 +3772,24 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
   }
 
   if (card.id === "visao-do-futuro") {
-    const cardsList = session.intentionDeck.slice(0, 3);
+    const isCommon = session.roomNumber <= 4;
+    const currentDeck = isCommon ? session.commonEnemyDeck : session.brutalEnemyDeck;
+    const cardsList = currentDeck.slice(0, 3);
     session.pendingIntentionLook = {
       cardUid: card.uid,
       casterId: player.id,
-      maxCards: Math.min(3, session.intentionDeck.length),
-      cards: cardsList.map(c => ({ id: c.id, name: c.name, presagioText: c.presagioText })),
+      maxCards: Math.min(3, currentDeck.length),
+      cards: cardsList.map(id => {
+        const temp = monsterTemplates[id];
+        return {
+          id: temp.id,
+          name: temp.name,
+          presagioText: `Vida: ${temp.maxLife} | ATK: ${temp.attack} | Categoria: ${temp.category === 'brutal' ? 'Brutal' : 'Comum'}`
+        };
+      }),
       canDiscard: true
     };
-    session.log.unshift(`${player.name} jogou Visão do Futuro. Aguardando descarte e reorganização do topo de Intenções.`);
+    session.log.unshift(`${player.name} jogou Visão do Futuro. Aguardando descarte e reorganização do topo de Monstros.`);
   }
 
   if (card.id === "luz-purificadora") {
@@ -4243,6 +4077,107 @@ function executeCardEffects(session, player, card, payload, attackBuff) {
     session.pendingDistorcaoTemporal = { casterId: player.id, targetId: target.id };
     session.log.unshift(`${player.name} jogou Distorcao Temporal em ${target.name}. Aguardando escolha de carta gratuita.`);
   }
+
+  if (card.id === "chama-menor") {
+    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
+    if (enemy) {
+      enemy.queimadura = Math.max(enemy.queimadura || 0, 1);
+      enemy.queimadura_rodadas = 2;
+      session.log.unshift(`${player.name} aplicou Queimadura 1 (2 rodadas) em ${enemy.name}.`);
+    }
+  }
+
+  if (card.id === "toque-glacial") {
+    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
+    if (enemy) {
+      enemy.reducao_proximo_ataque = (enemy.reducao_proximo_ataque || 0) + 1;
+      session.log.unshift(`${player.name} aplicou redução de dano de próximo ataque em ${enemy.name}.`);
+    }
+  }
+
+  if (card.id === "marca-arcana") {
+    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
+    if (enemy) {
+      enemy.marcas_arcanas = Math.min(5, (enemy.marcas_arcanas || 0) + 2);
+      session.log.unshift(`${player.name} aplicou 2 Marcas Arcanas em ${enemy.name} (Total: ${enemy.marcas_arcanas}/5).`);
+    }
+    const drawn = drawCards(player, 1);
+    session.log.unshift(`${player.name} comprou ${drawn} carta(s) com Marca Arcana.`);
+  }
+
+  if (card.id === "espelho-arcano") {
+    session.espelhos_arcanos_ativos = (session.espelhos_arcanos_ativos || 0) + 1;
+    session.log.unshift(`${player.name} ativou Espelho Arcano! O próximo ataque inimigo será redirecionado.`);
+  }
+
+  if (card.id === "amplificar") {
+    if (!session.cartas_jogadas_esta_rodada || session.cartas_jogadas_esta_rodada.length === 0) {
+      throw new Error("Nenhuma carta foi jogada nesta rodada ainda.");
+    }
+    session.pendingAmplificar = { cardUid: card.uid, casterId: player.id };
+    session.log.unshift(`${player.name} jogou Amplificar. Escolhendo qual carta de aliado/própria amplificar.`);
+  }
+
+  if (card.id === "detonacao-arcana") {
+    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
+    if (enemy) {
+      const marks = enemy.marcas_arcanas || 0;
+      enemy.marcas_arcanas = 0;
+      const dmg = marks * 3;
+      applyDamageToEnemy(session, enemy, dmg, "Detonação Arcana", true, player);
+      session.log.unshift(`${player.name} consumiu ${marks} Marcas Arcanas de ${enemy.name} e causou ${dmg} de dano (ignora Escudo).`);
+    } else {
+      throw new Error("Alvo inválido para Detonação Arcana.");
+    }
+  }
+
+  if (card.id === "escudo-etereo") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    addShieldToHero(session, target, 5, card, { reflect: 2 });
+    session.log.unshift(`${player.name} usou Escudo Etereo: concedeu 5 de Escudo com Refletir 2 para ${target.name}.`);
+  }
+
+  if (card.id === "no-temporal") {
+    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
+    if (enemy) {
+      enemy.reduzir_ofensiva = (enemy.reduzir_ofensiva || 0) + 3;
+      session.log.unshift(`${player.name} aplicou Reduzir Ofensiva 3 em ${enemy.name}.`);
+    } else {
+      throw new Error("Alvo inválido para Nó Temporal.");
+    }
+  }
+
+  if (card.id === "terreno-chao-de-gelo") {
+    session.terreno_ativo = "CHAO_DE_GELO";
+    session.log.unshift(`${player.name} ativou o Terreno: Chão de Gelo! Todos os ataques inimigos causam -1 de dano.`);
+  }
+
+  if (card.id === "cataclismo-arcano") {
+    const targets = session.enemies.filter((enemy) => enemy.life > 0);
+    targets.forEach((enemy) => {
+      applyDamageToEnemy(session, enemy, 8, "Cataclismo Arcano", false, player);
+    });
+
+    session.players.filter((ally) => ally.life > 0).forEach((ally) => {
+      ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
+    });
+
+    session.pendingCataclismoArcano = { cardUid: card.uid, casterId: player.id };
+    session.log.unshift(`${player.name} ativou Suprema: Cataclismo Arcano! Cause 8 de dano, concedeu 2 de energia a aliados e está escolhendo o Terreno.`);
+  }
+
+  if (card.id === "tempestade-eletrica") {
+    const primaryEnemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
+    if (primaryEnemy) {
+      applyDamageToEnemy(session, primaryEnemy, getHeroAttackDamage(player, 6, attackBuff, getHeroAttackPenalty(session)), "Tempestade Eletrica", false, player);
+    }
+    
+    const secondaryOptions = session.enemies.filter(e => e.uid !== payload.targetId && e.life > 0);
+    if (secondaryOptions.length > 0) {
+      session.pendingTempestadeEletrica = { casterId: player.id };
+      session.log.unshift(`${player.name} usou Tempestade Elétrica. Escolhendo alvo secundário.`);
+    }
+  }
 }
 
 function applyHealToHero(session, target, amount, source) {
@@ -4365,8 +4300,7 @@ function startDungeonTurn(session) {
   session.enemies.forEach(e => {
     e.currentTargetId = null;
   });
-  const intention = session.activeIntention;
-  session.log.unshift(`Turno da dungeon: ${intention.name}.`);
+  session.log.unshift("Turno da masmorra iniciado. Os monstros se preparam para atacar.");
 
   // Start of Dungeon Phase Boss Passives
   if (session.room?.effect === "bossRoom" && session.boss?.life > 0) {
@@ -4389,21 +4323,18 @@ function startDungeonTurn(session) {
   resolveEnvenenamentoTick(session);
 
   const continueTurn = () => {
-    if (!isRoomComplete(session)) {
-      if (session.room?.effect === "bossRoom") {
-        queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
-        queueEnemyGroup(session, "boss", intention.commonTarget, intention.commonText);
-      } else {
-        const brutalsFirst = (session.room.effect === "brutalsFirst" || session.activeTrap?.effect === "brutalsFirst") && session.activeIntention?.id !== "INT_013";
-        if (brutalsFirst) {
-          queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
-          queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
-        } else {
-          queueEnemyGroup(session, "common", intention.commonTarget, intention.commonText);
-          queueEnemyGroup(session, "brutal", intention.brutalTarget, intention.brutalText);
-        }
-      }
-    }
+    queueEnemyAttacks(session);
+    // Sort session.dungeonQueue so that attacks from enemies with reduzir_ofensiva > 0 go to the end
+    session.dungeonQueue.sort((a, b) => {
+      if (a.type !== "enemyAttack" || b.type !== "enemyAttack") return 0;
+      const enemyA = session.enemies.find(e => e.uid === a.enemyUid);
+      const enemyB = session.enemies.find(e => e.uid === b.enemyUid);
+      const roA = enemyA?.reduzir_ofensiva || 0;
+      const roB = enemyB?.reduzir_ofensiva || 0;
+      if (roA === 0 && roB > 0) return -1;
+      if (roA > 0 && roB === 0) return 1;
+      return 0;
+    });
     advanceDungeonTurn(session);
   };
 
@@ -4414,16 +4345,37 @@ function startDungeonTurn(session) {
   continueTurn();
 }
 
-function queueEnemyGroup(session, category, targetCriterion, ruleText) {
-  const enemies = session.enemies.filter((enemy) => enemy.life > 0 && enemy.category === category && !enemy.isStunned && !enemy.atordoado_rodada_atual);
-  enemies.forEach((enemy) => {
-    session.dungeonQueue.push({
-      type: "enemyAttack",
-      enemyUid: enemy.uid,
-      category,
-      targetCriterion,
-      ruleText
-    });
+function queueEnemyAttacks(session) {
+  if (isRoomComplete(session)) return;
+
+  session.enemies.forEach((enemy) => {
+    if (enemy.life <= 0 || enemy.isStunned || enemy.atordoado_rodada_atual) return;
+
+    // Check if there is a forced target (taunt)
+    const forcedTarget = session.players.find(p => p.id === enemy.forcedTargetId && p.life > 0)
+      || (session.todos_inimigos_forcam_guardiao ? session.players.find(p => p.heroId === "guardiao" && p.life > 0) : null);
+
+    if (forcedTarget) {
+      session.dungeonQueue.push({
+        type: "enemyAttack",
+        enemyUid: enemy.uid,
+        category: enemy.category,
+        targetId: forcedTarget.id,
+        ruleText: `${enemy.name} ataca ${forcedTarget.name} (Provocado)`
+      });
+    } else {
+      session.players.forEach((player) => {
+        if (player.life > 0) {
+          session.dungeonQueue.push({
+            type: "enemyAttack",
+            enemyUid: enemy.uid,
+            category: enemy.category,
+            targetId: player.id,
+            ruleText: `${enemy.name} ataca ${player.name} (Dano em Área)`
+          });
+        }
+      });
+    }
   });
 }
 
@@ -4440,9 +4392,13 @@ function advanceDungeonTurn(session) {
 
     const enemy = session.enemies.find((candidate) => candidate.uid === step.enemyUid && candidate.life > 0);
     if (!enemy) continue;
+
     const forcedTarget = session.players.find((player) => player.id === enemy.forcedTargetId && player.life > 0);
-    const target = forcedTarget || selectTarget(session.players, step.targetCriterion);
+    const target = forcedTarget
+      || (step.targetId ? session.players.find(p => p.id === step.targetId && p.life > 0) : null)
+      || selectTarget(session.players, step.targetCriterion || "minLife");
     if (!target) continue;
+
     const attack = step.overrideAttack ?? computeEnemyAttack(session, enemy, target, true);
     const isRetaliacaoBrutal = enemy.category === "brutal" && session.activeIntention?.id === "INT_007";
     const isBossReactionImmune = enemy.isBoss && session.bossReactionImmune;
@@ -4586,6 +4542,20 @@ function proceedToStandardReactions(session, pending) {
   } else {
     session.pendingReaction = null;
     session.log.unshift(`${pending.ruleText} Alvo: ${pending.targetName}.`);
+    
+    if (session.espelhos_arcanos_ativos > 0) {
+      session.pendingEspelhoArcano = {
+        id: randomUUID(),
+        enemyUid: enemy.uid,
+        enemyName: enemy.name,
+        originalTargetId: target.id,
+        attackDamage: pending.attack,
+        casterId: session.players.find(p => p.heroId === "mago")?.id
+      };
+      session.log.unshift(`[Espelho Arcano] O ataque de ${enemy.name} está sendo redirecionado.`);
+      return;
+    }
+    
     resolveEnemyAttack(session, enemy, target, pending.attack);
   }
 }
@@ -4615,25 +4585,16 @@ function applyQueimaduraTick(session) {
   });
 
   session.enemies.forEach((enemy) => {
-    if (enemy.life > 0 && enemy.statusEffects?.queimadura?.duration > 0) {
-      const q = enemy.statusEffects.queimadura;
-      const damage = q.value;
-      enemy.life = Math.max(0, enemy.life - damage);
-      q.duration -= 1;
+    if (enemy.life > 0 && enemy.queimadura_rodadas > 0) {
+      const damage = enemy.queimadura;
+      applyDamageToEnemy(session, enemy, damage, "Queimadura", true, null);
       
-      pushVisualEvent(session, {
-        type: "damage",
-        targetType: "enemy",
-        targetId: enemy.uid,
-        amount: damage,
-        source: "Queimadura"
-      });
-      session.log.unshift(`Queimadura causou ${damage} de dano em ${enemy.name} (ignora Escudo). Duração restante: ${q.duration} rodadas.`);
-      
-      if (enemy.life === 0) {
-        session.log.unshift(`${enemy.name} sucumbiu à Queimadura.`);
-        applyRoomReward(session);
+      enemy.queimadura_rodadas -= 1;
+      if (enemy.queimadura_rodadas === 0) {
+        enemy.queimadura = 0;
       }
+      
+      session.log.unshift(`Queimadura de inimigo causou ${damage} de dano em ${enemy.name}. Duração restante: ${enemy.queimadura_rodadas} rodadas.`);
     }
   });
 }
@@ -4643,14 +4604,18 @@ function finishDungeonTurn(session) {
     applyIntentionRepresalia(session);
     session.represaliaApplied = true;
   }
+  if (!session.queimaduraTickApplied) {
+    applyQueimaduraTick(session);
+    session.queimaduraTickApplied = true;
+    
+    if (checkFlechadaOportunidade(session, () => finishDungeonTurn(session))) {
+      return;
+    }
+  }
   if (!session.endDungeonEffectsApplied) {
     const paused = applyEndOfDungeonEffects(session);
     if (paused) return; // Keep paused
     session.endDungeonEffectsApplied = true;
-  }
-  if (!session.queimaduraTickApplied) {
-    applyQueimaduraTick(session);
-    session.queimaduraTickApplied = true;
   }
   if (!session.roomRewardApplied) {
     applyRoomReward(session);
@@ -4691,8 +4656,22 @@ function canPlayReactionCard(session, player, card, pending) {
   if (card.id === "contra-ataque") {
     return true;
   }
-  if (card.id === "voz-do-oraculo") {
+  if (card.id === "voz-do-oraculo" || card.id === "absorcao-arcana") {
     return pending.type === "trap";
+  }
+  if (card.id === "contra-feitico") {
+    if (pending.type === "keyword_activation") return true;
+    if (pending.enemyUid) {
+      const enemy = session.enemies.find(e => e.uid === pending.enemyUid);
+      if (enemy) {
+        const hasActiveKeywords = enemy.keywords?.some(kw => 
+          ["Peçonhenta", "Paralisante", "Sanguinária", "Curandeira", "Guardiã", "Explodir", "Invocar"].includes(kw) &&
+          !enemy[`keyword_${kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}_suprimida_rodada`]
+        );
+        return !!hasActiveKeywords;
+      }
+    }
+    return false;
   }
   if (card.id === "bencao-protetora") {
     return pending.type === "status_apply";
@@ -4747,6 +4726,13 @@ function resolvePendingSpecialReaction(session) {
     callback(false); // not negated
     return true;
   }
+  if (session.pendingKeywordCallback) {
+    const callback = session.pendingKeywordCallback;
+    session.pendingKeywordCallback = null;
+    session.pendingReaction = null;
+    callback(false); // not negated
+    return true;
+  }
   if (session.pendingCuraCallback) {
     const callback = session.pendingCuraCallback;
     session.pendingCuraCallback = null;
@@ -4767,7 +4753,8 @@ function skipReaction(session, player) {
   const remaining = pending.eligiblePlayerIds.filter((id) => !pending.skippedPlayerIds.includes(id));
   if (remaining.length === 0) {
     if (resolvePendingSpecialReaction(session)) return;
-    resolvePendingReactionAttack(session);
+    const paused = resolvePendingReactionAttack(session);
+    if (paused) return;
     advanceDungeonTurn(session);
   }
 }
@@ -4784,7 +4771,8 @@ function skipReactionsThisRound(session, player) {
     const remaining = pending.eligiblePlayerIds.filter((id) => !pending.skippedPlayerIds.includes(id));
     if (remaining.length === 0) {
       if (resolvePendingSpecialReaction(session)) return;
-      resolvePendingReactionAttack(session);
+      const paused = resolvePendingReactionAttack(session);
+      if (paused) return;
       advanceDungeonTurn(session);
     }
   }
@@ -4870,6 +4858,50 @@ function playReaction(session, player, payload) {
     return;
   }
 
+  if (card.id === "absorcao-arcana") {
+    session.pendingReaction = null;
+    const callback = session.pendingTrapCallback;
+    session.pendingTrapCallback = null;
+    player.energy = Math.min(player.maxEnergy, player.energy + 2);
+    session.log.unshift(`${player.name} usou Absorção Arcana! Negou o efeito de ${pending.trapName} para todos os heróis e recuperou 2⚡.`);
+    if (callback) {
+      const allHeroIds = session.players.map(p => p.id);
+      callback(allHeroIds);
+    }
+    return;
+  }
+
+  if (card.id === "contra-feitico") {
+    if (pending.type === "keyword_activation") {
+      session.pendingReaction = null;
+      const callback = session.pendingKeywordCallback;
+      session.pendingKeywordCallback = null;
+      const keywordType = pending.keywordType;
+      const enemyUid = pending.enemyUid;
+      const enemy = session.enemies.find(e => e.uid === enemyUid);
+      if (enemy) {
+        const normalizedKw = keywordType.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        enemy[`keyword_${normalizedKw}_suprimida_rodada`] = true;
+        session.log.unshift(`${player.name} usou Contra-Feitiço! A keyword ${keywordType} de ${enemy.name} foi anulada nesta rodada.`);
+      }
+      if (callback) {
+        callback(true);
+      }
+      return;
+    }
+    
+    const enemy = session.enemies.find(e => e.uid === pending.enemyUid);
+    if (enemy) {
+      enemy.keywords?.forEach(kw => {
+        const normalizedKw = kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        enemy[`keyword_${normalizedKw}_suprimida_rodada`] = true;
+      });
+      session.log.unshift(`${player.name} usou Contra-Feitiço! Todas as keywords de ${enemy.name} foram anuladas nesta rodada.`);
+    }
+    proceedToStandardReactions(session, pending);
+    return;
+  }
+
   if (card.id === "bencao-protetora") {
     session.pendingReaction = null;
     const callback = session.pendingStatusCallback;
@@ -4943,13 +4975,28 @@ function playReaction(session, player, payload) {
 
 function resolvePendingReactionAttack(session) {
   const pending = session.pendingReaction;
-  if (!pending) return;
+  if (!pending) return false;
   const enemy = session.enemies.find((candidate) => candidate.uid === pending.enemyUid && candidate.life > 0);
   const target = session.players.find((candidate) => candidate.id === pending.targetId && candidate.life > 0);
   session.pendingReaction = null;
-  if (!enemy || !target) return;
+  if (!enemy || !target) return false;
+
+  if (session.espelhos_arcanos_ativos > 0) {
+    session.pendingEspelhoArcano = {
+      id: randomUUID(),
+      enemyUid: enemy.uid,
+      enemyName: enemy.name,
+      originalTargetId: target.id,
+      attackDamage: pending.attack,
+      casterId: session.players.find(p => p.heroId === "mago")?.id
+    };
+    session.log.unshift(`[Espelho Arcano] O ataque de ${enemy.name} está sendo redirecionado.`);
+    return true; // paused!
+  }
+
   session.log.unshift(`${enemy.name} atacou ${target.name}.`);
   resolveEnemyAttack(session, enemy, target, pending.attack);
+  return false;
 }
 
 function selectTarget(players, criterion) {
@@ -5011,20 +5058,14 @@ function getEnemyCurrentTarget(session, enemy) {
   if (enemy.currentTargetId) {
     return session.players.find(p => p.id === enemy.currentTargetId) || null;
   }
-  if (session.status !== "playing" || !session.activeIntention || enemy.life <= 0) {
+  if (session.status !== "playing" || enemy.life <= 0) {
     return null;
   }
   const forcedTarget = session.players.find((player) => player.id === enemy.forcedTargetId && player.life > 0)
     || (session.todos_inimigos_forcam_guardiao && session.players.find((player) => player.heroId === "guardiao" && player.life > 0));
   if (forcedTarget) return forcedTarget;
 
-  const criterion = enemy.category === "brutal"
-    ? session.activeIntention.brutalTarget
-    : session.activeIntention.commonTarget;
-
-  if (!criterion) return null;
-
-  return selectTarget(session.players, criterion);
+  return { name: "Área", heroId: "all" };
 }
 
 function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
@@ -5061,6 +5102,24 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
     attack = Math.max(1, attack - enf);
   }
 
+  // Apply Terrain: Chao de Gelo effect
+  if (session.terreno_ativo === "CHAO_DE_GELO") {
+    attack = Math.max(1, attack - 1);
+  }
+
+  // Apply Reduzir Ofensiva
+  if (enemy.reduzir_ofensiva && enemy.reduzir_ofensiva > 0) {
+    attack = Math.max(1, attack - enemy.reduzir_ofensiva);
+  }
+
+  // Apply Toque Glacial next attack reduction
+  if (enemy.reducao_proximo_ataque && enemy.reducao_proximo_ataque > 0) {
+    attack = Math.max(1, attack - enemy.reducao_proximo_ataque);
+    if (commitFirstBonus) {
+      enemy.reducao_proximo_ataque = 0;
+    }
+  }
+
   return attack;
 }
 
@@ -5068,22 +5127,35 @@ function triggerTrapEffect(session, trap, affectedPlayerIds, executeEffectFn) {
   const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
   const hasVoz = oraculo && oraculo.hand.some(c => c.id === "voz-do-oraculo");
   
-  if (hasVoz) {
+  const vince = session.players.find(p => p.heroId === "mago" && p.life > 0 && !p.skipReactionsThisRound);
+  const hasAbsorcao = vince && vince.hand.some(c => c.id === "absorcao-arcana");
+  
+  if (hasVoz || hasAbsorcao) {
+    const eligiblePlayerIds = [];
+    const playableCardUids = {};
+    
+    if (hasVoz) {
+      eligiblePlayerIds.push(oraculo.id);
+      playableCardUids[oraculo.id] = oraculo.hand.filter(c => c.id === "voz-do-oraculo").map(c => c.uid);
+    }
+    if (hasAbsorcao) {
+      eligiblePlayerIds.push(vince.id);
+      playableCardUids[vince.id] = vince.hand.filter(c => c.id === "absorcao-arcana").map(c => c.uid);
+    }
+    
     session.pendingReaction = {
       id: randomUUID(),
       type: "trap",
       trapId: trap.id,
       trapName: trap.name,
       ruleText: trap.text,
-      eligiblePlayerIds: [oraculo.id],
+      eligiblePlayerIds,
       skippedPlayerIds: [],
       affectedPlayerIds,
-      playableCardUids: {
-        [oraculo.id]: oraculo.hand.filter(c => c.id === "voz-do-oraculo").map(c => c.uid)
-      }
+      playableCardUids
     };
     session.pendingTrapCallback = executeEffectFn;
-    session.log.unshift(`[Armadilha] Voz do Oraculo pode ser usada contra ${trap.name}. Reacoes abertas.`);
+    session.log.unshift(`[Armadilha] Reações abertas contra ${trap.name}.`);
     return true; // indicates paused
   }
   
@@ -5159,16 +5231,25 @@ function resolveEnemyAttackStage1(session, enemy, target, damage) {
 
 function resolveEnemyAttackStage2(session, enemy, target, damage) {
   // Peçonhenta trigger
-  if (damage > 0 && enemy.keywords?.includes("Peçonhenta")) {
+  if (damage > 0 && enemy.keywords?.includes("Peçonhenta") && !enemy.keyword_peconhenta_suprimida_rodada) {
     if (target.statusEffects) {
-      const paused = triggerStatusApplyReaction(session, enemy, target, "Veneno", 1, (negated) => {
+      const pausedContra = checkContraFeitico(session, enemy, "Peçonhenta", (negated) => {
         if (!negated) {
-          target.statusEffects.veneno = (target.statusEffects.veneno || 0) + 1;
-          session.log.unshift(`Peçonhenta: ${enemy.name} aplicou Veneno 1 em ${target.name}.`);
+          const pausedTrap = triggerStatusApplyReaction(session, enemy, target, "Veneno", 1, (negatedTrap) => {
+            if (!negatedTrap) {
+              target.statusEffects.veneno = (target.statusEffects.veneno || 0) + 1;
+              session.log.unshift(`Peçonhenta: ${enemy.name} aplicou Veneno 1 em ${target.name}.`);
+            }
+            resolveEnemyAttackStage3(session, enemy, target, damage);
+          });
+          if (!pausedTrap) {
+            resolveEnemyAttackStage3(session, enemy, target, damage);
+          }
+        } else {
+          resolveEnemyAttackStage3(session, enemy, target, damage);
         }
-        resolveEnemyAttackStage3(session, enemy, target, damage);
       });
-      if (paused) return;
+      if (pausedContra) return;
     } else {
       resolveEnemyAttackStage3(session, enemy, target, damage);
     }
@@ -5179,16 +5260,25 @@ function resolveEnemyAttackStage2(session, enemy, target, damage) {
 
 function resolveEnemyAttackStage3(session, enemy, target, damage) {
   // Paralisante trigger
-  if (damage > 0 && enemy.keywords?.includes("Paralisante")) {
+  if (damage > 0 && enemy.keywords?.includes("Paralisante") && !enemy.keyword_paralisante_suprimida_rodada) {
     if (target.statusEffects) {
-      const paused = triggerStatusApplyReaction(session, enemy, target, "Vácuo", 1, (negated) => {
+      const pausedContra = checkContraFeitico(session, enemy, "Paralisante", (negated) => {
         if (!negated) {
-          target.statusEffects.vacuo = true;
-          session.log.unshift(`Paralisante: ${enemy.name} aplicou Vácuo em ${target.name}.`);
+          const pausedTrap = triggerStatusApplyReaction(session, enemy, target, "Vácuo", 1, (negatedTrap) => {
+            if (!negatedTrap) {
+              target.statusEffects.vacuo = true;
+              session.log.unshift(`Paralisante: ${enemy.name} aplicou Vácuo em ${target.name}.`);
+            }
+            resolveEnemyAttackStage4(session, enemy, target, damage);
+          });
+          if (!pausedTrap) {
+            resolveEnemyAttackStage4(session, enemy, target, damage);
+          }
+        } else {
+          resolveEnemyAttackStage4(session, enemy, target, damage);
         }
-        resolveEnemyAttackStage4(session, enemy, target, damage);
       });
-      if (paused) return;
+      if (pausedContra) return;
     } else {
       resolveEnemyAttackStage4(session, enemy, target, damage);
     }
@@ -5399,6 +5489,12 @@ function sanitizeSession(session, viewerId) {
     pendingEnergyAllocation: session.pendingEnergyAllocation,
     pendingEcoArcano: session.pendingEcoArcano,
     pendingDistorcaoTemporal: session.pendingDistorcaoTemporal,
+    pendingEspelhoArcano: session.pendingEspelhoArcano,
+    pendingAmplificar: session.pendingAmplificar,
+    pendingCataclismoArcano: session.pendingCataclismoArcano,
+    pendingTempestadeEletrica: session.pendingTempestadeEletrica,
+    terreno_ativo: session.terreno_ativo,
+    cartas_jogadas_esta_rodada: session.cartas_jogadas_esta_rodada || [],
     pendingIntentionLook: session.pendingIntentionLook,
     activeTrapDisabledRounds: session.activeTrapDisabledRounds || 0,
     bossSelectOptions: session.bossSelectOptions || [],
@@ -5422,6 +5518,7 @@ function sanitizeSession(session, viewerId) {
       shield: player.shield,
       carga_de_batalha: player.carga_de_batalha !== undefined ? player.carga_de_batalha : null,
       statusEffects: player.statusEffects,
+      sobrecarga_pendente: player.sobrecarga_pendente || 0,
       profecia_tokens: player.profecia_tokens || [],
       proxima_carta_desconto_1: player.proxima_carta_desconto_1 || false,
       roundStats: player.roundStats,
@@ -5607,7 +5704,19 @@ async function handleApi(req, res) {
             isBoss: true,
             marcado: false,
             envenenamento: 0,
-            atordoado_rodada_atual: false
+            atordoado_rodada_atual: false,
+            marcas_arcanas: 0,
+            queimadura: 0,
+            queimadura_rodadas: 0,
+            reduzir_ofensiva: 0,
+            reducao_proximo_ataque: 0,
+            keyword_peconhenta_suprimida_rodada: false,
+            keyword_paralisante_suprimida_rodada: false,
+            keyword_curandeira_suprimida_rodada: false,
+            keyword_guardia_suprimida_rodada: false,
+            keyword_sanguinaria_suprimida_rodada: false,
+            keyword_explodir_suprimida_rodada: false,
+            keyword_invocar_suprimida_rodada: false
           };
           session.enemies = [session.boss];
 
@@ -5665,11 +5774,15 @@ async function handleApi(req, res) {
           session.status = "playing";
           session.turn = "players";
           session.roomRound = 1;
+          session.terreno_ativo = null;
+          session.espelhos_arcanos_ativos = 0;
+          session.cartas_jogadas_esta_rodada = [];
 
           // Clean old round state
           session.players.forEach((player) => {
             player.discard.push(...player.played);
             player.played = [];
+            player.sobrecarga_pendente = 0;
             player.energy = player.maxEnergy;
             player.shield = 0;
             player.protectingId = null;
@@ -5846,21 +5959,7 @@ async function handleApi(req, res) {
             pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: player.id, amount: 8, source: sc.name });
             session.log.unshift(`${player.name} usou ${sc.name}! Recebeu 8 de Escudo, redirecionara todo o dano aliado a si mesmo e reduzira todo o dano sofrido pela metade ate a proxima rodada.`);
           } else if (sc.id === "cataclismo-arcano") {
-            const targets = session.enemies.filter((enemy) => enemy.life > 0);
-            targets.forEach((enemy) =>
-              applyDamageToEnemy(session, enemy, Math.max(0, 6 - getHeroAttackPenalty(session)), sc.name, false, player)
-            );
-            session.players.filter((ally) => ally.life > 0).forEach((ally) => {
-              ally.energy = Math.min(ally.maxEnergy + 2, ally.energy + 2);
-            });
-            session.activeTrapDisabledRounds = 1;
-            const brutal = session.enemies.find((enemy) => enemy.category === "brutal" && enemy.life > 0);
-            if (brutal) {
-              brutal.isStunned = true;
-              session.log.unshift(`${player.name} usou Cataclismo Arcano! Causou 6 de dano em todos os inimigos, concedeu +2 de Energia para todos os aliados, atordoou ${brutal.name} e desativou as armadilhas nesta rodada.`);
-            } else {
-              session.log.unshift(`${player.name} usou Cataclismo Arcano! Causou 6 de dano em todos os inimigos, concedeu +2 de Energia para todos os aliados e desativou as armadilhas nesta rodada.`);
-            }
+            executeCardEffects(session, player, sc, {}, 0);
           }
         } else if (body.type === "discardCard") {
           // Resolve a pending discard (from planejamento)
@@ -5934,41 +6033,114 @@ async function handleApi(req, res) {
           
           session.pendingEcoArcano = null;
           session.log.unshift(`${player.name} usou Eco Arcano para repetir os efeitos de ${copiedCard.name}!`);
-          executeCardEffects(session, player, copiedCard, { targetId }, 0);
+          executeCardEffects(session, player, copiedCard, { targetId }, 0, true);
+
+        } else if (body.type === "confirmEspelhoArcano") {
+          if (!session.pendingEspelhoArcano) throw new Error("Não há redirecionamento de Espelho Arcano pendente.");
+          if (session.pendingEspelhoArcano.casterId !== player.id) throw new Error("Apenas o Arcanista pode confirmar o redirecionamento.");
+          
+          const targetEnemyUid = body.targetEnemyUid;
+          const targetEnemy = session.enemies.find(e => e.uid === targetEnemyUid && e.life > 0);
+          if (!targetEnemy) throw new Error("Inimigo selecionado é inválido ou já foi derrotado.");
+
+          const mirror = session.pendingEspelhoArcano;
+          session.pendingEspelhoArcano = null;
+          session.espelhos_arcanos_ativos = Math.max(0, session.espelhos_arcanos_ativos - 1);
+
+          session.log.unshift(`[Espelho Arcano] O ataque de ${mirror.enemyName} foi redirecionado para ${targetEnemy.name} (dano: ${mirror.attackDamage}).`);
+          
+          const enemyAttacker = session.enemies.find(e => e.uid === mirror.enemyUid);
+          applyDamageToEnemy(session, targetEnemy, mirror.attackDamage, `${enemyAttacker ? enemyAttacker.name : "Inimigo"} (Refletido por Espelho Arcano)`, false, null);
+
+          advanceDungeonTurn(session);
+
+        } else if (body.type === "confirmAmplificar") {
+          if (!session.pendingAmplificar) throw new Error("Não há Amplificar pendente.");
+          if (session.pendingAmplificar.casterId !== player.id) throw new Error("Apenas o conjurador pode responder.");
+          const copiedCardId = body.copiedCardId;
+          const targetId = body.targetId;
+          if (!copiedCardId) throw new Error("Selecione uma carta para amplificar.");
+          
+          const copiedCard = cards[copiedCardId];
+          if (!copiedCard) throw new Error("Carta para amplificar nao encontrada.");
+          if (copiedCard.id === "amplificar" || copiedCard.id === "cataclismo-arcano" || copiedCard.id === "eco-arcano") {
+            throw new Error("Não é possível amplificar cartas supremas, eco ou o próprio amplificar.");
+          }
+
+          session.pendingAmplificar = null;
+          session.log.unshift(`${player.name} usou Amplificar para repetir os efeitos de ${copiedCard.name}!`);
+          executeCardEffects(session, player, copiedCard, { targetId }, 0, true);
+
+        } else if (body.type === "cancelAmplificar") {
+          if (!session.pendingAmplificar) throw new Error("Não há Amplificar pendente.");
+          if (session.pendingAmplificar.casterId !== player.id) throw new Error("Apenas o conjurador pode cancelar.");
+          session.pendingAmplificar = null;
+          session.log.unshift(`${player.name} cancelou o Amplificar.`);
+
+        } else if (body.type === "confirmCataclismoArcano") {
+          if (!session.pendingCataclismoArcano) throw new Error("Não há Cataclismo Arcano pendente.");
+          if (session.pendingCataclismoArcano.casterId !== player.id) throw new Error("Apenas o conjurador pode responder.");
+          const terrainType = body.terrainType;
+          if (terrainType && terrainType !== "CHAO_DE_GELO" && terrainType !== "VORTICE_ARCANO") {
+            throw new Error("Tipo de terreno inválido.");
+          }
+
+          session.pendingCataclismoArcano = null;
+          if (terrainType) {
+            session.terreno_ativo = terrainType;
+            session.log.unshift(`${player.name} estabeleceu o Terreno Arcano: ${terrainType === "CHAO_DE_GELO" ? "Chão de Gelo" : "Vórtice Arcano"}.`);
+          } else {
+            session.log.unshift(`${player.name} optou por não criar nenhum Terreno Arcano.`);
+          }
+
+        } else if (body.type === "confirmTempestadeEletrica") {
+          if (!session.pendingTempestadeEletrica) throw new Error("Não há Tempestade Elétrica pendente.");
+          if (session.pendingTempestadeEletrica.casterId !== player.id) throw new Error("Apenas o conjurador pode responder.");
+          const targetId = body.targetId;
+          const enemy = session.enemies.find(e => e.uid === targetId && e.life > 0);
+          if (!enemy) throw new Error("Alvo secundário inválido ou já derrotado.");
+
+          session.pendingTempestadeEletrica = null;
+          applyDamageToEnemy(session, enemy, 3, "Tempestade Eletrica (Secundário)", false, player);
+          session.log.unshift(`${player.name} atingiu ${enemy.name} com o ataque secundário da Tempestade Elétrica.`);
+
         } else if (body.type === "confirmIntentionLook") {
-          if (!session.pendingIntentionLook) throw new Error("Não há visualização de intenções pendente.");
+          if (!session.pendingIntentionLook) throw new Error("Não há visualização de monstros pendente.");
           if (session.pendingIntentionLook.casterId !== player.id) throw new Error("Apenas o conjurador do efeito pode responder.");
 
           const { discardedCardId, reorderedCardIds } = body;
           const look = session.pendingIntentionLook;
 
+          const isCommon = session.roomNumber <= 4;
+          const currentDeck = isCommon ? session.commonEnemyDeck : session.brutalEnemyDeck;
+
           if (look.canDiscard && discardedCardId) {
-            const discardedIdx = session.intentionDeck.findIndex(c => c.id === discardedCardId);
+            const discardedIdx = currentDeck.findIndex(id => id === discardedCardId);
             if (discardedIdx === -1 || discardedIdx >= look.maxCards) {
-              throw new Error("Carta para descarte inválida.");
+              throw new Error("Monstro para descarte inválido.");
             }
-            const [discardedCard] = session.intentionDeck.splice(discardedIdx, 1);
-            session.intentionDeck.push(discardedCard);
-            session.log.unshift(`${player.name} descartou ${discardedCard.name} para o fundo do baralho de Intenções.`);
+            const [discardedCard] = currentDeck.splice(discardedIdx, 1);
+            currentDeck.push(discardedCard);
+            session.log.unshift(`${player.name} colocou o monstro ${monsterTemplates[discardedCard].name} no fundo do baralho.`);
           }
 
           const remainingCount = look.canDiscard && discardedCardId ? look.maxCards - 1 : look.maxCards;
-          const originalRemaining = session.intentionDeck.slice(0, remainingCount);
+          const originalRemaining = currentDeck.slice(0, remainingCount);
           if (reorderedCardIds.length !== remainingCount) {
-            throw new Error(`Deve reordenar exatamente ${remainingCount} cartas.`);
+            throw new Error(`Deve reordenar exatamente ${remainingCount} monstros.`);
           }
 
           const newTop = [];
           for (const id of reorderedCardIds) {
-            const idx = originalRemaining.findIndex(c => c.id === id);
-            if (idx === -1) throw new Error("ID de carta reordenada inválido.");
+            const idx = originalRemaining.findIndex(x => x === id);
+            if (idx === -1) throw new Error("ID de monstro reordenado inválido.");
             newTop.push(originalRemaining[idx]);
             originalRemaining.splice(idx, 1);
           }
 
-          session.intentionDeck.splice(0, remainingCount, ...newTop);
+          currentDeck.splice(0, remainingCount, ...newTop);
           session.pendingIntentionLook = null;
-          session.log.unshift(`${player.name} reorganizou o topo do baralho de Intenções.`);
+          session.log.unshift(`${player.name} reorganizou o topo do baralho de Monstros.`);
         } else if (body.type === "cancelEcoArcano") {
           if (!session.pendingEcoArcano) throw new Error("Nao ha Eco Arcano pendente.");
           if (session.pendingEcoArcano.casterId !== player.id) throw new Error("Apenas o conjurador pode cancelar.");

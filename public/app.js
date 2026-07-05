@@ -1268,6 +1268,7 @@ function renderGame() {
           </div>
           ${renderGameStatusPanel(state, me)}
           ${renderRoomCard(state)}
+          ${state.terreno_ativo ? renderTerrainCard(state.terreno_ativo) : ""}
           ${state.activeTorment ? renderTormentCard(state.activeTorment) : ""}
           ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
           ${renderIntentionCard(state.activeIntention)}
@@ -1290,6 +1291,10 @@ function renderGame() {
       ${renderDistorcaoTemporalModal(state, me)}
       ${renderRewardSelectionModal(state, me)}
       ${renderIntentionLookModal(state, me)}
+      ${renderEspelhoArcanoModal(state, me)}
+      ${renderAmplificarModal(state, me)}
+      ${renderCataclismoArcanoModal(state, me)}
+      ${renderTempestadeEletricaModal(state, me)}
     </section>
   `;
 
@@ -1609,7 +1614,7 @@ function renderIntentionLookModal(state, me) {
   let contentHtml = "";
   if (isMe) {
     contentHtml = `
-      <p style="margin-bottom: 12px; color: #f2dfb7;">Você pode reorganizar as cartas do topo do baralho de Intenções. ${look.canDiscard ? "Também pode descartar uma para o fundo." : ""}</p>
+      <p style="margin-bottom: 12px; color: #f2dfb7;">Você pode reorganizar os monstros do topo do baralho. ${look.canDiscard ? "Também pode colocar um monstro no fundo do baralho." : ""}</p>
       
       <div style="display: grid; gap: 12px; margin-bottom: 20px;">
         ${currentOrder.map((id, index) => {
@@ -1633,7 +1638,7 @@ function renderIntentionLookModal(state, me) {
       ${discardedId ? `
         <div style="margin-bottom: 20px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
           <div style="text-align: left;">
-            <span style="color: #ef4444; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; display: block;">Descartada (irá para o fundo):</span>
+            <span style="color: #ef4444; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; display: block;">Descartado (irá para o fundo):</span>
             <strong style="color: #fff;">${escapeHtml(cardsList.find(c => c.id === discardedId)?.name)}</strong>
           </div>
           <button class="secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="undiscardIntention()">Desfazer descarte</button>
@@ -1646,14 +1651,14 @@ function renderIntentionLookModal(state, me) {
     `;
   } else {
     contentHtml = `
-      <p class="muted" style="text-align: center; padding: 20px;">O Oráculo está olhando e reordenando as Intenções do topo do baralho...</p>
+      <p class="muted" style="text-align: center; padding: 20px;">O Oráculo está olhando e reordenando os Monstros do topo do baralho...</p>
     `;
   }
 
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="intentionLookTitle">
       <div class="glass-panel" style="width: min(540px, 100%); padding: 20px; display: grid; gap: 14px; position: relative;">
-        <h2 id="intentionLookTitle" style="color: #ffd785; font-size: 1.5rem; margin: 0; text-align: center;">Olhando o Futuro (Intenções)</h2>
+        <h2 id="intentionLookTitle" style="color: #ffd785; font-size: 1.5rem; margin: 0; text-align: center;">Previsão do Futuro (Monstros)</h2>
         ${contentHtml}
       </div>
     </div>
@@ -1855,7 +1860,7 @@ function renderTurnControls(state, me) {
 
   if (state.turn === "players") {
     return `
-      <p class="muted">Quando todos finalizarem, a dungeon resolve a carta de intencao automaticamente.</p>
+      <p class="muted">Quando todos finalizarem, a dungeon resolve o ataque em área automaticamente.</p>
       <button id="endTurn" class="danger" ${me.turnEnded ? "disabled" : ""}>
         ${me.turnEnded ? "Turno finalizado" : "Finalizar turno"}
       </button>
@@ -1880,7 +1885,7 @@ function renderTurnControls(state, me) {
   }
 
   return `
-    <p class="muted">A dungeon atacou seguindo a intencao ativa. Inicie a proxima rodada para revelar uma nova carta.</p>
+    <p class="muted">A dungeon realizou seus ataques em área. Inicie a próxima rodada para continuar.</p>
     <button id="startNextRound">${state.roomComplete ? "Avancar para proxima sala" : "Iniciar proxima rodada"}</button>
   `;
 }
@@ -1891,7 +1896,7 @@ function renderTopbar() {
       <div class="brand">
         <span class="eyebrow">Online cooperative TCG</span>
         <h1>Arena Cooperativa</h1>
-        <p>Sala ${escapeHtml(local.sessionId)} | intencoes, custos e dano validados pelo servidor</p>
+        <p>Sala ${escapeHtml(local.sessionId)} | combates, custos e dano validados pelo servidor</p>
       </div>
       <div class="topbar-actions">
         <button id="rulesToggle" class="secondary">Regras</button>
@@ -1951,49 +1956,37 @@ function renderTrapCard(trap, disabledRounds) {
   `;
 }
 
+function renderTerrainCard(terrain) {
+  if (!terrain) return "";
+  let name = "";
+  let text = "";
+  let color = "";
+  if (terrain === "CHAO_DE_GELO") {
+    name = "Terreno: Chao de Gelo";
+    text = "❄️ Todos os ataques inimigos causam 1 de dano a menos (mínimo 1). Persiste até o fim da sala.";
+    color = "#3b82f6";
+  } else if (terrain === "VORTICE_ARCANO") {
+    name = "Terreno: Vortice Arcano";
+    text = "🌀 Todos os heróis recuperam 1 de Energia adicional no início da rodada. Persiste até o fim da sala.";
+    color = "#a855f7";
+  }
+  
+  return `
+    <article class="glass-panel active-terrain-card" style="border-left: 4px solid ${color}; padding: 12px; margin-bottom: 12px; border-radius: 8px;">
+      <span class="eyebrow" style="color: ${color}; font-weight: bold; font-size: 0.8em; text-transform: uppercase;">Terreno Arcano Ativo</span>
+      <h3 style="margin: 4px 0; font-size: 1.1em; color: var(--color-text);">${escapeHtml(name)}</h3>
+      <p style="margin: 4px 0 0 0; font-size: 0.9em; opacity: 0.9; line-height: 1.3;">${escapeHtml(text)}</p>
+    </article>
+  `;
+}
+
 function getTrapArt(trap) {
   const number = Number(String(trap?.id || "").replace(/\D/g, ""));
   return trapArts[number % trapArts.length];
 }
 
 function renderIntentionCard(intention) {
-  if (!intention) {
-    return `
-      <article class="intention-card glass-panel">
-        <span class="eyebrow">Intencao</span>
-        <div class="intention-art empty-art"></div>
-        <h2>Aguardando carta</h2>
-      </article>
-    `;
-  }
-
-  return `
-    <article class="intention-card glass-panel new-intention-v2">
-      <span class="eyebrow">Carta de intencao</span>
-      <div class="intention-header">
-        <span class="card-number">${escapeHtml(intention.id)}</span>
-        <h2>${escapeHtml(intention.name)}</h2>
-      </div>
-      <div class="intention-rules-v2">
-        <div class="section-v2 presagio-v2">
-          <div class="label-v2">⚡ Presságio</div>
-          <p>${escapeHtml(intention.presagioText)}</p>
-        </div>
-        <div class="section-v2 comum-v2">
-          <div class="label-v2">👤 Comuns atacam</div>
-          <p>${escapeHtml(intention.commonText)}</p>
-        </div>
-        <div class="section-v2 brutal-v2">
-          <div class="label-v2">${local.state?.room?.effect === 'bossRoom' ? '👑 Chefe ataca' : '👹 Brutal ataca'}</div>
-          <p>${escapeHtml(intention.brutalText)}</p>
-        </div>
-        <div class="section-v2 represalia-v2">
-          <div class="label-v2">💀 Represália</div>
-          <p>${escapeHtml(intention.represaliaText)}</p>
-        </div>
-      </div>
-    </article>
-  `;
+  return "";
 }
 
 function renderSummaryCard(state) {
@@ -2009,25 +2002,21 @@ function renderSummaryCard(state) {
     }
   }
 
-  let intentionText = "Nenhuma intenção revelada.";
-  if (state.activeIntention) {
-    intentionText = `
-      <div class="summary-rules-v2">
-        <div class="summary-section-v2 presagio-sum">⚡ <strong>Presságio:</strong> ${escapeHtml(state.activeIntention.presagioText)}</div>
-        <div class="summary-section-v2 comum-sum">👤 <strong>Comuns:</strong> ${escapeHtml(state.activeIntention.commonText)}</div>
-        <div class="summary-section-v2 brutal-sum">👹 <strong>${state.room?.effect === 'bossRoom' ? 'Chefe' : 'Brutais'}:</strong> ${escapeHtml(state.activeIntention.brutalText)}</div>
-        <div class="summary-section-v2 represalia-sum">💀 <strong>Represália:</strong> ${escapeHtml(state.activeIntention.represaliaText)}</div>
-      </div>
-    `;
-  }
+  const roomNum = state.roomNumber || 1;
+  const progressText = roomNum === 9
+    ? "Confronte o Chefe na Câmara Final!"
+    : `Sala ${roomNum} de 8 para chegar ao Chefe.`;
 
   return `
     <article class="summary-card glass-panel">
       <span class="eyebrow">Resumo do Combate</span>
       
       <div class="summary-section summary-intention">
-        <h3>Intenções dos Inimigos</h3>
-        <div class="summary-content">${intentionText}</div>
+        <h3>Mecânica da Masmorra</h3>
+        <div class="summary-content">
+          <p style="color: #ffd785; font-weight: bold; margin: 0 0 6px 0;">⚔️ Combate em Área</p>
+          <p style="margin: 0; font-size: 0.88em; line-height: 1.4; color: #ccc;">No turno da masmorra, cada monstro ataca todos os heróis vivos ao mesmo tempo. Habilidades de Provocar forçam o monstro a atingir apenas o provocador.</p>
+        </div>
       </div>
 
       <div class="summary-section summary-trap">
@@ -2036,8 +2025,8 @@ function renderSummaryCard(state) {
       </div>
 
       <div class="summary-section summary-room">
-        <h3>Regras da Sala</h3>
-        <div class="summary-content">${escapeHtml(roomRule)}</div>
+        <h3>Progresso</h3>
+        <div class="summary-content" style="color: #60a5fa; font-weight: bold;">${escapeHtml(progressText)}</div>
       </div>
     </article>
   `;
@@ -2071,6 +2060,55 @@ function renderStatusEffects(statusEffects) {
   return `<div class="status-effects-list">${badges.join("")}</div>`;
 }
 
+function renderEnemyStatusEffects(enemy) {
+  const badges = [];
+  const se = enemy.statusEffects;
+  if (se) {
+    if (se.veneno > 0) {
+      badges.push(`<span class="status-badge veneno" title="Veneno: sofre ${se.veneno} de dano no início da rodada. Curável.">🧪 Veneno ${se.veneno}</span>`);
+    }
+    if (se.vacuo) {
+      badges.push(`<span class="status-badge vacuo" title="Vácuo: não recebe compra automática no início da rodada.">🌀 Vácuo</span>`);
+    }
+    if (se.enfraquecido > 0) {
+      badges.push(`<span class="status-badge enfraquecido" title="Enfraquecido: a próxima carta de ataque causará ${se.enfraquecido} a menos de dano.">⚔️ Enfraquecido ${se.enfraquecido}</span>`);
+    }
+    if (se.exposto) {
+      badges.push(`<span class="status-badge exposto" title="Exposto: sofre +1 de dano de todas as fontes.">🎯 Exposto</span>`);
+    }
+    if (se.marcado) {
+      badges.push(`<span class="status-badge marcado" title="Marcado: sofre efeitos adicionais de certas habilidades.">🎯 Marcado</span>`);
+    }
+    if (se.envenenamento > 0) {
+      badges.push(`<span class="status-badge envenenamento" title="Envenenamento: sofre ${se.envenenamento} de dano (ignora Escudo) no início da Fase da Masmorra.">🧪 Envenenamento ${se.envenenamento}</span>`);
+    }
+  }
+
+  if (enemy.marcas_arcanas > 0) {
+    badges.push(`<span class="status-badge marca-arcana" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Marcas Arcanas: sofre 3 de dano (ignora escudo) por marca ao usar Detonação Arcana.">✨ Marcas: ${enemy.marcas_arcanas}/5</span>`);
+  }
+  if (enemy.queimadura_rodadas > 0) {
+    badges.push(`<span class="status-badge queimadura" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white;" title="Queimadura: sofre ${enemy.queimadura} de dano (ignora Escudo) no final do turno da masmorra. Duração: ${enemy.queimadura_rodadas} rodadas.">🔥 Queimadura ${enemy.queimadura} (${enemy.queimadura_rodadas}r)</span>`);
+  }
+  if (enemy.reduzir_ofensiva > 0) {
+    badges.push(`<span class="status-badge reduzir-ofensiva" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;" title="Reduzir Ofensiva: ataca por último e causa -${enemy.reduzir_ofensiva} de dano nesta rodada (mínimo 1).">🛑 Reduzir Ofensiva ${enemy.reduzir_ofensiva}</span>`);
+  }
+  if (enemy.reducao_proximo_ataque > 0) {
+    badges.push(`<span class="status-badge reducao-proximo" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;" title="Redução Próximo Ataque: causa -${enemy.reducao_proximo_ataque} de dano em seu próximo ataque esta rodada (mínimo 1).">❄️ Prox. Ataque -${enemy.reducao_proximo_ataque}</span>`);
+  }
+
+  const activeKeywords = enemy.keywords?.filter(kw =>
+    ["Peçonhenta", "Paralisante", "Sanguinária", "Curandeira", "Guardiã", "Explodir", "Invocar"].includes(kw) &&
+    enemy[`keyword_${kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}_suprimida_rodada`]
+  );
+  if (activeKeywords && activeKeywords.length > 0) {
+    badges.push(`<span class="status-badge keyword-suprimida" style="background: #4b5563; color: white;" title="Keywords Suprimidas: as habilidades especiais deste monstro estão anuladas esta rodada.">🚫 Suprimido</span>`);
+  }
+
+  if (badges.length === 0) return "";
+  return `<div class="status-effects-list">${badges.join("")}</div>`;
+}
+
 function renderPlayerHud(player) {
   const hasResources = (local.state?.status === "playing" || local.animRunning) && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
   return `
@@ -2094,6 +2132,7 @@ function renderPlayerHud(player) {
                 ${player.profecia_tokens && player.profecia_tokens.length > 0 ? `<span class="hero-profecia prophecy-badge" title="Profecia ativa: cura ao sofrer dano de ataque inimigo.">👁️ Profecia: +${player.profecia_tokens.reduce((a, b) => a + b, 0)}</span>` : ""}
                 ${player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana ativa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : ""}
                 ${player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null ? `<span class="hero-carga-batalha charge-badge" title="Carga de Batalha: acumula ao provocar/proteger e aumenta o dano de Carga do Guardião.">⚔️ Carga: ${player.carga_de_batalha}</span>` : ""}
+                ${player.sobrecarga_pendente > 0 ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga ativa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""}
                 <span>Deck ${player.deckCount}</span>
                 <span>Mao ${player.handCount}</span>
                 <span>Desc ${player.discardCount}</span>
@@ -2183,7 +2222,7 @@ function renderMonsterCard(enemy) {
 
       <!-- Efeitos de Status (Flutuando no Centro-Baixo) -->
       <div class="monster-status-overlay">
-        ${renderStatusEffects(enemy.statusEffects)}
+        ${renderEnemyStatusEffects(enemy)}
       </div>
 
       <!-- Badges de Ataque e Escudo (Canto Inferior Esquerdo) -->
@@ -2541,17 +2580,17 @@ function renderDistorcaoTemporalModal(state, me) {
   if (!alloc || alloc.targetId !== me?.id) return "";
   
   const caster = state.players.find(p => p.id === alloc.casterId);
-  const eligible = me.hand.filter(c => c.cost <= 2 && c.type !== "reaction");
+  const eligible = me.hand.filter(c => c.cost <= 3 && c.type !== "reaction");
   
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="distorcaoTitle">
       <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
         <span class="eyebrow">Distorcao Temporal</span>
         <h2 id="distorcaoTitle">Conjuracao Temporal</h2>
-        <p class="muted">${escapeHtml(caster ? caster.name : "Mago")} lhe concedeu uma acao extra. Escolha uma carta de custo 2 ou menos para jogar gratuitamente.</p>
+        <p class="muted">${escapeHtml(caster ? caster.name : "Mago")} lhe concedeu uma acao extra. Escolha uma carta de custo 3 ou menos para jogar gratuitamente.</p>
         
         ${eligible.length === 0 ? `
-          <p class="muted" style="margin: 16px 0; text-align: center;">Você não possui cartas de custo 2 ou menos na mão.</p>
+          <p class="muted" style="margin: 16px 0; text-align: center;">Você não possui cartas de custo 3 ou menos na mão.</p>
           <button id="skipDistorcao" style="width: 100%;">Pular</button>
         ` : `
           <div class="distorcao-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
@@ -2574,6 +2613,146 @@ function renderDistorcaoTemporalModal(state, me) {
             <button id="skipDistorcao" class="secondary">Pular</button>
           </div>
         `}
+      </div>
+    </div>
+  `;
+}
+
+function renderEspelhoArcanoModal(state, me) {
+  if (local.animRunning) return "";
+  const mirror = state.pendingEspelhoArcano;
+  if (!mirror || mirror.casterId !== me?.id) return "";
+
+  const aliveEnemies = state.enemies.filter(e => e.life > 0);
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="espelhoArcanoTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow" style="color: #db2777;">Espelho Arcano</span>
+        <h2 id="espelhoArcanoTitle">Redirecionar Ataque</h2>
+        <p class="muted">O ataque de <strong>${escapeHtml(mirror.enemyName)}</strong> (${mirror.attackDamage} de dano) está sendo redirecionado! Escolha o inimigo alvo para receber o ataque.</p>
+        
+        <div class="espelho-arcano-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+          <label style="display: flex; flex-direction: column; gap: 4px;">
+            <strong>Redirecionar para:</strong>
+            <select id="espelhoArcanoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${aliveEnemies.map(e => `<option value="${e.uid}">${escapeHtml(e.name)} (Vida: ${e.life}/${e.maxLife}, Esc: ${e.shield})</option>`).join("")}
+            </select>
+          </label>
+        </div>
+        
+        <button id="confirmEspelhoArcano" style="width: 100%;">Confirmar Redirecionamento</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderAmplificarModal(state, me) {
+  if (local.animRunning) return "";
+  const amp = state.pendingAmplificar;
+  if (!amp || amp.casterId !== me?.id) return "";
+
+  const playedList = state.cartas_jogadas_esta_rodada || [];
+  const eligible = playedList.filter(item => item.cardId !== "amplificar" && item.cardId !== "cataclismo-arcano" && item.cardId !== "eco-arcano");
+
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="ampTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow" style="color: #a855f7;">Magia Arcana</span>
+        <h2 id="ampTitle">Amplificar Efeito</h2>
+        <p class="muted">Escolha uma carta jogada nesta rodada por qualquer herói para repetir seus efeitos nos mesmos alvos.</p>
+        
+        ${eligible.length === 0 ? `
+          <p class="muted" style="margin: 16px 0; text-align: center;">Nenhuma carta elegível foi jogada por aliados nesta rodada ainda.</p>
+          <button id="cancelAmplificar" style="width: 100%;">Fechar</button>
+        ` : `
+          <div class="amp-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+            <label style="display: flex; flex-direction: column; gap: 4px;">
+              <strong>Carta a amplificar:</strong>
+              <select id="ampCardSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+                ${eligible.map((item, idx) => {
+                  const casterPlayer = state.players.find(p => p.id === item.casterId);
+                  const casterName = casterPlayer ? casterPlayer.name : "Aliado";
+                  
+                  let targetName = "";
+                  const tEnemy = state.enemies.find(e => e.uid === item.targetId);
+                  if (tEnemy) targetName = tEnemy.name;
+                  const tPlayer = state.players.find(p => p.id === item.targetId);
+                  if (tPlayer) targetName = tPlayer.name;
+
+                  return `<option value="${idx}" data-card-id="${item.cardId}" data-target-id="${item.targetId || ""}">${escapeHtml(item.cardId)} (jogada por ${escapeHtml(casterName)}${targetName ? ` em ${escapeHtml(targetName)}` : ""})</option>`;
+                }).join("")}
+              </select>
+            </label>
+          </div>
+          
+          <div style="display: flex; gap: 10px;">
+            <button id="confirmAmplificar" style="flex: 1;">Amplificar!</button>
+            <button id="cancelAmplificar" class="secondary">Cancelar</button>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function renderCataclismoArcanoModal(state, me) {
+  if (local.animRunning) return "";
+  const cat = state.pendingCataclismoArcano;
+  if (!cat || cat.casterId !== me?.id) return "";
+
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="cataclismoArcanoTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow" style="color: #a855f7;">Suprema Arcanista</span>
+        <h2 id="cataclismoArcanoTitle">Cataclismo Arcano: Terreno</h2>
+        <p class="muted">Escolha um Terreno Arcano para estabelecer no campo de batalha:</p>
+        
+        <div class="cataclismo-arcano-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+          <label style="display: flex; gap: 8px; align-items: flex-start; cursor: pointer; margin-bottom: 8px;">
+            <input type="radio" name="cataclismoTerrainRadio" value="CHAO_DE_GELO" checked />
+            <div>
+              <strong>Chão de Gelo</strong><br/>
+              <span class="muted" style="font-size: 0.85em;">Todos os ataques inimigos causam 1 de dano a menos (mínimo 1).</span>
+            </div>
+          </label>
+          <label style="display: flex; gap: 8px; align-items: flex-start; cursor: pointer;">
+            <input type="radio" name="cataclismoTerrainRadio" value="VORTICE_ARCANO" />
+            <div>
+              <strong>Vórtice Arcano</strong><br/>
+              <span class="muted" style="font-size: 0.85em;">Todos os heróis recuperam 1 de Energia adicional no início de cada rodada.</span>
+            </div>
+          </label>
+        </div>
+        
+        <button id="confirmCataclismoArcano" style="width: 100%;">Estabelecer Terreno</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTempestadeEletricaModal(state, me) {
+  if (local.animRunning) return "";
+  const temp = state.pendingTempestadeEletrica;
+  if (!temp || temp.casterId !== me?.id) return "";
+
+  const aliveEnemies = state.enemies.filter(e => e.life > 0);
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="tempestadeEletricaTitle">
+      <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
+        <span class="eyebrow" style="color: #3b82f6;">Tempestade Eletrica</span>
+        <h2 id="tempestadeEletricaTitle">Alvo Secundário</h2>
+        <p class="muted">Selecione outro inimigo para receber 3 de dano adicional da Tempestade Elétrica:</p>
+        
+        <div class="tempestade-eletrica-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
+          <label style="display: flex; flex-direction: column; gap: 4px;">
+            <strong>Segundo Alvo:</strong>
+            <select id="tempestadeEletricaTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${aliveEnemies.map(e => `<option value="${e.uid}">${escapeHtml(e.name)} (Vida: ${e.life}/${e.maxLife})</option>`).join("")}
+            </select>
+          </label>
+        </div>
+        
+        <button id="confirmTempestadeEletrica" style="width: 100%;">Confirmar Segundo Alvo</button>
       </div>
     </div>
   `;
@@ -3349,6 +3528,39 @@ function bindGlobalControls() {
   });
   document.querySelector("#skipDistorcao")?.addEventListener("click", () => {
     action({ type: "skipDistorcaoTemporal" });
+  });
+
+  // Espelho Arcano click listener
+  document.querySelector("#confirmEspelhoArcano")?.addEventListener("click", () => {
+    const targetEnemyUid = document.querySelector("#espelhoArcanoTargetSelect")?.value;
+    action({ type: "confirmEspelhoArcano", targetEnemyUid });
+  });
+
+  // Amplificar click listeners
+  document.querySelector("#confirmAmplificar")?.addEventListener("click", () => {
+    const selectEl = document.querySelector("#ampCardSelect");
+    const option = selectEl?.options[selectEl.selectedIndex];
+    if (option) {
+      const cardId = option.getAttribute("data-card-id");
+      const targetId = option.getAttribute("data-target-id");
+      action({ type: "confirmAmplificar", copiedCardId: cardId, targetId });
+    }
+  });
+  document.querySelector("#cancelAmplificar")?.addEventListener("click", () => {
+    action({ type: "cancelAmplificar" });
+  });
+
+  // Cataclismo Arcano click listener
+  document.querySelector("#confirmCataclismoArcano")?.addEventListener("click", () => {
+    const selectedEl = document.querySelector("input[name='cataclismoTerrainRadio']:checked");
+    const terrainType = selectedEl ? selectedEl.value : null;
+    action({ type: "confirmCataclismoArcano", terrainType });
+  });
+
+  // Tempestade Eletrica click listener
+  document.querySelector("#confirmTempestadeEletrica")?.addEventListener("click", () => {
+    const targetId = document.querySelector("#tempestadeEletricaTargetSelect")?.value;
+    action({ type: "confirmTempestadeEletrica", targetId });
   });
 }
 
