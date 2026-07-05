@@ -2038,6 +2038,18 @@ function renderTerrainCard(terrain) {
     name = "Terreno: Vortice Arcano";
     text = "🌀 Todos os heróis recuperam 1 de Energia adicional no início da rodada. Persiste até o fim da sala.";
     color = "#a855f7";
+  } else if (terrain === "TERRENO_ARCANO") {
+    name = "Terreno Arcano";
+    text = "🌀 Enquanto este terreno estiver ativo, todos os aliados ganham +1 de Energia máxima.";
+    color = "#d946ef";
+  } else if (terrain === "TERRENO_MONTANHOSO") {
+    name = "Terreno Montanhoso";
+    text = "⛰️ Enquanto este terreno estiver ativo, todos os inimigos causam 2 a menos de dano.";
+    color = "#eab308";
+  } else if (terrain === "TERRENO_COSMICO") {
+    name = "Terreno Cósmico";
+    text = "🌌 Enquanto ativo, todos os heróis aumentam o limite máximo de cartas na mão em +1.";
+    color = "#06b6d4";
   }
   
   return `
@@ -2650,8 +2662,21 @@ function renderEcoArcanoModal(state, me) {
   const alloc = state?.pendingEcoArcano;
   if (!alloc || alloc.casterId !== me?.id) return "";
   
-  const played = me.played || [];
-  const eligible = played.filter(c => c.id !== "eco-arcano" && c.id !== "cataclismo-arcano");
+  const playedInfo = state.cartas_jogadas_esta_rodada || [];
+  const eligible = [];
+  const addedIds = new Set();
+  playedInfo.forEach(info => {
+    if (info.cardId === "eco-arcano") return;
+    let config = null;
+    for (const list of Object.values(local.heroCards || {})) {
+      const found = list.find(c => c.id === info.cardId);
+      if (found) { config = found; break; }
+    }
+    if (config && config.cost !== 0 && !addedIds.has(config.id)) {
+      addedIds.add(config.id);
+      eligible.push(config);
+    }
+  });
   
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="ecoTitle">
