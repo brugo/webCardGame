@@ -1213,16 +1213,16 @@ const cards = {
   "flechada-de-oportunidade": {
     id: "flechada-de-oportunidade",
     name: "Flechada de Oportunidade",
-    type: "reaction",
-    cost: 0,
-    text: "Reação. Quando qualquer inimigo é derrotado durante a Fase da Masmorra, você imediatamente recupera 1 de Energia e compra 1 carta."
+    type: "draw",
+    cost: 1,
+    text: "Compre 2 cartas. Se houver apenas 1 inimigo em jogo, esta carta custa 0 de Energia."
   },
   "flecha-relampago": {
     id: "flecha-relampago",
     name: "Flecha Relâmpago",
-    type: "reaction",
+    type: "attack",
     cost: 0,
-    text: "Reação. Quando um inimigo é declarado como atacante, cause 2 de dano a esse inimigo. Se ele morrer, seu ataque é cancelado."
+    text: "Cause 2 de dano a um inimigo. Compre 1 carta e depois descarte 1."
   },
   "flecha-precisa": {
     id: "flecha-precisa",
@@ -1255,93 +1255,84 @@ const cards = {
     name: "Flecha Envenenada",
     type: "attack",
     cost: 1,
-    damage: 2,
-    text: "Cause 2 de dano a um inimigo. Aplique Envenenamento 2 a esse inimigo."
+    text: "Cause 3 de dano a um inimigo. Se o inimigo não possuir Escudo, cause 5 de dano em vez disso."
   },
   "marcar-alvo": {
     id: "marcar-alvo",
     name: "Marcar Alvo",
     type: "control",
     cost: 1,
-    draw: 1,
-    text: "Aplique Marcado a um inimigo. Compre 1 carta."
+    text: "Escolha um inimigo. O próximo ataque contra ele nesta rodada vindo de qualquer herói causará +3 de dano."
   },
   "cacada": {
     id: "cacada",
-    name: "Caçada",
+    name: "Reciclagem",
     type: "draw",
-    cost: 1,
-    text: "Se um inimigo foi derrotado nesta rodada, compre 2 cartas. Caso contrário, compre 1."
+    cost: 3,
+    text: "Descarte qualquer quantidade de cartas da sua mão. Para cada carta descartada, compre uma nova."
   },
   "flecha-de-abertura": {
     id: "flecha-de-abertura",
     name: "Flecha de Abertura",
     type: "attack",
     cost: 1,
-    damage: 3,
-    text: "Cause 3 de dano a um inimigo. Se esta é a primeira carta de Ataque que você jogou nesta rodada, aplique também Marcado a esse inimigo."
+    text: "Cause 3 de dano a um inimigo. Se esta for a primeira carta que você jogou nesta rodada, cause 6 de dano em vez disso."
   },
   "chuva-de-flechas": {
     id: "chuva-de-flechas",
     name: "Chuva de Flechas",
     type: "attack",
     cost: 2,
-    areaDamage: 3,
-    text: "Cause 3 de dano a todos os inimigos."
+    text: "Dispare 3 flechas de 3 de dano cada. Você pode distribuir as flechas livremente entre os inimigos."
   },
   "flecha-explosiva": {
     id: "flecha-explosiva",
     name: "Flecha Explosiva",
     type: "attack",
     cost: 2,
-    text: "Cause 4 de dano a um inimigo. Em seguida, cause 2 de dano a todos os outros inimigos."
+    text: "Cause 4 de dano a um inimigo. Se houver outros inimigos em jogo, cause 2 de dano a cada um deles."
   },
   "flecha-atordoante": {
     id: "flecha-atordoante",
-    name: "Flecha Atordoante",
-    type: "attack",
+    name: "Desabilitador",
+    type: "control",
     cost: 2,
-    damage: 4,
-    text: "Cause 4 de dano a um inimigo. Esse inimigo não ataca nesta rodada."
+    text: "Remova a armadilha ativa. Você começa a próxima rodada com 2 de Energia a menos."
   },
   "companheiro-animal": {
     id: "companheiro-animal",
     name: "Companheiro Animal",
     type: "attack",
     cost: 2,
-    nextAttackBonus: 3,
-    text: "A próxima carta de Ataque que você jogar nesta rodada causa +3 de dano."
+    text: "No início do próximo turno dos heróis, cause 8 de dano a um inimigo."
   },
   "tiro-duplo": {
     id: "tiro-duplo",
     name: "Tiro Duplo",
     type: "attack",
-    cost: 2,
-    text: "Cause 3 de dano a um inimigo. Em seguida, cause 3 de dano a um segundo inimigo diferente. Se houver apenas 1 inimigo, cause 3 de dano a ele duas vezes."
+    cost: 1,
+    text: "Cause 3 de dano a um inimigo duas vezes. Você pode escolher alvos diferentes para cada tiro."
   },
   "concentracao": {
     id: "concentracao",
     name: "Concentração",
     type: "control",
     cost: 2,
-    text: "Escolha um inimigo. Até o início da próxima Fase dos Heróis, todas as suas cartas de Ataque causam +2 de dano a esse inimigo específico."
+    text: "Nesta rodada, todas as suas cartas de Ataque custam 1 de Energia a menos (mínimo 0). Você começa a próxima rodada com apenas 1 de Energia."
   },
   "flecha-perfurante": {
     id: "flecha-perfurante",
     name: "Flecha Perfurante",
     type: "attack",
     cost: 2,
-    damage: 4,
-    ignoreShield: true,
-    text: "Cause 4 de dano a um inimigo, ignorando Escudo. Aplique Envenenamento 1 a esse inimigo."
+    text: "Cause 5 de dano a um inimigo. Este dano ignora o Escudo do inimigo."
   },
   "rastrear": {
     id: "rastrear",
     name: "Rastrear",
-    type: "control",
+    type: "utility",
     cost: 2,
-    draw: 1,
-    text: "Escolha um inimigo. Todos os aliados causam +1 de dano a esse inimigo até o final desta rodada. Compre 1 carta."
+    text: "Todos os aliados recuperam 1 de Energia. Você compra 1 carta."
   },
   "disparo-poderoso": {
     id: "disparo-poderoso",
@@ -1358,14 +1349,14 @@ const cards = {
     cost: 3,
     damage: 7,
     ignoreShield: true,
-    text: "Cause 7 de dano a um inimigo, ignorando Escudo."
+    text: "Cause 7 de dano a um inimigo. Este dano ignora o Escudo do inimigo."
   },
   "cacada-implacavel": {
     id: "cacada-implacavel",
     name: "Caçada Implacável",
     type: "attack",
     cost: 3,
-    text: "Cause 5 de dano a um inimigo. Se esse inimigo possui Marcado, cause 9 de dano em vez disso e remova o Marcado."
+    text: "Cause 6 de dano a um inimigo. Se a Vida dele estiver abaixo de 50%, cause 10 de dano em vez disso."
   },
   "ultima-flecha": {
     id: "ultima-flecha",
@@ -1380,21 +1371,21 @@ const cards = {
     name: "Saraivada Venenosa",
     type: "attack",
     cost: 3,
-    text: "Cause 3 de dano a todos os inimigos. Aplique Envenenamento 2 a todos os inimigos vivos após o dano."
+    text: "Dispare 5 flechas de 2 de dano cada que podem ser distribuídas livremente. Compre 1 carta."
   },
   "flecha-letal": {
     id: "flecha-letal",
     name: "Flecha Letal",
     type: "attack",
     cost: 4,
-    text: "Cause dano a um inimigo ignorando Escudo: 14 se tiver Marcado e Envenenamento (remove Marcado); 10 se tiver apenas Marcado (remove Marcado); 6 + Envenenamento 3 se tiver apenas Envenenamento; 6 se não tiver nenhum."
+    text: "Cause 8 de dano a um inimigo. Se a Vida dele estiver abaixo de 50%, cause 16 de dano em vez disso. Este ataque ignora o Escudo."
   },
   "tempestade-de-flechas": {
     id: "tempestade-de-flechas",
     name: "Tempestade de Flechas",
     type: "attack",
     cost: 0,
-    text: "Suprema. Cause 5 de dano a todos os inimigos. Em seguida, cause 10 de dano a um inimigo escolhido. Se o inimigo possui Marcado ou Envenenamento ativo, cause 15 em vez disso, remova o Marcado e aplique Envenenamento 3 a todos os outros inimigos."
+    text: "Suprema. Cause 14 de dano a um inimigo. Se a Vida dele estiver abaixo de 50%, cause 20 de dano em vez disso. Seus outros ataques nesta rodada não custam Energia."
   },
   "bastiao-supremo": {
     id: "bastiao-supremo",
@@ -2486,6 +2477,12 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
       amount += (session.bonus_rastreado || 0);
       session.log.unshift(`[Rastrear] +${session.bonus_rastreado} de dano no alvo rastreado.`);
     }
+    if (target.proximo_ataque_bonus_recebido && target.proximo_ataque_bonus_recebido > 0) {
+      const bonus = target.proximo_ataque_bonus_recebido;
+      amount += bonus;
+      target.proximo_ataque_bonus_recebido = 0; // Consume the mark on first player attack
+      session.log.unshift(`[Marcado] +${bonus} de dano pelo efeito de Marcar Alvo.`);
+    }
   }
 
   if (target.statusEffects?.exposto) {
@@ -3077,6 +3074,22 @@ function startNextRound(session) {
     }
   });
 
+  // Resolve delayed damage (like Batedor's Companheiro Animal)
+  session.players.forEach((player) => {
+    if (player.life > 0 && player.delayed_damages && player.delayed_damages.length > 0) {
+      player.delayed_damages.forEach((delayed) => {
+        let enemy = session.enemies.find(e => e.uid === delayed.targetUid && e.life > 0);
+        if (!enemy) {
+          enemy = session.enemies.find(e => e.life > 0);
+        }
+        if (enemy) {
+          applyDamageToEnemy(session, enemy, delayed.damage, delayed.source, false, player);
+        }
+      });
+      player.delayed_damages = [];
+    }
+  });
+
   session.round += 1;
   session.turn = "players";
   session.dungeonResolved = false;
@@ -3137,7 +3150,10 @@ function startNextRound(session) {
     player.played = [];
     
     let finalEnergy = Math.max(1, player.maxEnergy - (player.sobrecarga_pendente || 0));
-    if (session.terreno_ativo === "VORTICE_ARCANO") {
+    if (player.force_next_round_energy_1) {
+      finalEnergy = 1;
+      player.force_next_round_energy_1 = false;
+    } else if (session.terreno_ativo === "VORTICE_ARCANO") {
       finalEnergy = Math.min(player.maxEnergy + 2, finalEnergy + 1);
     }
     player.energy = finalEnergy;
@@ -3150,6 +3166,8 @@ function startNextRound(session) {
     player.foco_em = null;
     player.bonus_foco = 0;
     player.ataques_jogados_esta_rodada = 0;
+    player.concentracao_ativa = false;
+    player.ataques_gratuitos_esta_rodada = false;
     player.bastiaoSupremoActive = false;
     player.salvaguardaActive = false;
     player.activeShields = [];
@@ -3217,7 +3235,30 @@ function playCard(session, player, payload) {
     }
   }
 
-  const finalCost = isFreePlay ? 0 : card.cost;
+  let finalCost = isFreePlay ? 0 : card.cost;
+  if (!isFreePlay) {
+    // Flechada de Oportunidade discount
+    if (card.id === "flechada-de-oportunidade") {
+      const enemyCount = session.enemies.filter(e => e.life > 0).length;
+      if (enemyCount === 1) {
+        finalCost = 0;
+      }
+    }
+    
+    // Free attacks from ultimate
+    if (player.heroId === "batedor" && player.ataques_gratuitos_esta_rodada && card.type === "attack") {
+      finalCost = 0;
+    } else {
+      // Concentração discount for attacks
+      if (player.heroId === "batedor" && player.concentracao_ativa && card.type === "attack") {
+        finalCost = Math.max(0, finalCost - 1);
+      }
+      // Oraculo's Bênção Arcana discount
+      if (player.proxima_carta_desconto_1) {
+        finalCost = Math.max(0, finalCost - 1);
+      }
+    }
+  }
   if (player.energy < finalCost) throw new Error("Energia insuficiente.");
 
   if (card.lifeCost) {
@@ -3287,6 +3328,9 @@ function playCard(session, player, payload) {
   player.hand.splice(cardIndex, 1);
   player.energy -= finalCost;
   player.roundStats.energySpent += finalCost;
+  if (player.proxima_carta_desconto_1 && !isFreePlay) {
+    player.proxima_carta_desconto_1 = false;
+  }
   if (card.lifeCost) {
     player.life -= card.lifeCost;
     session.log.unshift(`${player.name} pagou o custo de ${card.lifeCost} de Vida para usar ${card.name}.`);
@@ -3956,27 +4000,73 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.log.unshift(`${player.name} jogou ${card.name}. Proxima carta de ataque causara +${card.nextAttackBonus} de dano.`);
   }
 
+  if (card.id === "flechada-de-oportunidade") {
+    drawCards(player, 2);
+    session.log.unshift(`${player.name} usou Flechada de Oportunidade e comprou 2 cartas.`);
+  }
+
+  if (card.id === "flecha-relampago") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 2, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Flecha Relâmpago em ${target.name} causando ${dmg} de dano.`);
+    }
+    drawCards(player, 1);
+    player.pendingDiscard = (player.pendingDiscard || 0) + 1;
+    session.log.unshift(`${player.name} comprou 1 carta e deve descartar 1 com Flecha Relâmpago.`);
+  }
+
   if (card.id === "flecha-envenenada") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      target.statusEffects.envenenamento = (target.statusEffects.envenenamento || 0) + 2;
-      session.log.unshift(`${player.name} aplicou Envenenamento 2 em ${target.name}.`);
+      const baseVal = target.shield <= 0 ? 5 : 3;
+      const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Flecha Envenenada em ${target.name} causando ${dmg} de dano (base: ${baseVal}).`);
     }
   }
 
   if (card.id === "marcar-alvo") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      target.statusEffects.marcado = true;
-      session.log.unshift(`${player.name} marcou ${target.name}.`);
+      target.proximo_ataque_bonus_recebido = (target.proximo_ataque_bonus_recebido || 0) + 3;
+      session.log.unshift(`${player.name} marcou ${target.name}. O próximo ataque contra ele nesta rodada vindo de qualquer herói causará +3 de dano.`);
     }
+  }
+
+  if (card.id === "cacada") {
+    session.pendingReciclagem = {
+      playerId: player.id,
+      discardedCount: 0
+    };
+    session.log.unshift(`${player.name} usou Reciclagem. Escolhendo cartas para trocar.`);
   }
 
   if (card.id === "flecha-de-abertura") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
-    if (target && player.ataques_jogados_esta_rodada === 1) {
-      target.statusEffects.marcado = true;
-      session.log.unshift(`${player.name} aplicou Marcado em ${target.name} com Flecha de Abertura.`);
+    if (target) {
+      const cardsPlayedByMe = session.cartas_jogadas_esta_rodada.filter(item => item.casterId === player.id).length;
+      const baseVal = (cardsPlayedByMe === 1) ? 6 : 3;
+      const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Flecha de Abertura em ${target.name} causando ${dmg} de dano (base: ${baseVal}).`);
+    }
+  }
+
+  if (card.id === "chuva-de-flechas") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      for (let i = 0; i < 3; i++) {
+        let currentTarget = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0);
+        if (!currentTarget) {
+          currentTarget = session.enemies.find((enemy) => enemy.life > 0);
+        }
+        if (currentTarget) {
+          const dmg = getHeroAttackDamage(player, 3, i === 0 ? attackBuff : 0, getHeroAttackPenalty(session));
+          applyDamageToEnemy(session, currentTarget, dmg, `${card.name} (Flecha ${i+1})`, false, player);
+        }
+      }
     }
   }
 
@@ -3984,21 +4074,38 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
       const dmgTarget = getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session));
-      const dmgOthers = getHeroAttackDamage(player, 2, 0, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmgTarget, card.name, false, player);
-      session.enemies.filter((enemy) => enemy.uid !== target.uid && enemy.life > 0).forEach((other) => {
-        applyDamageToEnemy(session, other, dmgOthers, card.name, false, player);
+      const otherEnemies = session.enemies.filter((enemy) => enemy.uid !== target.uid && enemy.life > 0);
+      otherEnemies.forEach((other) => {
+        const dmgOther = getHeroAttackDamage(player, 2, 0, getHeroAttackPenalty(session));
+        applyDamageToEnemy(session, other, dmgOther, `${card.name} (Explosão)`, false, player);
       });
-      session.log.unshift(`${player.name} jogou Flecha Explosiva! 4 de dano (modificado para ${dmgTarget}) em ${target.name} e 2 de dano (modificado para ${dmgOthers}) em area nos demais.`);
+      session.log.unshift(`${player.name} usou Flecha Explosiva em ${target.name} causando ${dmgTarget} de dano, e 2 de dano nos outros inimigos.`);
     }
   }
 
   if (card.id === "flecha-atordoante") {
+    if (session.activeTrap) {
+      const trapName = session.activeTrap.name;
+      session.trapDiscard.push(session.activeTrap);
+      session.activeTrap = null;
+      session.log.unshift(`${player.name} usou Desabilitador e desarmou a armadilha ${trapName}!`);
+    } else {
+      session.log.unshift(`${player.name} usou Desabilitador, mas não havia nenhuma armadilha ativa.`);
+    }
+    player.sobrecarga_pendente = (player.sobrecarga_pendente || 0) + 2;
+  }
+
+  if (card.id === "companheiro-animal") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      target.isStunned = true;
-      target.atordoado_rodada_atual = true;
-      session.log.unshift(`${player.name} atordoou ${target.name} com Flecha Atordoante. Ele nao atacara nesta rodada.`);
+      player.delayed_damages = player.delayed_damages || [];
+      player.delayed_damages.push({
+        targetUid: target.uid,
+        damage: 8,
+        source: "Companheiro Animal (Efeito Atrasado)"
+      });
+      session.log.unshift(`${player.name} chamou o Companheiro Animal! Ele atacará ${target.name} com 8 de dano no início da próxima rodada.`);
     }
   }
 
@@ -4023,49 +4130,34 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "concentracao") {
-    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
-    if (target) {
-      player.foco_em = target.uid;
-      player.bonus_foco = 2;
-      session.log.unshift(`${player.name} concentrou o foco em ${target.name}. Ataques contra ele causam +2 de dano.`);
-    }
+    player.concentracao_ativa = true;
+    player.force_next_round_energy_1 = true;
+    session.log.unshift(`${player.name} usou Concentração! Suas cartas de ataque custarão 1 a menos esta rodada, mas começará a próxima rodada com apenas 1 de Energia.`);
   }
 
   if (card.id === "flecha-perfurante") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      target.statusEffects.envenenamento = (target.statusEffects.envenenamento || 0) + 1;
-      session.log.unshift(`${player.name} aplicou Envenenamento 1 em ${target.name} com Flecha Perfurante.`);
+      const dmg = getHeroAttackDamage(player, 5, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, true, player);
+      session.log.unshift(`${player.name} usou Flecha Perfurante em ${target.name} causando ${dmg} de dano ignorando Escudo.`);
     }
   }
 
   if (card.id === "rastrear") {
-    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
-    if (target) {
-      session.alvo_rastreado = target.uid;
-      session.bonus_rastreado = 1;
-      session.log.unshift(`${player.name} rastreou ${target.name}. Todos os heróis causam +1 de dano a ele.`);
-    }
-  }
-
-  if (card.id === "cacada") {
-    const enemyDefeatedThisRound = (session.inimigos_derrotados_esta_rodada || 0) > 0;
-    const count = enemyDefeatedThisRound ? 2 : 1;
-    const drawn = drawCards(player, count);
-    session.log.unshift(`${player.name} jogou Cacada. Como ${enemyDefeatedThisRound ? "um" : "nenhum"} inimigo foi derrotado nesta rodada, comprou ${drawn} carta(s).`);
+    session.players.filter((p) => p.life > 0).forEach((p) => {
+      p.energy = Math.min(p.maxEnergy, p.energy + 1);
+    });
+    drawCards(player, 1);
+    session.log.unshift(`${player.name} usou Rastrear. Todos os aliados recuperaram 1 de Energia e o Batedor comprou 1 carta.`);
   }
 
   if (card.id === "cacada-implacavel") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      const isMarcado = Boolean(target.statusEffects.marcado);
-      const baseVal = isMarcado ? 9 : 5;
+      const baseVal = target.life <= target.maxLife / 2 ? 10 : 6;
       const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
-      if (isMarcado) {
-        target.statusEffects.marcado = false;
-        session.log.unshift(`${player.name} consumiu o Marcado de ${target.name} com Caçada Implacável.`);
-      }
       session.log.unshift(`${player.name} usou Caçada Implacável em ${target.name} e causou ${dmg} de dano.`);
     }
   }
@@ -4080,54 +4172,30 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "saraivada-venenosa") {
-    const targets = session.enemies.filter((enemy) => enemy.life > 0);
-    targets.forEach((enemy) => {
-      const dmg = getHeroAttackDamage(player, 3, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, enemy, dmg, card.name, false, player);
-    });
-    const survivors = session.enemies.filter((enemy) => enemy.life > 0);
-    survivors.forEach((enemy) => {
-      enemy.statusEffects.envenenamento = (enemy.statusEffects.envenenamento || 0) + 2;
-    });
-    if (survivors.length > 0) {
-      session.log.unshift(`Saraivada Venenosa aplicou Envenenamento 2 a ${survivors.length} inimigo(s) sobrevivente(s).`);
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      for (let i = 0; i < 5; i++) {
+        let currentTarget = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0);
+        if (!currentTarget) {
+          currentTarget = session.enemies.find((enemy) => enemy.life > 0);
+        }
+        if (currentTarget) {
+          const dmg = getHeroAttackDamage(player, 2, i === 0 ? attackBuff : 0, getHeroAttackPenalty(session));
+          applyDamageToEnemy(session, currentTarget, dmg, `${card.name} (Flecha ${i+1})`, false, player);
+        }
+      }
     }
+    drawCards(player, 1);
+    session.log.unshift(`${player.name} usou Saraivada Venenosa e comprou 1 carta.`);
   }
 
   if (card.id === "flecha-letal") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (target) {
-      const hasMarcado = Boolean(target.statusEffects.marcado);
-      const hasEnvenenamento = (target.statusEffects.envenenamento || 0) > 0;
-      let baseDmg = 6;
-      let removeMarcado = false;
-      let addEnvenenamento = 0;
-      
-      if (hasMarcado && hasEnvenenamento) {
-        baseDmg = 14;
-        removeMarcado = true;
-      } else if (hasMarcado) {
-        baseDmg = 10;
-        removeMarcado = true;
-      } else if (hasEnvenenamento) {
-        baseDmg = 6;
-        addEnvenenamento = 3;
-      } else {
-        baseDmg = 6;
-      }
-      
-      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      const baseVal = target.life <= target.maxLife / 2 ? 16 : 8;
+      const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, true, player);
-      
-      if (removeMarcado) {
-        target.statusEffects.marcado = false;
-        session.log.unshift(`Flecha Letal consumiu o Marcado de ${target.name}.`);
-      }
-      if (addEnvenenamento > 0) {
-        target.statusEffects.envenenamento = (target.statusEffects.envenenamento || 0) + addEnvenenamento;
-        session.log.unshift(`Flecha Letal aplicou Envenenamento ${addEnvenenamento} em ${target.name}.`);
-      }
-      session.log.unshift(`${player.name} usou Flecha Letal em ${target.name} e causou ${dmg} de dano ignorando Escudo.`);
+      session.log.unshift(`${player.name} usou Flecha Letal em ${target.name} e causou ${dmg} de dano (base: ${baseVal}) ignorando Escudo.`);
     }
   }
 
@@ -4357,40 +4425,6 @@ function resolveEnvenenamentoTick(session) {
   });
 }
 
-function checkFlechadaOportunidade(session, callback) {
-  if (!session.enemiesDefeatedThisDungeonStep || session.enemiesDefeatedThisDungeonStep.length === 0) {
-    return false;
-  }
-
-  const batedor = session.players.find(p => p.heroId === "batedor" && p.life > 0 && !p.skipReactionsThisRound);
-  const hasFlechada = batedor && batedor.hand.some(c => c.id === "flechada-de-oportunidade");
-
-  if (hasFlechada) {
-    session.enemiesDefeatedThisDungeonStep.shift();
-
-    session.pendingReaction = {
-      id: randomUUID(),
-      type: "flechada_oportunidade",
-      eligiblePlayerIds: [batedor.id],
-      skippedPlayerIds: [],
-      ruleText: `Flechada de Oportunidade: Um inimigo foi derrotado. Reaja para recuperar 1 de Energia e comprar 1 carta.`,
-      playableCardUids: {
-        [batedor.id]: batedor.hand.filter(c => c.id === "flechada-de-oportunidade").map(c => c.uid)
-      }
-    };
-    session.pendingFlechadaCallback = () => {
-      if (!checkFlechadaOportunidade(session, callback)) {
-        callback();
-      }
-    };
-    session.log.unshift(`[Reação] Flechada de Oportunidade pode ser usada. Reações abertas.`);
-    return true;
-  } else {
-    session.enemiesDefeatedThisDungeonStep = [];
-    return false;
-  }
-}
-
 function startDungeonTurn(session) {
   session.turn = "dungeon";
   session.dungeonResolved = false;
@@ -4440,10 +4474,6 @@ function startDungeonTurn(session) {
     advanceDungeonTurn(session);
   };
 
-  if (checkFlechadaOportunidade(session, continueTurn)) {
-    return;
-  }
-
   continueTurn();
 }
 
@@ -4485,10 +4515,6 @@ function queueEnemyAttacks(session) {
 function advanceDungeonTurn(session) {
   if (session.pendingReaction || session.dungeonResolved) return;
 
-  if (checkFlechadaOportunidade(session, () => advanceDungeonTurn(session))) {
-    return;
-  }
-
   while (session.dungeonQueue.length > 0) {
     const step = session.dungeonQueue.shift();
     if (step.type !== "enemyAttack") continue;
@@ -4506,31 +4532,6 @@ function advanceDungeonTurn(session) {
     const isRetaliacaoBrutal = enemy.category === "brutal" && session.activeIntention?.id === "INT_007";
     const isBossReactionImmune = enemy.isBoss && session.bossReactionImmune;
     const isReactionSkipped = isRetaliacaoBrutal || isBossReactionImmune;
-
-    // Check for Flecha Relâmpago (Reaction)
-    const batedor = session.players.find(p => p.heroId === "batedor" && p.life > 0 && !p.skipReactionsThisRound);
-    const hasRelampago = batedor && batedor.hand.some(c => c.id === "flecha-relampago");
-
-    if (hasRelampago && !isReactionSkipped) {
-      session.pendingReaction = {
-        id: randomUUID(),
-        type: "flecha_relampago",
-        enemyUid: enemy.uid,
-        enemyName: enemy.name,
-        enemyCategory: enemy.category,
-        targetId: target.id,
-        targetName: target.name,
-        attack,
-        ruleText: step.ruleText,
-        eligiblePlayerIds: [batedor.id],
-        skippedPlayerIds: [],
-        playableCardUids: {
-          [batedor.id]: batedor.hand.filter(c => c.id === "flecha-relampago").map(c => c.uid)
-        }
-      };
-      session.log.unshift(`[Reação] Flecha Relâmpago pode ser usada contra ${enemy.name}. Reações abertas.`);
-      return; // paused
-    }
 
     const tempPending = {
       enemyUid: enemy.uid,
@@ -4764,12 +4765,6 @@ function canPlayReactionCard(session, player, card, pending) {
   if (card.id === "cura-de-emergencia") {
     return pending.type === "cura_emergencia";
   }
-  if (card.id === "flechada-de-oportunidade") {
-    return pending.type === "flechada_oportunidade";
-  }
-  if (card.id === "flecha-relampago") {
-    return pending.type === "flecha_relampago";
-  }
   return false;
 }
 
@@ -4902,34 +4897,7 @@ function playReaction(session, player, payload) {
     player.proxima_carta_desconto_1 = false;
   }
 
-  if (card.id === "flechada-de-oportunidade") {
-    session.pendingReaction = null;
-    player.energy = Math.min(player.maxEnergy, player.energy + 1);
-    const drawn = drawCards(player, 1);
-    session.log.unshift(`${player.name} usou Flechada de Oportunidade: recuperou 1 de Energia e comprou ${drawn} carta.`);
-    const callback = session.pendingFlechadaCallback;
-    session.pendingFlechadaCallback = null;
-    if (callback) {
-      callback();
-    }
-    return;
-  }
-
-  if (card.id === "flecha-relampago") {
-    const enemy = session.enemies.find((candidate) => candidate.uid === pending.enemyUid && candidate.life > 0);
-    if (enemy) {
-      applyDamageToEnemy(session, enemy, 2, "Flecha Relâmpago", false, player);
-    }
-    
-    if (!enemy || enemy.life <= 0) {
-      session.log.unshift(`${pending.enemyName} foi derrotado por Flecha Relâmpago. O ataque foi cancelado.`);
-      session.pendingReaction = null;
-      advanceDungeonTurn(session);
-    } else {
-      proceedToStandardReactions(session, pending);
-    }
-    return;
-  }
+  // Oráculo and Arcanista reaction handlers continue below...
 
   if (card.id === "voz-do-oraculo") {
     const targetId = payload.targetId;
@@ -6030,6 +5998,24 @@ async function handleApi(req, res) {
           player.discard.push(player.hand.splice(idx, 1)[0]);
           player.pendingDiscard -= 1;
           session.log.unshift(`${player.name} descartou uma carta.`);
+        } else if (body.type === "reciclagemDiscard") {
+          if (!session.pendingReciclagem || session.pendingReciclagem.playerId !== player.id) {
+            throw new Error("Voce nao esta em um processo de reciclagem.");
+          }
+          const idx = player.hand.findIndex((c) => c.uid === body.cardUid);
+          if (idx === -1) throw new Error("Carta nao encontrada na mao.");
+          const discarded = player.hand.splice(idx, 1)[0];
+          player.discard.push(discarded);
+          drawCards(player, 1);
+          session.pendingReciclagem.discardedCount += 1;
+          session.log.unshift(`${player.name} descartou ${discarded.name} e comprou 1 nova com Reciclagem.`);
+        } else if (body.type === "finishReciclagem") {
+          if (!session.pendingReciclagem || session.pendingReciclagem.playerId !== player.id) {
+            throw new Error("Voce nao esta em um processo de reciclagem.");
+          }
+          const count = session.pendingReciclagem.discardedCount;
+          session.pendingReciclagem = null;
+          session.log.unshift(`${player.name} finalizou a Reciclagem (trocou ${count} cartas).`);
         } else if (body.type === "confirmShieldAllocation") {
           // Resolve escudo-compartilhado or redistribuir-escudos
           if (!session.pendingShieldAllocation) throw new Error("Nao ha redistribuicao de escudos pendente.");

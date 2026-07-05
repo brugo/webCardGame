@@ -1341,6 +1341,7 @@ function renderGame() {
       ${renderSelectedCardModal(state, me)}
       ${renderReactionPrompt(state, me)}
       ${renderPendingDiscardModal(state, me)}
+      ${renderPendingReciclagemModal(state, me)}
       ${renderShieldAllocationModal(state, me)}
       ${renderEnergyAllocationModal(state, me)}
       ${renderEcoArcanoModal(state, me)}
@@ -1403,6 +1404,13 @@ function renderGame() {
   // pending discard: clicking a card in discard-mode selects it for discard
   document.querySelectorAll("[data-discard-card]").forEach((el) => {
     el.addEventListener("click", () => action({ type: "discardCard", cardUid: el.dataset.discardCard }));
+  });
+  // reciclagem: click to swap/discard card or finish
+  document.querySelectorAll("[data-rec-discard-card]").forEach((el) => {
+    el.addEventListener("click", () => action({ type: "reciclagemDiscard", cardUid: el.dataset.recDiscardCard }));
+  });
+  document.querySelector("#finishReciclagem")?.addEventListener("click", () => {
+    action({ type: "finishReciclagem" });
   });
   // shield allocation confirm
   document.querySelector("#confirmShieldAlloc")?.addEventListener("click", () => {
@@ -2436,6 +2444,50 @@ function renderPendingDiscardModal(state, me) {
     </div>
   `;
 }
+
+function renderPendingReciclagemModal(state, me) {
+  if (local.animRunning) return "";
+  if (!state.pendingReciclagem) return "";
+  if (state.pendingReciclagem.playerId !== me.id) {
+    const waitingPlayerName = state.players.find(p => p.id === state.pendingReciclagem.playerId)?.name || "Batedor";
+    return `
+      <div class="modal-lightbox">
+        <div class="modal-content text-center">
+          <h2>Reciclagem em Andamento</h2>
+          <p class="muted">Aguardando ${escapeHtml(waitingPlayerName)} escolher as cartas para trocar...</p>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="modal-lightbox">
+      <div class="modal-content">
+        <h2>Reciclagem</h2>
+        <p class="muted">Escolha quais cartas descartar da sua mão para comprar novas de graça.</p>
+        <p class="accent" style="margin: 10px 0; font-size: 1.1em;">Cartas trocadas nesta ação: <strong>${state.pendingReciclagem.discardedCount}</strong></p>
+        
+        <div style="margin-bottom: 20px;">
+          <button id="finishReciclagem" class="primary" style="padding: 10px 20px; font-weight: bold; font-size: 1.1em;">Finalizar Troca</button>
+        </div>
+
+        <div class="reaction-cards">
+          ${me.hand.map((card) => `
+            <article class="tcg-card reaction-choice">
+              <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
+              <div class="card-body">
+                <strong>${escapeHtml(card.name)}</strong>
+                <p>${escapeHtml(card.text)}</p>
+              </div>
+              <button data-rec-discard-card="${card.uid}" class="danger">Trocar (Comprar 1)</button>
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 
 function renderRewardSelectionModal(state, me) {
   if (local.animRunning) return "";
