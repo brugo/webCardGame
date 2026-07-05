@@ -110,7 +110,7 @@ const glossaryEntries = [
   ["Carta de Intencao", "Define o comportamento dos inimigos da rodada."],
   ["Descanso", "Apos concluir uma sala, o grupo escolhe um beneficio."],
   ["Recompensa", "Beneficio recebido ao concluir uma sala."],
-  ["Energia", "Recurso usado para jogar cartas. Cada heroi inicia o turno com sua Energia maxima (Guardiao: 4, Oraculo: 5, Batedor: 4, Arcanista: 6). Ela e restaurada a cada rodada e nao acumula."],
+  ["Energia", "Recurso usado para jogar cartas. Cada heroi inicia o turno com sua Energia maxima (Donovan: 4, Oraculo: 5, Batedor: 4, Arcanista: 6). Ela e restaurada a cada rodada e nao acumula."],
   ["Custos", "0 Energia: Reacoes. 1 Energia: acoes simples. 2 Energias: acoes poderosas."]
 ];
 
@@ -704,21 +704,41 @@ function buildMonsterCardHtml(enemy) {
   "</article>";
 }
 
+function getEnemyActionText(enemy) {
+  const name = enemy.name || "Inimigo";
+  
+  const isHealer = (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) || 
+                   (name.includes("Bruxa")) || 
+                   (enemy.id === "bruxa");
+  if (isHealer) {
+    return name + " cura";
+  }
+
+  const isShield = (enemy.keywords && (enemy.keywords.includes("Guardiã") || enemy.keywords.includes("Guardião"))) || 
+                   (name.includes("Místico") || name.includes("Mistico")) || 
+                   (enemy.id === "mistico");
+  if (isShield) {
+    return name + " da escudos";
+  }
+
+  const isBuff = (enemy.keywords && enemy.keywords.some(function(k) { return k.includes("Fortalecer"); })) || 
+                 (name.includes("Arauto")) || 
+                 (enemy.id === "arauto");
+  if (isBuff) {
+    return name + " potencializa";
+  }
+
+  return name + " ataca";
+}
+
 async function showMonsterSpotlight(enemy, actionText, actionTarget) {
   const overlay = showOverlay();
   const modal = document.createElement("div");
   modal.className = "monster-spotlight-modal enter";
-  const categoryLabel =
-    enemy.category === "brutal" ? "\uD83D\uDC79 Inimigo Brutal"
-    : enemy.category === "boss" ? "\uD83D\uDC51 Chefe"
-    : "\uD83D\uDC64 Inimigo Comum";
   modal.innerHTML =
-    "<span class=\"spotlight-eyebrow\">" + escapeHtml(categoryLabel) + "</span>" +
     "<div class=\"spotlight-card-wrap\">" + buildMonsterCardHtml(enemy) + "</div>" +
     "<div class=\"spotlight-action-text\">" +
       "<span class=\"action-verb\">" + escapeHtml(actionText) + "</span>" +
-      (actionTarget ? "<br><span style=\"color:#cfc5aa;font-weight:700;\">\u2192 </span><span class=\"action-target\">" + escapeHtml(actionTarget) + "</span>" : "") +
-      "<div class=\"action-damage\">\u2694\uFE0F " + enemy.attack + " de dano</div>" +
     "</div>";
   overlay.appendChild(modal);
   await sleep(3000);
@@ -727,6 +747,7 @@ async function showMonsterSpotlight(enemy, actionText, actionTarget) {
   await sleep(400);
   await hideOverlay();
 }
+
 
 async function showMonsterEntrySpotlight(enemy) {
   const overlay = showOverlay();
@@ -789,9 +810,7 @@ async function queueCinematicRoomStart(state) {
   await showCinematicBanner("Iniciando Sala " + roomNumber, room ? room.name : "", "");
   await sleep(200);
 
-  if (room) {
-    await showRoomReveal(room, roomNumber, enemies);
-  }
+
 
   for (let i = 0; i < enemies.length; i++) {
     const enemy = enemies[i];
@@ -860,12 +879,7 @@ async function queueCinematicDungeonStart(state) {
       }
 
       // Build action text
-      let actionText = enemy.name + " ataca";
-      if (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) {
-        actionText = enemy.name + " cura aliados";
-      } else if (enemy.keywords && (enemy.keywords.includes("Guardiã") || enemy.keywords.includes("Guardião"))) {
-        actionText = enemy.name + " protege aliados";
-      }
+      let actionText = getEnemyActionText(enemy);
 
       // Show spotlight for this monster
       await showMonsterSpotlight(enemy, actionText, targetPlayer ? targetPlayer.name : null);
@@ -914,10 +928,7 @@ async function queueCinematicDungeonStart(state) {
       || { name: pending.enemyName, category: pending.enemyCategory || "common", attack: pending.attack,
            life: 1, maxLife: 1, shield: 0, uid: pending.enemyUid, keywords: [] };
 
-    var actionText2 = pending.enemyName + " ataca";
-    if (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) {
-      actionText2 = pending.enemyName + " cura aliados";
-    }
+    var actionText2 = getEnemyActionText(enemy);
 
     await showMonsterSpotlight(enemy, actionText2, pending.targetName);
     
@@ -944,12 +955,7 @@ async function queueCinematicMonsterAttack(state) {
     || { name: pending.enemyName, category: pending.enemyCategory || "common", attack: pending.attack,
          life: 1, maxLife: 1, shield: 0, uid: pending.enemyUid, keywords: [] };
 
-  let actionText = pending.enemyName + " ataca";
-  if (enemy.keywords && (enemy.keywords.includes("Curandeira") || enemy.keywords.includes("Curandeiro"))) {
-    actionText = pending.enemyName + " cura aliados";
-  } else if (enemy.keywords && (enemy.keywords.includes("Guardiã") || enemy.keywords.includes("Guardião"))) {
-    actionText = pending.enemyName + " protege aliados";
-  }
+  let actionText = getEnemyActionText(enemy);
 
   // Show the monster spotlight (who will attack and whom)
   await showMonsterSpotlight(enemy, actionText, pending.targetName);
@@ -1260,17 +1266,16 @@ function renderGame() {
         </section>
 
         <aside class="right-rail">
-          ${renderSummaryCard(state)}
+          ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
+          ${renderTerrainCard(state.terreno_ativo)}
           <div class="glass-panel compact-panel">
-            <span class="eyebrow">Controle de turno</span>
             ${renderTurnControls(state, me)}
             <p class="notice">${escapeHtml(local.error)}</p>
           </div>
           ${renderGameStatusPanel(state, me)}
+          ${renderSummaryCard(state)}
           ${renderRoomCard(state)}
-          ${state.terreno_ativo ? renderTerrainCard(state.terreno_ativo) : ""}
           ${state.activeTorment ? renderTormentCard(state.activeTorment) : ""}
-          ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
           ${renderIntentionCard(state.activeIntention)}
 
           <div class="glass-panel compact-panel">
@@ -1857,14 +1862,11 @@ function renderTurnBanner(state, me) {
 
 function renderTurnControls(state, me) {
   if (state.pendingReaction) {
-    return `
-      <p class="muted">A dungeon esta aguardando uma janela de reacao antes de resolver o ataque.</p>
-    `;
+    return ``;
   }
 
   if (state.turn === "players") {
     return `
-      <p class="muted">Quando todos finalizarem, a dungeon resolve o ataque em área automaticamente.</p>
       <button id="endTurn" class="danger" ${me.turnEnded ? "disabled" : ""}>
         ${me.turnEnded ? "Turno finalizado" : "Finalizar turno"}
       </button>
@@ -1874,7 +1876,6 @@ function renderTurnControls(state, me) {
   if (state.roomComplete) {
     if (!me.hasClaimedRoomReward) {
       return `
-        <p class="muted">Sala concluida! Escolha sua recompensa antes de prosseguir.</p>
         <button id="claimRewardBtn" style="background: linear-gradient(135deg, #ffd785, #a8720a); color: #1a1000; font-weight: 900; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px rgba(245, 194, 0, 0.4);">
           🎁 Receber Recompensas
         </button>
@@ -1882,14 +1883,12 @@ function renderTurnControls(state, me) {
     }
     if (!state.allRewardsClaimed) {
       return `
-        <p class="muted">Voce ja escolheu sua recompensa. Aguardando os aliados escolherem...</p>
         <button disabled class="secondary" style="opacity: 0.6; cursor: not-allowed;">Aguardando Grupo...</button>
       `;
     }
   }
 
   return `
-    <p class="muted">A dungeon realizou seus ataques em área. Inicie a próxima rodada para continuar.</p>
     <button id="startNextRound">${state.roomComplete ? "Avancar para proxima sala" : "Iniciar proxima rodada"}</button>
   `;
 }
@@ -1961,7 +1960,14 @@ function renderTrapCard(trap, disabledRounds) {
 }
 
 function renderTerrainCard(terrain) {
-  if (!terrain) return "";
+  if (!terrain) {
+    return `
+      <article class="glass-panel active-terrain-card" style="padding: 12px; margin-bottom: 12px; border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.15);">
+        <span class="eyebrow" style="color: #a197b0; font-weight: bold; font-size: 0.8em; text-transform: uppercase;">Terreno Ativo</span>
+        <p style="margin: 6px 0 0 0; font-size: 0.95em; opacity: 0.6; font-style: italic; color: #ccc;">vazio</p>
+      </article>
+    `;
+  }
   let name = "";
   let text = "";
   let color = "";
@@ -1977,7 +1983,7 @@ function renderTerrainCard(terrain) {
   
   return `
     <article class="glass-panel active-terrain-card" style="border-left: 4px solid ${color}; padding: 12px; margin-bottom: 12px; border-radius: 8px;">
-      <span class="eyebrow" style="color: ${color}; font-weight: bold; font-size: 0.8em; text-transform: uppercase;">Terreno Arcano Ativo</span>
+      <span class="eyebrow" style="color: ${color}; font-weight: bold; font-size: 0.8em; text-transform: uppercase;">Terreno Ativo</span>
       <h3 style="margin: 4px 0; font-size: 1.1em; color: var(--color-text);">${escapeHtml(name)}</h3>
       <p style="margin: 4px 0 0 0; font-size: 0.9em; opacity: 0.9; line-height: 1.3;">${escapeHtml(text)}</p>
     </article>
@@ -2808,7 +2814,7 @@ function exportToPDF() {
     <h3>🛡️ Seleção de Heróis e Baralhos</h3>
     <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
     <ul>
-      <li><strong>Guardião Solar (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
+      <li><strong>Donovan (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
       <li><strong>Oráculo Lunar (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
       <li><strong>Batedor Verde (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
       <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
@@ -2833,7 +2839,7 @@ function exportToPDF() {
       <li><strong>Menos Vida atual:</strong> O monstro ataca o herói com menos Vida restante.</li>
       <li><strong>Menos Escudo atual:</strong> Se a vida for idêntica, ataca quem tiver menos Escudo.</li>
       <li><strong>Menos Cartas na Mão:</strong> Se ambos forem iguais, ataca quem tiver menos cartas na mão.</li>
-      <li><strong>Ordem de Turno / Lobby:</strong> Se o empate persistir, o monstro ataca conforme a ordem do lobby (Guardião &rarr; Oráculo &rarr; Batedor &rarr; Mago).</li>
+      <li><strong>Ordem de Turno / Lobby:</strong> Se o empate persistir, o monstro ataca conforme a ordem do lobby (Donovan &rarr; Oráculo &rarr; Batedor &rarr; Mago).</li>
     </ol>
     <p><em>Importante:</em> O critério é avaliado no exato momento do ataque. Se a intenção for "menos escudo" e ambos os jogadores tiveram seus escudos zerados por ataques anteriores na mesma rodada, o histórico não conta; é considerado um empate (0x0) e segue a ordem de desempate acima (menos Vida atual).</p>
 
@@ -3163,7 +3169,7 @@ function renderRulesModal() {
           <h3>🛡️ Seleção de Heróis e Baralhos</h3>
           <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
           <ul>
-            <li><strong>Guardião Solar (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
+            <li><strong>Donovan (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
             <li><strong>Oráculo Lunar (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
             <li><strong>Batedor Verde (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
             <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
@@ -3194,7 +3200,7 @@ function renderRulesModal() {
             <li><strong>1º Critério:</strong> Monstro ataca quem tiver <strong>menos Vida atual</strong>.</li>
             <li><strong>2º Critério:</strong> Se a vida for idêntica, ataca quem tiver <strong>menos Escudo atual</strong>.</li>
             <li><strong>3º Critério:</strong> Se ainda empatar, ataca quem tiver <strong>menos cartas na mão</strong>.</li>
-            <li><strong>4º Critério:</strong> Em caso de empate absoluto, o monstro ataca de acordo com a ordem do lobby (Guardião &rarr; Oráculo &rarr; Batedor &rarr; Mago).</li>
+            <li><strong>4º Critério:</strong> Em caso de empate absoluto, o monstro ataca de acordo com a ordem do lobby (Donovan &rarr; Oráculo &rarr; Batedor &rarr; Mago).</li>
           </ul>
           <p>⚠️ <em>Importante:</em> O critério é avaliado no **exato momento** do ataque. Se a intenção for "menos escudo" e ambos os jogadores tiveram seus escudos zerados por ataques anteriores na mesma rodada, o histórico não conta; é considerado um empate ($0 \times 0$) e segue a ordem de desempate acima (menos Vida atual).</p>
         </section>

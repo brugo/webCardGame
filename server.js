@@ -180,17 +180,6 @@ const monsterTemplates = {
     icon: "fang",
     keywords: []
   },
-  bruxa: {
-    id: "bruxa",
-    name: "Bruxa do Breu",
-    category: "common",
-    role: "Suporte (ofensivo)",
-    maxLife: 20,
-    attack: 2,
-    shield: 3,
-    icon: "moon",
-    keywords: []
-  },
   carcereiro: {
     id: "carcereiro",
     name: "Carcereiro Ferrugem",
@@ -201,30 +190,6 @@ const monsterTemplates = {
     shield: 3,
     icon: "stone",
     keywords: []
-  },
-  mistico: {
-    id: "mistico",
-    name: "Místico Penumbra",
-    category: "common",
-    role: "Suporte (cura)",
-    maxLife: 16,
-    attack: 1,
-    shield: 1,
-    icon: "star",
-    keywords: [],
-    curandeiraValue: 3
-  },
-  arauto: {
-    id: "arauto",
-    name: "Arauto Cinza",
-    category: "common",
-    role: "Suporte (escudo)",
-    maxLife: 18,
-    attack: 2,
-    shield: 2,
-    icon: "shield",
-    keywords: [],
-    guardiaValue: 2
   },
   colosso: {
     id: "colosso",
@@ -258,6 +223,41 @@ const monsterTemplates = {
     shield: 7,
     icon: "moon",
     keywords: []
+  },
+  bruxa: {
+    id: "bruxa",
+    name: "Bruxa do Breu",
+    category: "mystic",
+    role: "Suporte (cura)",
+    maxLife: 12,
+    attack: 0,
+    shield: 0,
+    icon: "moon",
+    keywords: ["Curandeira"],
+    curandeiraValue: 4
+  },
+  mistico: {
+    id: "mistico",
+    name: "Místico Penumbra",
+    category: "mystic",
+    role: "Suporte (escudo)",
+    maxLife: 15,
+    attack: 0,
+    shield: 0,
+    icon: "star",
+    keywords: ["Guardiã"],
+    guardiaValue: 3
+  },
+  arauto: {
+    id: "arauto",
+    name: "Arauto Cinza",
+    category: "mystic",
+    role: "Suporte (dano)",
+    maxLife: 17,
+    attack: 0,
+    shield: 0,
+    icon: "shield",
+    keywords: ["Fortalecer +3"]
   }
 };
 
@@ -628,7 +628,7 @@ const tormentCards = [
 const heroes = {
   guardiao: {
     id: "guardiao",
-    name: "Guardiao Solar",
+    name: "Donovan",
     life: 32,
     energy: 4,
     supreme: "bastiao-supremo",
@@ -883,7 +883,7 @@ const cards = {
     type: "attack",
     cost: 2,
     target: "enemy",
-    text: "Cause 4 de dano a um inimigo. Para cada Carga de Batalha atual, todos os aliados ganham Escudo igual à Carga atual."
+    text: "Cause 4 de dano a um inimigo. Todos os aliados ganham Escudo igual à Carga de Batalha atual."
   },
   "provocacao-em-massa": {
     id: "provocacao-em-massa",
@@ -1674,6 +1674,8 @@ function createSession() {
     commonEnemyDiscard: [],
     brutalEnemyDeck: makeEnemyDeck("brutal"),
     brutalEnemyDiscard: [],
+    mysticEnemyDeck: makeEnemyDeck("mystic"),
+    mysticEnemyDiscard: [],
     trapDeck: shuffle(trapCards),
     trapDiscard: [],
     activeTrap: null,
@@ -1712,26 +1714,25 @@ function getUnlockedRoom(monsterId) {
     case "sentinela":
     case "salteador":
     case "carcereiro":
-    case "colosso":
       return 1;
-    case "bruxa":
+    case "colosso":
     case "executor":
     case "basilisco":
-      return 2;
-    case "mistico":
-    case "arauto":
-      return 3;
+      return 5;
     default:
       return 1;
   }
 }
 
 function drawEnemyId(session, category) {
-  const roomNum = session.roomNumber || 1;
   const unlocked = Object.values(monsterTemplates).filter(
-    (m) => m.category === category && getUnlockedRoom(m.id) <= roomNum
+    (m) => m.category === category
   );
-  if (unlocked.length === 0) return category === "common" ? "sentinela" : "colosso";
+  if (unlocked.length === 0) {
+    if (category === "common") return "sentinela";
+    if (category === "brutal") return "colosso";
+    return "bruxa";
+  }
   const chosen = unlocked[Math.floor(Math.random() * unlocked.length)];
   return chosen.id;
 }
@@ -1773,7 +1774,7 @@ function createEnemy(session, templateId) {
   }
 
   const finalLife = template.maxLife + lifeMod + lifeBonus;
-  const finalAttack = template.attack + attackMod;
+  const finalAttack = template.attack === 0 ? 0 : template.attack + attackMod;
 
   return {
     uid: randomUUID(),
@@ -1792,6 +1793,8 @@ function createEnemy(session, templateId) {
     queimadura_rodadas: 0,
     reduzir_ofensiva: 0,
     reducao_proximo_ataque: 0,
+    bruxa_resolved_this_round: false,
+    mistico_resolved_this_round: false,
     keyword_peconhenta_suprimida_rodada: false,
     keyword_paralisante_suprimida_rodada: false,
     keyword_curandeira_suprimida_rodada: false,
@@ -1815,59 +1818,22 @@ function spawnMinion(session, templateId) {
 function createEnemiesForRoom(session) {
   const enemies = [];
   const roomNum = session.roomNumber || 1;
-
-  const unlockedCommons = Object.values(monsterTemplates).filter(
-    (m) => m.category === "common" && getUnlockedRoom(m.id) <= roomNum
-  );
-  const unlockedBrutals = Object.values(monsterTemplates).filter(
-    (m) => m.category === "brutal" && getUnlockedRoom(m.id) <= roomNum
-  );
-
-  const newlyUnlockedCommons = unlockedCommons.filter((m) => getUnlockedRoom(m.id) === roomNum);
-  const newlyUnlockedBrutals = unlockedBrutals.filter((m) => getUnlockedRoom(m.id) === roomNum);
+  const isCommonStage = roomNum <= 4;
+  const category = isCommonStage ? "common" : "brutal";
 
   const setup = session.room.setup;
+  const totalToSpawn = (setup.common || 0) + (setup.brutal || 0);
 
-  const hasNewCommons = newlyUnlockedCommons.length > 0 && setup.common > 0;
-  const hasNewBrutals = newlyUnlockedBrutals.length > 0 && setup.brutal > 0;
+  const availableTemplates = Object.values(monsterTemplates).filter(
+    (m) => m.category === category
+  );
 
-  let commonIdsToSpawn = [];
-  let brutalIdsToSpawn = [];
+  if (availableTemplates.length === 0) return enemies;
 
-  if (roomNum >= 2 && (hasNewCommons || hasNewBrutals)) {
-    const pickCommonAsPriority = hasNewCommons && (!hasNewBrutals || Math.random() < 0.5);
-
-    if (pickCommonAsPriority) {
-      const chosenCommon = newlyUnlockedCommons[Math.floor(Math.random() * newlyUnlockedCommons.length)];
-      commonIdsToSpawn.push(chosenCommon.id);
-    } else if (hasNewBrutals) {
-      const chosenBrutal = newlyUnlockedBrutals[Math.floor(Math.random() * newlyUnlockedBrutals.length)];
-      brutalIdsToSpawn.push(chosenBrutal.id);
-    }
+  for (let i = 0; i < totalToSpawn; i++) {
+    const chosen = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
+    enemies.push(createEnemy(session, chosen.id));
   }
-
-  while (commonIdsToSpawn.length < setup.common) {
-    if (unlockedCommons.length === 0) break;
-    const chosen = unlockedCommons[Math.floor(Math.random() * unlockedCommons.length)];
-    commonIdsToSpawn.push(chosen.id);
-  }
-
-  while (brutalIdsToSpawn.length < setup.brutal) {
-    if (unlockedBrutals.length === 0) break;
-    const chosen = unlockedBrutals[Math.floor(Math.random() * unlockedBrutals.length)];
-    brutalIdsToSpawn.push(chosen.id);
-  }
-
-  commonIdsToSpawn = shuffle(commonIdsToSpawn);
-  brutalIdsToSpawn = shuffle(brutalIdsToSpawn);
-
-  commonIdsToSpawn.forEach((id) => {
-    enemies.push(createEnemy(session, id));
-  });
-
-  brutalIdsToSpawn.forEach((id) => {
-    enemies.push(createEnemy(session, id));
-  });
 
   return enemies;
 }
@@ -1956,6 +1922,7 @@ function archiveCurrentEnemies(session) {
   session.enemies.forEach((enemy) => {
     if (enemy.category === "common") session.commonEnemyDiscard.push(enemy.id);
     if (enemy.category === "brutal") session.brutalEnemyDiscard.push(enemy.id);
+    if (enemy.category === "mystic") session.mysticEnemyDiscard.push(enemy.id);
   });
 }
 
@@ -2127,6 +2094,53 @@ function applyStartOfRoundEffects(session) {
 
   // Trigger Curandeira and Guardiã keywords for monsters
   for (const enemy of session.enemies) {
+    // Custom Bruxa do Breu healing
+    if (enemy.life > 0 && enemy.id === "bruxa" && enemy.category === "mystic" && !enemy.bruxa_resolved_this_round) {
+      enemy.bruxa_resolved_this_round = true;
+      const otherEnemies = session.enemies.filter(e => e.uid !== enemy.uid && e.life > 0);
+      if (otherEnemies.length > 0) {
+        const healAmount = Math.floor(4 / otherEnemies.length);
+        if (healAmount > 0) {
+          otherEnemies.forEach(target => {
+            const before = target.life;
+            target.life = Math.min(target.maxLife, target.life + healAmount);
+            const healed = target.life - before;
+            if (target.statusEffects && target.statusEffects.veneno > 0) {
+              target.statusEffects.veneno = 0;
+            }
+            if (healed > 0) {
+              pushVisualEvent(session, {
+                type: "heal",
+                targetType: "enemy",
+                targetId: target.uid,
+                amount: healed,
+                source: enemy.name
+              });
+              session.log.unshift(`Bruxa do Breu: Curou ${healed} de Vida em ${target.name}.`);
+            }
+          });
+        }
+      }
+    }
+
+    // Custom Místico Penumbra shielding
+    if (enemy.life > 0 && enemy.id === "mistico" && enemy.category === "mystic" && !enemy.mistico_resolved_this_round) {
+      enemy.mistico_resolved_this_round = true;
+      const otherEnemies = session.enemies.filter(e => e.uid !== enemy.uid && e.life > 0);
+      otherEnemies.forEach(target => {
+        target.shield += 3;
+        pushVisualEvent(session, {
+          type: "shield",
+          targetType: "enemy",
+          targetId: target.uid,
+          amount: 3,
+          source: enemy.name
+        });
+        session.log.unshift(`Místico Penumbra: Concedeu 3 de Escudo para ${target.name}.`);
+      });
+    }
+
+    // Default Curandeira triggering (for other custom/boss monsters if any)
     if (enemy.life > 0 && enemy.keywords?.includes("Curandeira") && !enemy.curandeira_resolved_this_round && !enemy.keyword_curandeira_suprimida_rodada) {
       const paused = checkContraFeitico(session, enemy, "Curandeira", (negated) => {
         enemy.curandeira_resolved_this_round = true;
@@ -2163,6 +2177,7 @@ function applyStartOfRoundEffects(session) {
       if (paused) return;
     }
 
+    // Default Guardiã triggering (for other custom/boss monsters if any)
     if (enemy.life > 0 && enemy.keywords?.includes("Guardiã") && !enemy.guardia_resolved_this_round && !enemy.keyword_guardia_suprimida_rodada) {
       const paused = checkContraFeitico(session, enemy, "Guardiã", (negated) => {
         enemy.guardia_resolved_this_round = true;
@@ -2967,6 +2982,8 @@ function startGame(session) {
   session.commonEnemyDiscard = [];
   session.brutalEnemyDeck = makeEnemyDeck("brutal");
   session.brutalEnemyDiscard = [];
+  session.mysticEnemyDeck = makeEnemyDeck("mystic");
+  session.mysticEnemyDiscard = [];
   session.trapDeck = shuffle(trapCards);
   session.trapDiscard = [];
   session.activeTrap = null;
@@ -3098,6 +3115,8 @@ function startNextRound(session) {
     enemy.reducao_proximo_ataque = 0;
     enemy.curandeira_resolved_this_round = false;
     enemy.guardia_resolved_this_round = false;
+    enemy.bruxa_resolved_this_round = false;
+    enemy.mistico_resolved_this_round = false;
     enemy.keyword_peconhenta_suprimida_rodada = false;
     enemy.keyword_paralisante_suprimida_rodada = false;
     enemy.keyword_curandeira_suprimida_rodada = false;
@@ -3548,7 +3567,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.log.unshift(`${target.name} foi desafiado e so pode atacar ${player.name} ate o fim da rodada.`);
   }
 
-  // Guardiao Solar Custom Cards
+  // Donovan Custom Cards
   if (card.id === "bastiao-supremo") {
     player.bastiaoSupremoActive = true;
     addShieldToHero(session, player, 10, card);
@@ -3582,7 +3601,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     const currentCarga = player.carga_de_batalha || 0;
     target.desafio_guardiao_carga_reducao = currentCarga;
     player.carga_de_batalha = 0; // Consume charges!
-    session.log.unshift(`${target.name} foi desafiado por ${player.name} e só atacará ele. Dano sofrido pelo Guardião será reduzido em 2x(${currentCarga}) = ${2 * currentCarga} (Carga consumida).`);
+    session.log.unshift(`${target.name} foi desafiado por ${player.name} e só atacará ele. Dano sofrido por Donovan será reduzido em 2x(${currentCarga}) = ${2 * currentCarga} (Carga consumida).`);
   }
 
   if (card.id === "corte-do-escudo") {
@@ -3651,7 +3670,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
       
       const carga = player.carga_de_batalha || 0;
-      const blockAmount = carga * carga;
+      const blockAmount = carga;
       if (blockAmount > 0) {
         session.players.filter((p) => p.life > 0).forEach((ally) => {
           addShieldToHero(session, ally, blockAmount, card);
@@ -3671,7 +3690,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
       session.log.unshift(`${player.name} acumulou +1 de Carga de Batalha.`);
     }
-    session.log.unshift(`${player.name} usou Provocação em Massa! Todos os inimigos focarão o Guardião.`);
+    session.log.unshift(`${player.name} usou Provocação em Massa! Todos os inimigos focarão Donovan.`);
   }
 
   if (card.id === "escudo-refletor") {
@@ -3709,7 +3728,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     });
     if (player.heroId === "guardiao") {
       player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
-      session.log.unshift(`${player.name} usou Rugido Feroz. Todos os inimigos perderam seus Escudos. Guardião Solar acumulou +1 de Carga de Batalha.`);
+      session.log.unshift(`${player.name} usou Rugido Feroz. Todos os inimigos perderam seus Escudos. Donovan acumulou +1 de Carga de Batalha.`);
     } else {
       session.log.unshift(`${player.name} usou Rugido Feroz. Todos os inimigos perderam seus Escudos.`);
     }
@@ -4433,6 +4452,7 @@ function queueEnemyAttacks(session) {
 
   session.enemies.forEach((enemy) => {
     if (enemy.life <= 0 || enemy.isStunned || enemy.atordoado_rodada_atual) return;
+    if (enemy.attack <= 0) return; // Support/Mystic monsters with 0 attack do not perform attacks
 
     // Check if there is a forced target (taunt)
     const forcedTarget = session.players.find(p => p.id === enemy.forcedTargetId && p.life > 0)
@@ -5100,10 +5120,20 @@ function getEnemyCurrentTarget(session, enemy) {
 }
 
 function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
+  if (enemy.attack <= 0) return 0;
+
   const forcedTarget = session.players.find((player) => player.id === enemy.forcedTargetId && player.life > 0)
     || (session.todos_inimigos_forcam_guardiao && session.players.find((player) => player.heroId === "guardiao" && player.life > 0));
   if (forcedTarget) target = forcedTarget;
+  
   let attack = enemy.attack;
+  
+  // Arauto Cinza alive passive boost: +3 damage to other enemies
+  const hasAliveArauto = session.enemies.some(e => e.id === "arauto" && e.life > 0);
+  if (hasAliveArauto) {
+    attack += 3;
+  }
+
   if (enemy.isEnfurecido && enemy.life <= enemy.maxLife / 2) {
     attack += 2;
   }
