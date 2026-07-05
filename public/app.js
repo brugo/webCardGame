@@ -17,6 +17,7 @@ const local = {
   justPlayedUid: "",
   selectedCardUid: "",
   seenVisualEventIds: new Set(),
+  completedVisualEventIds: new Set(),
   previousMeters: {},
   roomCards: [],
   trapCards: [],
@@ -132,6 +133,7 @@ function clearAuth() {
   local.state = null;
   local.error = "";
   local.seenVisualEventIds.clear();
+  local.completedVisualEventIds.clear();
   local.previousMeters = {};
   local.quitConfirmOpen = false;
   local.animQueue = [];
@@ -242,6 +244,8 @@ function clearSavedSession() {
   local.quitConfirmOpen = false;
   local.animQueue = [];
   local.animRunning = false;
+  local.seenVisualEventIds.clear();
+  local.completedVisualEventIds.clear();
   const overlay = document.getElementById("cinematic-overlay");
   if (overlay) {
     overlay.style.display = "none";
@@ -425,6 +429,16 @@ function isStateIdentical(s1, s2) {
   return true;
 }
 
+function isTargetAnimating(targetId, targetType, state) {
+  return (state?.visualEvents || []).some(ev => 
+    ev.targetId === targetId && 
+    (ev.targetType === targetType || 
+     (targetType === "hero" && ev.targetType === "player") || 
+     (targetType === "player" && ev.targetType === "hero")) && 
+    !local.completedVisualEventIds.has(ev.id)
+  );
+}
+
 function setState(nextState) {
   if (isStateIdentical(nextState, local.state)) {
     return;
@@ -442,6 +456,28 @@ function setState(nextState) {
 
   if (!local.visualLife) local.visualLife = {};
   if (!local.visualShield) local.visualShield = {};
+
+  // First, initialize visual values from prevState if they aren't already set
+  if (prevState) {
+    (prevState.players || []).forEach(p => {
+      if (local.visualLife[p.id] === undefined) local.visualLife[p.id] = p.life;
+      if (local.visualShield[p.id] === undefined) local.visualShield[p.id] = p.shield;
+    });
+    (prevState.enemies || []).forEach(e => {
+      if (local.visualLife[e.uid] === undefined) local.visualLife[e.uid] = e.life;
+      if (local.visualShield[e.uid] === undefined) local.visualShield[e.uid] = e.shield;
+    });
+  }
+
+  // Next, make sure everything present in nextState is initialized in visual state
+  (nextState.players || []).forEach(p => {
+    if (local.visualLife[p.id] === undefined) local.visualLife[p.id] = p.life;
+    if (local.visualShield[p.id] === undefined) local.visualShield[p.id] = p.shield;
+  });
+  (nextState.enemies || []).forEach(e => {
+    if (local.visualLife[e.uid] === undefined) local.visualLife[e.uid] = e.life;
+    if (local.visualShield[e.uid] === undefined) local.visualShield[e.uid] = e.shield;
+  });
 
   const prevTurn = prevState?.turn;
   const nextTurn = nextState?.turn;
@@ -487,15 +523,19 @@ function setState(nextState) {
     });
   }
 
-  // If not cinematic and not running animation, keep visual values exactly in sync
+  // If not cinematic and not running animation, keep visual values in sync (except for targets currently animating)
   if (!isCinematic && !local.animRunning) {
     (nextState.players || []).forEach(p => {
-      local.visualLife[p.id] = p.life;
-      local.visualShield[p.id] = p.shield;
+      if (!isTargetAnimating(p.id, "hero", nextState)) {
+        local.visualLife[p.id] = p.life;
+        local.visualShield[p.id] = p.shield;
+      }
     });
     (nextState.enemies || []).forEach(e => {
-      local.visualLife[e.uid] = e.life;
-      local.visualShield[e.uid] = e.shield;
+      if (!isTargetAnimating(e.uid, "enemy", nextState)) {
+        local.visualLife[e.uid] = e.life;
+        local.visualShield[e.uid] = e.shield;
+      }
     });
   }
 
@@ -545,6 +585,11 @@ function ingestVisualEvents(state) {
 
     // Delay of 1.5 seconds (1500ms) before the animation triggers
     window.setTimeout(() => {
+      // Apply changes to visual state when animation triggers
+      applyEventToVisualState(event, state);
+      local.completedVisualEventIds.add(event.id);
+      render();
+
       const elId = event.targetType === "enemy" ? `card-enemy-${event.targetId}` : `hud-player-${event.targetId}`;
       const el = document.getElementById(elId);
       if (!el) return;
@@ -891,6 +936,7 @@ async function queueCinematicDungeonStart(state) {
         
         // Apply changes to visual state before firing effect
         applyEventToVisualState(ev, state);
+        local.completedVisualEventIds.add(ev.id);
         
         // Render the board with updated visual state so HP bars reflect changes
         render();
@@ -908,6 +954,7 @@ async function queueCinematicDungeonStart(state) {
       if (!local.seenVisualEventIds.has(gev.id) && !usedEventIds.has(gev.id)) {
         local.seenVisualEventIds.add(gev.id);
         applyEventToVisualState(gev, state);
+        local.completedVisualEventIds.add(gev.id);
         render();
         await sleep(50);
         fireVisualEffect(gev);
@@ -915,8 +962,11 @@ async function queueCinematicDungeonStart(state) {
       }
     }
 
-    // Mark all remaining events as seen
-    newEvents.forEach(function(ev) { local.seenVisualEventIds.add(ev.id); });
+    // Mark all remaining events as seen and completed
+    newEvents.forEach(function(ev) {
+      local.seenVisualEventIds.add(ev.id);
+      local.completedVisualEventIds.add(ev.id);
+    });
     render();
     return;
   }
@@ -979,6 +1029,7 @@ async function queueCinematicAfterReaction(state) {
     
     // Apply changes to visual state before firing effect
     applyEventToVisualState(ev, state);
+    local.completedVisualEventIds.add(ev.id);
     render();
     await sleep(50);
     
