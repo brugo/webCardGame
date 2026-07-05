@@ -1474,6 +1474,10 @@ function playSelectedCard() {
     showToast("Energia insuficiente.");
     return;
   }
+  if (card.lifeCost && me.life <= card.lifeCost) {
+    showToast("Vida insuficiente.");
+    return;
+  }
   const button = document.querySelector("#playSelectedCard");
   button.disabled = true;
   window.setTimeout(() => {
@@ -1818,7 +1822,7 @@ function renderSelectedCardModal(state, me) {
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="selectedCardName">
       <article class="tcg-card selected-card-detail ${card.type}">
         <button id="closeCardDetail" class="card-close secondary" aria-label="Fechar carta">Fechar</button>
-        <div class="card-cost">${card.cost}</div>
+        <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
         <img src="${getCardArt(card)}" alt="" />
         <div class="card-body">
           <strong id="selectedCardName">${escapeHtml(card.name)}</strong>
@@ -2252,6 +2256,7 @@ function renderMonsterCard(enemy) {
 function isCardBlocked(card, state, me) {
   if (!me) return true;
   if (state.turn !== "players" || me.turnEnded || me.energy < card.cost) return true;
+  if (card.lifeCost && me.life <= card.lifeCost) return true;
 
   const alivePlayers = state.players.filter((p) => p.life > 0);
   if (card.id === "manipular-energia" || card.id === "redistribuir-escudos" || card.id === "escudo-compartilhado") {
@@ -2287,7 +2292,7 @@ function renderHandCard(card, state, index = 0, total = 1) {
       tabindex="0"
       style="--hand-offset: ${offset}px; --hand-rotate: ${rotation}deg;"
     >
-      <div class="card-cost">${card.cost}</div>
+      <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
       <img src="${getCardArt(card)}" alt="" />
       <div class="card-body">
         <strong>${escapeHtml(card.name)}</strong>
@@ -2361,7 +2366,7 @@ function renderPendingDiscardModal(state, me) {
         <div class="reaction-cards">
           ${me.hand.map((card) => `
             <article class="tcg-card reaction-choice">
-              <div class="card-cost">${card.cost}</div>
+              <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
               <div class="card-body">
                 <strong>${escapeHtml(card.name)}</strong>
                 <p>${escapeHtml(card.text)}</p>
@@ -3254,7 +3259,7 @@ function renderRulesModal() {
           return `
             <div class="rules-card-entry ${isSupreme ? "supreme-entry" : ""}">
               <div class="card-entry-header">
-                <span class="card-entry-cost">${card.cost}⚡</span>
+                <span class="card-entry-cost" ${card.lifeCost ? 'style="color: #ef4444;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : `${card.cost}⚡`}</span>
                 <strong class="card-entry-name">${escapeHtml(card.name)}</strong>
                 <span class="card-entry-type badge-${card.type}">${escapeHtml(card.type)}</span>
                 ${isSupreme ? `<span class="supreme-badge">Suprema</span>` : ""}

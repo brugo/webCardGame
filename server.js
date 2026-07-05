@@ -633,17 +633,13 @@ const heroes = {
     energy: 4,
     supreme: "bastiao-supremo",
     deck: [
-      ["interceptar", 2],
-      ["postura-de-ferro", 1],
-      ["sacrificio-nobre", 1],
-      ["contra-ataque", 1],
       ["escudo-protetor", 1],
       ["golpe-de-escudo", 1],
       ["provocar", 1],
       ["desafio-do-guardiao", 1],
       ["corte-do-escudo", 1],
       ["grito-de-guerra", 1],
-      ["varredura-de-escudos", 1],
+      ["salvaguarda", 1],
       ["ultima-resistencia", 1],
       ["barreira-explosiva", 1],
       ["formacao-defensiva", 1],
@@ -651,11 +647,13 @@ const heroes = {
       ["troca-de-escudos", 1],
       ["muralha-viva", 1],
       ["golpe-pesado", 1],
-      ["avalanche-de-ferro", 1],
+      ["avalanche-de-ferro", 2],
       ["provocacao-em-massa", 1],
       ["escudo-refletor", 1],
-      ["carga-do-guardiao", 1],
-      ["escudo-espinhoso-maximo", 1]
+      ["protecao-divina", 1],
+      ["destruir-armadilha", 2],
+      ["rugido-feroz", 2],
+      ["benevolencia", 2]
     ]
   },
   oraculo: {
@@ -780,16 +778,15 @@ const cards = {
     name: "Formação Defensiva",
     type: "defense",
     cost: 2,
-    allBlock: 3,
-    text: "Todos os aliados recebem 3 de Escudo."
+    allBlock: 2,
+    text: "Todos os aliados recebem 2 de Escudo."
   },
-  "varredura-de-escudos": {
-    id: "varredura-de-escudos",
-    name: "Varredura de Escudos",
-    type: "attack",
-    cost: 1,
-    areaDamage: 3,
-    text: "Cause 3 de dano a todos os inimigos."
+  "salvaguarda": {
+    id: "salvaguarda",
+    name: "Salvaguarda",
+    type: "defense",
+    cost: 3,
+    text: "Nesta rodada, metade de todo o dano que os aliados receberiam de ataques inimigos é redirecionado para você (arredondado para baixo)."
   },
   "avanco-implacavel": {
     id: "avanco-implacavel",
@@ -808,30 +805,14 @@ const cards = {
     cost: 1,
     text: "Escolha um aliado. Até o início da próxima Fase dos Heróis, todo dano que ele receberia é redirecionado para você. Acumule +1 de Carga."
   },
-  interceptar: {
-    id: "interceptar",
-    name: "Interceptar",
-    type: "reaction",
-    cost: 0,
-    intercept: true,
-    text: "Reação. Quando um aliado sofreria dano, anule esse dano e você sofre esse dano em vez dele."
-  },
-  "contra-ataque": {
-    id: "contra-ataque",
-    name: "Contra-Ataque",
-    type: "reaction",
-    cost: 0,
-    reflect: 3,
-    text: "Reação. Você ganha Refletir 3 até o início da próxima Fase dos Heróis."
-  },
   "muralha-viva": {
     id: "muralha-viva",
     name: "Muralha Viva",
     type: "defense",
     cost: 2,
-    block: 7,
+    block: 4,
     draw: 1,
-    text: "Você recebe 7 de Escudo e compra 1 carta."
+    text: "Você recebe 4 de Escudo e compra 1 carta."
   },
   "desafio-do-guardiao": {
     id: "desafio-do-guardiao",
@@ -839,7 +820,7 @@ const cards = {
     type: "control",
     target: "enemy",
     cost: 1,
-    text: "Escolha um inimigo. Ele só pode atacar você até o fim desta rodada. Se você tiver 3+ de Escudo no momento de cada ataque, cause 2 de dano de retorno."
+    text: "Escolha um inimigo. Todo o dano que ele causar nesta rodada é redirecionado para você e reduzido em 2 vezes a sua Carga de Batalha atual."
   },
   "ultima-resistencia": {
     id: "ultima-resistencia",
@@ -857,21 +838,8 @@ const cards = {
     type: "defense",
     target: "ally",
     cost: 2,
-    text: "Um aliado recebe 5 de Escudo com propriedade Espinhoso 2 e Refletir 1."
-  },
-  "postura-de-ferro": {
-    id: "postura-de-ferro",
-    name: "Postura de Ferro",
-    type: "reaction",
-    cost: 0,
-    text: "Reação. Quando você sofreria 5 ou mais de dano de uma única fonte, reduza esse dano em 3."
-  },
-  "sacrificio-nobre": {
-    id: "sacrificio-nobre",
-    name: "Sacrifício Nobre",
-    type: "reaction",
-    cost: 0,
-    text: "Reação. Quando um aliado sofreria dano que o derrotaria, esse aliado fica com 1 de Vida. Você sofre 8 de dano (ignora Escudo). Exaurir."
+    block: 5,
+    text: "Um aliado recebe 5 de Escudo. Você ganha +1 de Carga de Batalha."
   },
   "corte-do-escudo": {
     id: "corte-do-escudo",
@@ -885,22 +853,22 @@ const cards = {
     name: "Grito de Guerra",
     type: "control",
     cost: 1,
-    text: "Todos os aliados recebem 2 de Escudo. Compre 1 carta."
+    text: "Todos os aliados recebem 2 de Escudo. Compre 1 carta. Você ganha +1 de Carga de Batalha."
   },
   "barreira-explosiva": {
     id: "barreira-explosiva",
     name: "Barreira Explosiva",
     type: "defense",
-    cost: 2,
-    text: "Você recebe 6 de Escudo com propriedade Espinhoso 4."
+    cost: 3,
+    block: 6,
+    text: "Você recebe 6 de Escudo."
   },
   "troca-de-escudos": {
     id: "troca-de-escudos",
     name: "Troca de Escudos",
     type: "control",
-    target: "ally",
     cost: 2,
-    text: "Troque o valor de Escudo atual seu com o de um aliado escolhido."
+    text: "Soma o Escudo de todos os aliados e distribui igualmente entre todos, arredondando para baixo."
   },
   "golpe-pesado": {
     id: "golpe-pesado",
@@ -914,7 +882,8 @@ const cards = {
     name: "Avalanche de Ferro",
     type: "attack",
     cost: 2,
-    text: "Cause 4 de dano a todos os inimigos. Se Carga >= 1, cause 6 de dano."
+    target: "enemy",
+    text: "Cause 4 de dano a um inimigo. Para cada Carga de Batalha atual, todos os aliados ganham Escudo igual à Carga atual."
   },
   "provocacao-em-massa": {
     id: "provocacao-em-massa",
@@ -923,19 +892,37 @@ const cards = {
     cost: 2,
     text: "Até o início da próxima Fase dos Heróis, todos os inimigos só atacam você. Você recebe 3 de Escudo. Acumule +1 de Carga."
   },
-  "carga-do-guardiao": {
-    id: "carga-do-guardiao",
-    name: "Carga do Guardião",
-    type: "attack",
-    cost: 3,
-    text: "Cause 4 + (3 x Carga de Batalha atual) de dano. Zera a Carga."
-  },
-  "escudo-espinhoso-maximo": {
-    id: "escudo-espinhoso-maximo",
-    name: "Escudo Espinhoso Máximo",
+  "protecao-divina": {
+    id: "protecao-divina",
+    name: "Proteção Divina",
     type: "defense",
+    target: "enemy",
     cost: 3,
-    text: "Você recebe 10 de Escudo com propriedade Espinhoso 6."
+    text: "Reduz o dano total causado pelo monstro alvo nesta rodada em 2 vezes a sua Carga de Batalha atual."
+  },
+  "destruir-armadilha": {
+    id: "destruir-armadilha",
+    name: "Destruir Armadilha",
+    type: "defense",
+    cost: 0,
+    lifeCost: 4,
+    text: "Destrói a armadilha ativa da sala. Impede por 1 rodada que novas armadilhas entrem em jogo. Custa 4 de Vida."
+  },
+  "rugido-feroz": {
+    id: "rugido-feroz",
+    name: "Rugido Feroz",
+    type: "control",
+    cost: 3,
+    text: "Remove todo o Escudo de todos os inimigos. Você ganha +1 de Carga de Batalha."
+  },
+  "benevolencia": {
+    id: "benevolencia",
+    name: "Benevolência",
+    type: "defense",
+    target: "ally",
+    cost: 2,
+    block: 2,
+    text: "Um aliado recebe 2 de Escudo. Você ganha +3 de Carga de Batalha."
   },
   "golpe-radiante": {
     id: "golpe-radiante",
@@ -1750,6 +1737,12 @@ function drawEnemyId(session, category) {
 }
 
 function drawTrap(session) {
+  if (session.prevent_new_traps_round && session.round <= session.prevent_new_traps_round) {
+    session.activeTrap = null;
+    session.log.unshift("Nenhuma armadilha foi revelada devido ao efeito de Destruir Armadilha.");
+    return;
+  }
+
   if (session.trapDeck.length === 0) {
     session.trapDeck = shuffle(session.trapDiscard.length ? session.trapDiscard : trapCards);
     session.trapDiscard = [];
@@ -2284,12 +2277,31 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
       session.log.unshift(`${interceptor.name} interceptou o dano que iria atingir ${target.name}.`);
       return applyDamageToHero(session, interceptor, amount, source, sourceEnemy, { skipRedirect: true });
     }
+
+    const salvaguardaCaster = session.players.find((player) => player.life > 0 && player.salvaguardaActive && player.id !== target.id);
+    if (salvaguardaCaster) {
+      const half = Math.floor(amount / 2);
+      if (half > 0) {
+        session.log.unshift(`Salvaguarda: metade do dano (${half}) que ${target.name} receberia de ${sourceEnemy.name} é redirecionado para ${salvaguardaCaster.name}.`);
+        applyDamageToHero(session, salvaguardaCaster, half, source, sourceEnemy, { skipRedirect: true });
+        amount = amount - half;
+      }
+    }
   }
 
   if (options.isBastiaoSupremoRedirect) {
     const reduced = Math.max(1, amount - 4);
     session.log.unshift(`Bastião Supremo: dano redirecionado reduzido de ${amount} para ${reduced}.`);
     amount = reduced;
+  }
+
+  if (sourceEnemy && sourceEnemy.challengedByGuardiao && target.heroId === "guardiao") {
+    const reductionAmount = 2 * (sourceEnemy.desafio_guardiao_carga_reducao || 0);
+    if (reductionAmount > 0) {
+      const reduced = Math.max(0, amount - reductionAmount);
+      session.log.unshift(`Desafio do Guardião: dano recebido de ${sourceEnemy.name} reduzido de ${amount} para ${reduced} (redução de ${reductionAmount} devido a ${sourceEnemy.desafio_guardiao_carga_reducao} de Carga).`);
+      amount = reduced;
+    }
   }
 
   const reduction = target.reduceDamage || 0;
@@ -2993,6 +3005,7 @@ function startGame(session) {
     player.bonus_foco = 0;
     player.ataques_jogados_esta_rodada = 0;
     player.bastiaoSupremoActive = false;
+    player.salvaguardaActive = false;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
     player.deck = makeDeck(player.heroId);
@@ -3110,7 +3123,6 @@ function startNextRound(session) {
     }
     player.energy = finalEnergy;
     player.sobrecarga_pendente = 0;
-    player.carga_de_batalha = 0;
     player.protectingId = null;
     player.interceptReady = false;
     player.reflectDamage = 0;
@@ -3120,6 +3132,7 @@ function startNextRound(session) {
     player.bonus_foco = 0;
     player.ataques_jogados_esta_rodada = 0;
     player.bastiaoSupremoActive = false;
+    player.salvaguardaActive = false;
     player.activeShields = [];
     player.turnEnded = player.life <= 0;
     player.roundStats = makeRoundStats();
@@ -3154,6 +3167,9 @@ function startNextRound(session) {
   session.revealedNextTrap = null;
   session.enemies.forEach((enemy) => {
     enemy.forcedTargetId = null;
+    enemy.challengedByGuardiao = false;
+    enemy.desafio_guardiao_carga_reducao = 0;
+    enemy.protecao_divina_reduction = 0;
   });
   drawIntention(session);
   applyIntentionPresagio(session);
@@ -3184,6 +3200,12 @@ function playCard(session, player, payload) {
 
   const finalCost = isFreePlay ? 0 : card.cost;
   if (player.energy < finalCost) throw new Error("Energia insuficiente.");
+
+  if (card.lifeCost) {
+    if (player.life <= card.lifeCost) {
+      throw new Error(`Vida insuficiente para usar esta carta (custo: ${card.lifeCost} PV).`);
+    }
+  }
 
   if (card.id === "purificar") {
     if (!session.activeTrap) {
@@ -3246,6 +3268,17 @@ function playCard(session, player, payload) {
   player.hand.splice(cardIndex, 1);
   player.energy -= finalCost;
   player.roundStats.energySpent += finalCost;
+  if (card.lifeCost) {
+    player.life -= card.lifeCost;
+    session.log.unshift(`${player.name} pagou o custo de ${card.lifeCost} de Vida para usar ${card.name}.`);
+    pushVisualEvent(session, {
+      type: "damage",
+      targetType: "hero",
+      targetId: player.id,
+      amount: card.lifeCost,
+      source: card.name
+    });
+  }
   player.roundStats.cardsPlayed += 1;
   if (card.type === "attack") {
     player.roundStats.attackCardsPlayed += 1;
@@ -3536,12 +3569,20 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.log.unshift(`${player.name} provocou ataques contra ${target.name}.`);
   }
 
+  if (card.id === "salvaguarda") {
+    player.salvaguardaActive = true;
+    session.log.unshift(`${player.name} usou Salvaguarda! Ele redirecionará metade de todo o dano que os aliados receberiam de ataques inimigos para si nesta rodada.`);
+  }
+
   if (card.id === "desafio-do-guardiao") {
     const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
     if (!target) throw new Error("Não há monstros vivos para desafiar.");
     target.forcedTargetId = player.id;
     target.challengedByGuardiao = true;
-    session.log.unshift(`${target.name} foi desafiado por ${player.name} e só poderá atacá-lo.`);
+    const currentCarga = player.carga_de_batalha || 0;
+    target.desafio_guardiao_carga_reducao = currentCarga;
+    player.carga_de_batalha = 0; // Consume charges!
+    session.log.unshift(`${target.name} foi desafiado por ${player.name} e só atacará ele. Dano sofrido pelo Guardião será reduzido em 2x(${currentCarga}) = ${2 * currentCarga} (Carga consumida).`);
   }
 
   if (card.id === "corte-do-escudo") {
@@ -3559,7 +3600,12 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       addShieldToHero(session, ally, 2, card);
     });
     const drawn = drawCards(player, 1);
-    session.log.unshift(`${player.name} usou Grito de Guerra, concedendo 2 de Escudo a todos e comprando ${drawn} carta.`);
+    if (player.heroId === "guardiao") {
+      player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
+      session.log.unshift(`${player.name} usou Grito de Guerra, concedendo 2 de Escudo a todos, comprando ${drawn} carta(s) e acumulando +1 de Carga de Batalha.`);
+    } else {
+      session.log.unshift(`${player.name} usou Grito de Guerra, concedendo 2 de Escudo a todos e comprando ${drawn} carta.`);
+    }
   }
 
   if (card.id === "ultima-resistencia") {
@@ -3569,23 +3615,22 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
-  if (card.id === "barreira-explosiva") {
-    addShieldToHero(session, player, 6, card, { espinhoso: 4 });
-  }
-
   if (card.id === "troca-de-escudos") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    const tempShield = player.shield;
-    player.shield = target.shield;
-    target.shield = tempShield;
-
-    const tempActive = player.activeShields || [];
-    player.activeShields = target.activeShields || [];
-    target.activeShields = tempActive;
-
-    pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: player.id, amount: player.shield, source: card.name });
-    pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: target.id, amount: target.shield, source: card.name });
-    session.log.unshift(`${player.name} trocou de Escudo com ${target.name}.`);
+    const activeAllies = session.players.filter((p) => p.life > 0);
+    const totalShield = activeAllies.reduce((sum, p) => sum + (p.shield || 0), 0);
+    const dividedShield = Math.floor(totalShield / activeAllies.length);
+    
+    activeAllies.forEach((p) => {
+      p.shield = dividedShield;
+      p.activeShields = [{
+        id: randomUUID(),
+        amount: dividedShield,
+        espinhoso: 0,
+        reflect: 0,
+        source: "Troca de Escudos"
+      }];
+    });
+    session.log.unshift(`${player.name} usou Troca de Escudos. Escudo total de ${totalShield} foi distribuído igualmente (${dividedShield} para cada herói).`);
   }
 
   if (card.id === "golpe-pesado") {
@@ -3599,13 +3644,24 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "avalanche-de-ferro") {
-    const targets = session.enemies.filter((enemy) => enemy.life > 0);
-    const baseDmg = (player.carga_de_batalha || 0) >= 1 ? 6 : 4;
-    targets.forEach((enemy) => {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      const baseDmg = 4;
       const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, enemy, dmg, card.name, false, player);
-    });
-    session.log.unshift(`${player.name} usou Avalanche de Ferro (base: ${baseDmg}) em todos os inimigos.`);
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      
+      const carga = player.carga_de_batalha || 0;
+      const blockAmount = carga * carga;
+      if (blockAmount > 0) {
+        session.players.filter((p) => p.life > 0).forEach((ally) => {
+          addShieldToHero(session, ally, blockAmount, card);
+        });
+        session.log.unshift(`${player.name} usou Avalanche de Ferro em ${target.name} causando ${dmg} de dano. Todos os aliados receberam ${blockAmount} de Escudo (Carga consumida: ${carga}).`);
+      } else {
+        session.log.unshift(`${player.name} usou Avalanche de Ferro em ${target.name} causando ${dmg} de dano (0 Carga).`);
+      }
+      player.carga_de_batalha = 0; // Consume charges!
+    }
   }
 
   if (card.id === "provocacao-em-massa") {
@@ -3619,24 +3675,51 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "escudo-refletor") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    addShieldToHero(session, target, 5, card, { espinhoso: 2, reflect: 1 });
-  }
-
-  if (card.id === "carga-do-guardiao") {
-    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
-    if (target) {
-      const currentCarga = player.carga_de_batalha || 0;
-      const baseDmg = 4 + 3 * currentCarga;
-      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, target, dmg, card.name, false, player);
-      player.carga_de_batalha = 0;
-      session.log.unshift(`${player.name} usou Carga do Guardião (Carga: ${currentCarga}) e causou ${dmg} de dano.`);
+    if (player.heroId === "guardiao") {
+      player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
+      session.log.unshift(`${player.name} acumulou +1 de Carga de Batalha.`);
     }
   }
 
-  if (card.id === "escudo-espinhoso-maximo") {
-    addShieldToHero(session, player, 10, card, { espinhoso: 6 });
+  if (card.id === "protecao-divina") {
+    const target = session.enemies.find((enemy) => enemy.uid === payload.targetId && enemy.life > 0) || session.enemies.find((enemy) => enemy.life > 0);
+    if (target) {
+      const currentCarga = player.carga_de_batalha || 0;
+      const reduction = 2 * currentCarga;
+      target.protecao_divina_reduction = (target.protecao_divina_reduction || 0) + reduction;
+      player.carga_de_batalha = 0; // Consume charges!
+      session.log.unshift(`${player.name} usou Proteção Divina em ${target.name}, reduzindo o dano total do monstro nesta rodada em ${reduction} (Carga consumida: ${currentCarga}).`);
+    }
+  }
+
+  if (card.id === "destruir-armadilha") {
+    if (session.activeTrap) {
+      session.trapDiscard.push(session.activeTrap);
+      session.activeTrap = null;
+    }
+    session.prevent_new_traps_round = session.round + 1;
+    session.log.unshift(`${player.name} usou Destruir Armadilha. A armadilha atual foi destruída e novas armadilhas não poderão entrar até a próxima rodada.`);
+  }
+
+  if (card.id === "rugido-feroz") {
+    session.enemies.forEach((enemy) => {
+      if (enemy.life > 0) {
+        enemy.shield = 0;
+      }
+    });
+    if (player.heroId === "guardiao") {
+      player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
+      session.log.unshift(`${player.name} usou Rugido Feroz. Todos os inimigos perderam seus Escudos. Guardião Solar acumulou +1 de Carga de Batalha.`);
+    } else {
+      session.log.unshift(`${player.name} usou Rugido Feroz. Todos os inimigos perderam seus Escudos.`);
+    }
+  }
+
+  if (card.id === "benevolencia") {
+    if (player.heroId === "guardiao") {
+      player.carga_de_batalha = (player.carga_de_batalha || 0) + 3;
+      session.log.unshift(`${player.name} usou Benevolência e acumulou +3 de Carga de Batalha.`);
+    }
   }
 
   // Oraculo Lunar custom cards
@@ -4637,25 +4720,7 @@ function finishDungeonTurn(session) {
 
 function canPlayReactionCard(session, player, card, pending) {
   const isSolo = session.players.filter(p => p.life > 0).length === 1;
-  if (card.id === "interceptar") {
-    // In solo play, interceptar still lets the player react (absorbs damage to self, grants the reaction window)
-    if (isSolo) return true;
-    return pending.targetId !== player.id;
-  }
-  if (card.id === "postura-de-ferro") {
-    return pending.targetId === player.id && pending.attack >= 5;
-  }
-  if (card.id === "sacrificio-nobre") {
-    if (pending.targetId === player.id) return false;
-    const target = session.players.find(p => p.id === pending.targetId);
-    if (!target) return false;
-    const shield = target.shield || 0;
-    const incomingDmgToLife = Math.max(0, pending.attack - shield);
-    return incomingDmgToLife >= target.life;
-  }
-  if (card.id === "contra-ataque") {
-    return true;
-  }
+
   if (card.id === "voz-do-oraculo" || card.id === "absorcao-arcana") {
     return pending.type === "trap";
   }
@@ -4934,41 +4999,7 @@ function playReaction(session, player, payload) {
     return;
   }
 
-  if (card.id === "postura-de-ferro") {
-    const original = pending.attack;
-    pending.attack = Math.max(0, pending.attack - 3);
-    session.log.unshift(`${player.name} usou ${card.name} e reduziu o dano de ${original} para ${pending.attack}.`);
-    resolveEnemyAttack(session, enemy, target, pending.attack);
-    advanceDungeonTurn(session);
-    return;
-  }
-
-  if (card.id === "sacrificio-nobre") {
-    session.log.unshift(`${player.name} usou ${card.name} e salvou ${target.name} da derrota!`);
-    session.heroDefeatedThisRound = true;
-    session.heroi_derrotado = true;
-    target.life = 1;
-    pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: 0, source: card.name });
-    applyDamageToHero(session, player, 8, card.name, null, { ignoreShield: true, skipRedirect: true });
-    card.exhausted = true;
-    advanceDungeonTurn(session);
-    return;
-  }
-
-  if (card.intercept) {
-    session.log.unshift(`${player.name} usou ${card.name} e interceptou o ataque contra ${target.name}.`);
-    applyDamageToHero(session, player, pending.attack, enemy.name, enemy, { skipRedirect: true });
-    advanceDungeonTurn(session);
-    return;
-  }
-
-  if (card.reflect) {
-    player.reflectDamage = Math.max(player.reflectDamage || 0, card.reflect);
-    session.log.unshift(`${player.name} usou ${card.name} e recebeu Refletir ${card.reflect}.`);
-  } else {
-    session.log.unshift(`${player.name} usou ${card.name}.`);
-  }
-
+  session.log.unshift(`${player.name} usou ${card.name}.`);
   resolveEnemyAttack(session, enemy, target, pending.attack);
   advanceDungeonTurn(session);
 }
@@ -5118,6 +5149,13 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
     if (commitFirstBonus) {
       enemy.reducao_proximo_ataque = 0;
     }
+  }
+
+  // Apply Proteção Divina reduction
+  if (enemy.protecao_divina_reduction && enemy.protecao_divina_reduction > 0) {
+    const aliveHeroesCount = session.players.filter(p => p.life > 0).length || 1;
+    const reductionPerAttack = Math.floor(enemy.protecao_divina_reduction / aliveHeroesCount);
+    attack = Math.max(0, attack - reductionPerAttack);
   }
 
   return attack;
@@ -5354,14 +5392,6 @@ function resolveEnemyAttackStage6(session, enemy, target, damage) {
     applyHealToHero(session, target, totalHeal, "Profecia");
     session.log.unshift(`[Profecia] ${target.name} curou ${totalHeal} de Vida.`);
     target.profecia_tokens = [];
-  }
-
-  if (enemy.challengedByGuardiao && enemy.life > 0) {
-    const guardiao = session.players.find(p => p.heroId === "guardiao" && p.life > 0);
-    if (guardiao && guardiao.shield >= 3) {
-      session.log.unshift(`Desafio do Guardião: ${guardiao.name} possui ${guardiao.shield} de Escudo e causa 2 de dano de retorno em ${enemy.name}.`);
-      applyDamageToEnemy(session, enemy, 2, "Desafio do Guardião", false);
-    }
   }
 
   advanceDungeonTurn(session);
@@ -5791,6 +5821,7 @@ async function handleApi(req, res) {
             player.reduceDamage = 0;
             player.nextAttackBonus = 0;
             player.bastiaoSupremoActive = false;
+            player.salvaguardaActive = false;
             player.turnEnded = player.life <= 0;
             player.roundStats = makeRoundStats();
             player.hand = [];
