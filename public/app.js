@@ -114,7 +114,9 @@ const glossaryEntries = [
   ["Descanso", "Apos concluir uma sala, o grupo escolhe um beneficio."],
   ["Recompensa", "Beneficio recebido ao concluir uma sala."],
   ["Energia", "Recurso usado para jogar cartas. Cada heroi inicia o turno com sua Energia maxima (Donovan: 4, Niely: 5, Elerion: 4, Arcanista: 6). Ela e restaurada a cada rodada e nao acumula."],
-  ["Custos", "0 Energia: Reacoes. 1 Energia: acoes simples. 2 Energias: acoes poderosas."]
+  ["Custos", "0 Energia: Reacoes. 1 Energia: acoes simples. 2 Energias: acoes poderosas."],
+  ["Profecia", "Habilidade de antecipação que dura até 2 rodadas. Quando o alvo sofre dano de ataque inimigo, o efeito da profecia é ativado (ex: curar ou ganhar escudo) e o token é consumido."],
+  ["Renovação", "Efeito de cura contínua (HoT). O alvo cura o valor indicado no início da rodada dos heróis. Reduz sua duração em 1 rodada a cada tick."]
 ];
 
 function saveAuth(auth) {
@@ -1613,25 +1615,6 @@ function renderReactionPrompt(state, me) {
                       }
                       
                       let targetSelectHtml = "";
-                      if (card.id === "voz-do-oraculo") {
-                        targetSelectHtml = `
-                          <label style="margin: 8px 12px; display: block; text-align: left; font-size: 0.85em;">
-                            Herói imune:
-                            <select id="reactionTarget-${card.uid}" style="width: 100%; padding: 6px; border-radius: 4px; background: #222; color: #fff; border: 1px solid #444; margin-top: 4px;">
-                              ${state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
-                            </select>
-                          </label>
-                        `;
-                      } else if (card.id === "cura-de-emergencia") {
-                        targetSelectHtml = `
-                          <label style="margin: 8px 12px; display: block; text-align: left; font-size: 0.85em;">
-                            Herói a curar:
-                            <select id="reactionTarget-${card.uid}" style="width: 100%; padding: 6px; border-radius: 4px; background: #222; color: #fff; border: 1px solid #444; margin-top: 4px;">
-                              ${state.players.filter(p => p.life > 0 && p.life <= 8).map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${p.life} PV)</option>`).join("")}
-                            </select>
-                          </label>
-                        `;
-                      }
 
                       return `
                         <article class="tcg-card reaction-choice ${me.energy < cost ? "unplayable" : ""}">
@@ -1867,17 +1850,16 @@ function renderSelectedCardModal(state, me) {
   let moveShieldControls = "";
   if (needsMoveShield) {
     moveShieldControls = `
-      <label>Mover escudo de
+      <label>Aliado A
         <select id="selectedCardFrom">
-          ${state.players.filter((p) => p.life > 0 && p.shield > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${p.shield} esc.)</option>`).join("")}
+          ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${p.shield} esc.)</option>`).join("")}
         </select>
       </label>
-      <label>Para
+      <label>Aliado B
         <select id="selectedCardTarget">
-          ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+          ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)} (${p.shield} esc.)</option>`).join("")}
         </select>
       </label>
-      <label>Quantidade <input id="shieldMoveAmount" type="number" min="1" max="99" value="1" style="width:70px" /></label>
     `;
     targetSelect = "";
   }
@@ -2139,6 +2121,9 @@ function renderStatusEffects(statusEffects) {
   if (statusEffects.envenenamento > 0) {
     badges.push(`<span class="status-badge envenenamento" title="Envenenamento: sofre ${statusEffects.envenenamento} de dano (ignora Escudo) no início da Fase da Masmorra.">🧪 Envenenamento ${statusEffects.envenenamento}</span>`);
   }
+  if (statusEffects.renovacao && statusEffects.renovacao.duration > 0) {
+    badges.push(`<span class="status-badge renovacao" style="background: linear-gradient(135deg, #10b981, #059669); color: white;" title="Renovação: cura ${statusEffects.renovacao.value} de Vida no início de cada rodada. Duração: ${statusEffects.renovacao.duration} rodadas.">🌿 Renovação ${statusEffects.renovacao.value} (${statusEffects.renovacao.duration}r)</span>`);
+  }
   if (badges.length === 0) return "";
   return `<div class="status-effects-list">${badges.join("")}</div>`;
 }
@@ -2212,7 +2197,7 @@ function renderPlayerHud(player) {
               ${renderStatusEffects(player.statusEffects)}
               <div class="hud-stats">
                 <span class="hero-shield shield-badge"><i></i>${getVisualShield(player.id, player.shield || 0)}</span>
-                ${player.profecia_tokens && player.profecia_tokens.length > 0 ? `<span class="hero-profecia prophecy-badge" title="Profecia ativa: cura ao sofrer dano de ataque inimigo.">👁️ Profecia: +${player.profecia_tokens.reduce((a, b) => a + b, 0)}</span>` : ""}
+                ${player.profecia_tokens && player.profecia_tokens.length > 0 ? `<span class="hero-profecia prophecy-badge" title="Profecia ativa.">${player.profecia_tokens.map(t => `👁️ ${t.type === 'shield' ? '🛡️' : '❤️'}${t.value}(${t.duration}r)`).join(' ')}</span>` : ""}
                 ${player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana ativa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : ""}
                 ${player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null ? `<span class="hero-carga-batalha charge-badge" title="Carga de Batalha: acumula ao provocar/proteger e aumenta o dano de Carga do Guardião.">⚔️ Carga: ${player.carga_de_batalha}</span>` : ""}
                 ${player.sobrecarga_pendente > 0 ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga ativa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""}
@@ -2950,7 +2935,7 @@ function exportToPDF() {
     <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
     <ul>
       <li><strong>Donovan (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
-      <li><strong>Niely (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
+      <li><strong>Niely (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, aplicar efeitos de cura contínua (Renovação), prever danos (Profecias) e trocar escudos.</li>
       <li><strong>Elerion (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
       <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
     </ul>
@@ -3000,14 +2985,14 @@ function exportToPDF() {
 
   // 3. Build Hero Cards HTML
   let heroesHtml = "<h2>3. Cartas dos Heróis</h2>";
-  const heroesList = local.heroes || [];
-  const heroCardsMap = local.heroCards || {};
+  const heroesList = local.state?.heroes || local.heroes || [];
+  const heroCardsMap = local.state?.heroCards || local.heroCards || {};
   heroesList.forEach(hero => {
     heroesHtml += `<h3>${escapeHtml(hero.name)} (${hero.life} Vida, ${hero.energy} Energia)</h3>`;
     heroesHtml += `<div class="card-grid">`;
     const cards = heroCardsMap[hero.id] || [];
     cards.forEach(card => {
-      const isSupreme = card.id === "bastiao-supremo" || card.id === "luz-da-esperanca" || card.id === "tempestade-de-flechas";
+      const isSupreme = card.id === "bastiao-supremo" || card.id === "luz-da-esperanca" || card.id === "tempestade-de-flechas" || card.id === "cataclismo-arcano";
       heroesHtml += `
         <div class="print-card">
           <div class="card-header">
@@ -3024,7 +3009,7 @@ function exportToPDF() {
 
   // 4. Build Rooms HTML
   let roomsHtml = "<h2>4. Cartas de Sala</h2><div class=\"card-grid\">";
-  const roomCards = local.roomCards || [];
+  const roomCards = local.state?.roomCards || local.roomCards || [];
   roomCards.forEach(room => {
     roomsHtml += `
       <div class="print-card">
@@ -3043,7 +3028,7 @@ function exportToPDF() {
 
   // 5. Build Intentions HTML
   let intentionsHtml = "<h2>5. Cartas de Intenção</h2><div class=\"card-grid\">";
-  const intentionCards = local.intentionCards || [];
+  const intentionCards = local.state?.intentionCards || local.intentionCards || [];
   intentionCards.forEach(intention => {
     intentionsHtml += `
       <div class="print-card new-intention-v2" style="background: rgba(13, 24, 30, 0.82); border: 1px solid rgba(255, 246, 223, 0.16); padding: 14px; border-radius: 8px; color: #f0ebe3;">
@@ -3072,7 +3057,7 @@ function exportToPDF() {
 
   // 6. Build Traps HTML
   let trapsHtml = "<h2>6. Armadilhas</h2><div class=\"card-grid\">";
-  const trapCards = local.trapCards || [];
+  const trapCards = local.state?.trapCards || local.trapCards || [];
   trapCards.forEach(trap => {
     trapsHtml += `
       <div class="print-card">
@@ -3381,8 +3366,8 @@ function renderRulesModal() {
       </div>
     `;
   } else if (isCards) {
-    const heroesList = local.heroes || [];
-    const heroCardsMap = local.heroCards || {};
+    const heroesList = local.state?.heroes || local.heroes || [];
+    const heroCardsMap = local.state?.heroCards || local.heroCards || {};
     const selectedHeroId = local.rulesSelectedHero || (heroesList[0]?.id || "guardiao");
     const cards = heroCardsMap[selectedHeroId] || [];
     
@@ -3396,7 +3381,7 @@ function renderRulesModal() {
       </div>
       <div class="rules-results cards-list-rules">
         ${cards.length ? cards.map(card => {
-          const isSupreme = card.id === "bastiao-supremo" || card.id === "luz-da-esperanca" || card.id === "tempestade-de-flechas";
+          const isSupreme = card.id === "bastiao-supremo" || card.id === "luz-da-esperanca" || card.id === "tempestade-de-flechas" || card.id === "cataclismo-arcano";
           return `
             <div class="rules-card-entry ${isSupreme ? "supreme-entry" : ""}">
               <div class="card-entry-header">
@@ -3412,7 +3397,7 @@ function renderRulesModal() {
       </div>
     `;
   } else if (isRooms) {
-    const roomCards = local.roomCards || [];
+    const roomCards = local.state?.roomCards || local.roomCards || [];
     tabContent = `
       <div class="rules-results cards-list-rules">
         ${roomCards.length ? roomCards.map(room => `
@@ -3433,7 +3418,7 @@ function renderRulesModal() {
       </div>
     `;
   } else if (isIntentions) {
-    const intentionCards = local.intentionCards || [];
+    const intentionCards = local.state?.intentionCards || local.intentionCards || [];
     tabContent = `
       <div class="rules-results cards-list-rules">
         ${intentionCards.length ? intentionCards.map(intention => `
@@ -3452,7 +3437,7 @@ function renderRulesModal() {
       </div>
     `;
   } else if (isTraps) {
-    const trapCards = local.trapCards || [];
+    const trapCards = local.state?.trapCards || local.trapCards || [];
     tabContent = `
       <div class="rules-results cards-list-rules">
         ${trapCards.length ? trapCards.map(trap => `

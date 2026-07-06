@@ -153,7 +153,8 @@ function makeStatusEffects() {
     enfraquecido: 0,
     exposto: false,
     marcado: false,
-    envenenamento: 0
+    envenenamento: 0,
+    renovacao: { value: 0, duration: 0 }
   };
 }
 
@@ -676,11 +677,10 @@ const heroes = {
       ["pressagio", 1],
       ["toque-sagrado", 1],
       ["cura-de-alma", 1],
-      ["luz-sagrada", 1],
+      ["raio-trovejante", 2],
       ["profecia-dupla", 1],
       ["bencao-arcana", 1],
       ["purificar", 1],
-      ["visao-do-futuro", 1],
       ["luz-purificadora", 1],
       ["descanso-breve", 1],
       ["renovacao", 1],
@@ -755,6 +755,13 @@ const heroes = {
 };
 
 const cards = {
+  "bastiao-supremo": {
+    id: "bastiao-supremo",
+    name: "Bastião Supremo",
+    type: "defense",
+    cost: 0,
+    text: "Suprema. O Guardião recebe 10 de Escudo e redireciona todo dano sofrido por aliados para si nesta rodada. Acumula +3 de Carga de Batalha."
+  },
   "escudo-protetor": {
     id: "escudo-protetor",
     name: "Escudo Protetor",
@@ -1022,24 +1029,27 @@ const cards = {
   },
   "cura-de-emergencia": {
     id: "cura-de-emergencia",
-    name: "Cura de Emergência",
-    type: "reaction",
-    cost: 0,
-    text: "Reação. Quando um ataque inimigo reduzir a Vida de qualquer herói para 8 ou menos, esse herói imediatamente cura 5."
+    name: "Premonição Vital",
+    type: "heal",
+    target: "ally",
+    cost: 1,
+    text: "Coloque uma Profecia Vital (valor: 8) em um aliado por até 2 rodadas. Se ele sofrer dano de um ataque inimigo nesse período, ele cura 8 de Vida imediatamente após o dano resolver."
   },
   "bencao-protetora": {
     id: "bencao-protetora",
-    name: "Bênção Protetora",
-    type: "reaction",
-    cost: 0,
-    text: "Reação. Quando um monstro aplicaria um status effect a qualquer herói, negue essa aplicação de status. (O dano ainda ocorre normalmente)."
+    name: "Profecia Protetora",
+    type: "defense",
+    target: "ally",
+    cost: 2,
+    text: "Coloque uma Profecia Protetora (valor: 5) em um aliado por até 2 rodadas. Se ele sofrer dano de um ataque inimigo nesse período, ele ganha 5 de Escudo imediatamente antes de sofrer o dano."
   },
   "voz-do-oraculo": {
     id: "voz-do-oraculo",
-    name: "Voz do Oráculo",
-    type: "reaction",
-    cost: 0,
-    text: "Reação. Quando uma Armadilha ativa aplicaria seu efeito (em qualquer fase da rodada), escolha um herói. Esse herói é imune ao efeito desta Armadilha nesta aplicação específica."
+    name: "Antecipação do Perigo",
+    type: "control",
+    target: "ally",
+    cost: 1,
+    text: "Escolha um aliado. Pelas próximas 2 rodadas, ele fica imune a danos provenientes de armadilhas."
   },
   "cura-menor": {
     id: "cura-menor",
@@ -1047,16 +1057,14 @@ const cards = {
     type: "heal",
     target: "ally",
     cost: 1,
-    heal: 4,
-    text: "Cure 4 de Vida de um aliado. Se esse aliado possui Veneno, remova todo o Veneno dele."
+    text: "Cure 4 de Vida de um aliado. Se esse aliado estiver com menos de 50% da sua Vida máxima, ele cura 6 em vez disso."
   },
   "cura-em-ondas": {
     id: "cura-em-ondas",
-    name: "Cura em Ondas",
+    name: "Prece da Regeneração",
     type: "heal",
-    cost: 1,
-    allHeal: 2,
-    text: "Todos os aliados curam 2 de Vida."
+    cost: 2,
+    text: "Todos os aliados recebem Renovação 2 por 3 rodadas (curam 2 de Vida no início da Fase dos Heróis de cada rodada)."
   },
   "planejamento": {
     id: "planejamento",
@@ -1064,24 +1072,23 @@ const cards = {
     type: "draw",
     target: "ally",
     cost: 1,
-    planning: true,
-    text: "Um aliado compra 2 cartas e depois descarta 1 carta."
+    text: "Um aliado compra 2 cartas (se ultrapassar o limite de cartas na mão, ele deve descartar as cartas excedentes)."
   },
   "redistribuir-escudos": {
     id: "redistribuir-escudos",
-    name: "Redistribuir Escudos",
+    name: "Troca de Escudos",
     type: "control",
     cost: 1,
     moveShield: true,
-    text: "Mova qualquer quantidade de Escudo de um aliado para outro."
+    text: "Escolha dois aliados. Troque os Escudos atuais entre eles."
   },
   "absolvicao": {
     id: "absolvicao",
-    name: "Absolvição",
+    name: "Sintonizar Destinos",
     type: "control",
     target: "ally",
     cost: 1,
-    text: "Remova todos os status effects ativos de um aliado (Veneno, Queimadura, Vácuo, Enfraquecido, Exposto)."
+    text: "Escolha um aliado. Se ele possuir uma Profecia ativa, ele compra 2 cartas e recupera 1 de Energia."
   },
   "inspiracao": {
     id: "inspiracao",
@@ -1098,45 +1105,45 @@ const cards = {
     type: "heal",
     target: "ally",
     cost: 1,
-    text: "Coloque 1 token de Profecia (valor: 5) em um aliado. Na próxima vez que esse aliado sofrer dano de um ataque inimigo nesta rodada, ele cura 5 imediatamente após o dano resolver."
+    text: "Coloque uma Profecia (valor: 6) em um aliado por até 2 rodadas. Se ele sofrer dano de um ataque inimigo nesse período, ele cura 6 de Vida imediatamente após o dano resolver."
   },
   "pressagio": {
     id: "pressagio",
     name: "Presságio",
     type: "control",
     cost: 1,
-    text: "Olhe as próximas 2 cartas do topo do baralho de Intenções (sem removê-las). Você pode reordenar essas 2 cartas como desejar."
+    text: "Olhe as 3 próximas cartas do baralho dos Monstros. Você pode reordenar essas cartas como desejar."
   },
   "toque-sagrado": {
     id: "toque-sagrado",
-    name: "Toque Sagrado",
+    name: "Toque Divino",
     type: "heal",
     target: "ally",
     cost: 2,
     heal: 6,
-    text: "Cure 6 de Vida de um aliado. Remova todos os status effects desse aliado."
+    text: "Cure 6 de Vida de um aliado."
   },
   "cura-de-alma": {
     id: "cura-de-alma",
     name: "Cura de Alma",
     type: "heal",
     cost: 2,
-    text: "Todos os aliados curam 3 de Vida. Aliados que possuem qualquer status effect ativo curam 3 adicionais (6 de Vida total)."
+    text: "Todos os aliados curam 3 de Vida. Aliados que possuem 10 ou menos de Vida curam 3 adicionais (6 de Vida total)."
   },
-  "luz-sagrada": {
-    id: "luz-sagrada",
-    name: "Luz Sagrada",
+  "raio-trovejante": {
+    id: "raio-trovejante",
+    name: "Raio Trovejante",
     type: "attack",
     cost: 2,
-    damage: 5,
-    text: "Cause 5 de dano a um inimigo. Se qualquer aliado possui um status effect ativo no momento em que esta carta resolve, cause 8 de dano em vez disso."
+    text: "Causa 5 de dano a um inimigo. Se existir alguma profecia ou renovação ativa em qualquer herói, cause 8 ao invés de 5."
   },
   "profecia-dupla": {
     id: "profecia-dupla",
     name: "Profecia Dupla",
     type: "heal",
+    target: "ally",
     cost: 2,
-    text: "Coloque 1 token de Profecia (valor: 4) em dois aliados diferentes."
+    text: "Coloque uma Profecia (valor: 5) em dois aliados diferentes por até 2 rodadas."
   },
   "bencao-arcana": {
     id: "bencao-arcana",
@@ -1152,21 +1159,15 @@ const cards = {
     type: "control",
     cost: 2,
     removeTrap: true,
-    text: "Remova a Armadilha ativa da sala. Todos os heróis compram 1 carta."
-  },
-  "visao-do-futuro": {
-    id: "visao-do-futuro",
-    name: "Visão do Futuro",
-    type: "control",
-    cost: 2,
-    text: "Olhe as próximas 3 cartas do topo do baralho de Intenções. Você pode descartar 1 delas (ela vai para o fundo do baralho). Recoloque as restantes no topo na ordem que preferir."
+    text: "Remova a Armadilha ativa da sala. Todos os aliados compram 1 carta."
   },
   "luz-purificadora": {
     id: "luz-purificadora",
-    name: "Luz Purificadora",
+    name: "Ondas Regenerativas",
     type: "heal",
     cost: 2,
-    text: "Remova Queimadura de todos os aliados. Para cada aliado cuja Queimadura foi removida desta forma, esse aliado cura 3 de Vida."
+    heal: 5,
+    text: "Cure 5 de Vida de um aliado. Todos os aliados recebem Renovação 3 por 2 rodadas (curam 3 de Vida no início da Fase dos Heróis)."
   },
   "descanso-breve": {
     id: "descanso-breve",
@@ -1178,12 +1179,11 @@ const cards = {
   },
   "renovacao": {
     id: "renovacao",
-    name: "Renovação",
+    name: "Renovação Contínua",
     type: "heal",
     target: "ally",
-    cost: 3,
-    heal: 8,
-    text: "Cure 8 de Vida de um aliado. Esse aliado compra 1 carta."
+    cost: 2,
+    text: "Escolha um aliado. Aplique Renovação 4 por 3 rodadas (cura 4 de Vida no início da Fase dos Heróis). Se o alvo já possuir Renovação ativa, cura 4 de Vida imediatamente."
   },
   "reanimar": {
     id: "reanimar",
@@ -1191,16 +1191,15 @@ const cards = {
     type: "heal",
     target: "ally",
     cost: 3,
-    revive: 6,
-    text: "Traga um herói derrotado de volta com 6 de Vida e remova todos os status effects dele."
+    revive: 8,
+    text: "Traga um herói derrotado de volta com 8 de Vida."
   },
   "julgamento-divino": {
     id: "julgamento-divino",
     name: "Julgamento Divino",
     type: "attack",
     cost: 3,
-    damage: 4,
-    text: "Cause 4 de dano a todos os inimigos. Remova 1 status effect de cada aliado (à escolha do Oráculo)."
+    text: "Cause 4 de dano a todos os inimigos. Todos os aliados ganham 3 de Escudo."
   },
   "luz-da-esperanca": {
     id: "luz-da-esperanca",
@@ -1208,7 +1207,7 @@ const cards = {
     type: "heal",
     cost: 0,
     supremeEffects: true,
-    text: "Suprema. Todos os aliados recebem: Cura 8, Escudo 5, todos os status effects removidos, Energia +2 e compram 1 carta."
+    text: "Suprema. Todos os aliados recebem: Cura 8, Escudo 6, Energia +2 e compram 1 carta."
   },
   "flechada-de-oportunidade": {
     id: "flechada-de-oportunidade",
@@ -1269,7 +1268,7 @@ const cards = {
     name: "Reciclagem",
     type: "draw",
     cost: 3,
-    text: "Descarte qualquer quantidade de cartas da sua mão. Para cada carta descartada, compre uma nova."
+    text: "Troque todas as cartas da sua mão por novas cartas."
   },
   "flecha-de-abertura": {
     id: "flecha-de-abertura",
@@ -1315,10 +1314,11 @@ const cards = {
   },
   "concentracao": {
     id: "concentracao",
-    name: "Concentração",
+    name: "Redirecionar",
     type: "control",
+    target: "ally",
     cost: 2,
-    text: "Nesta rodada, todas as suas cartas de Ataque custam 1 de Energia a menos (mínimo 0). Você começa a próxima rodada com apenas 1 de Energia."
+    text: "Escolha um herói aliado. Todo o dano que você receberia neste turno é redirecionado para ele."
   },
   "flecha-perfurante": {
     id: "flecha-perfurante",
@@ -2226,6 +2226,11 @@ function addShieldToHero(session, target, amount, sourceCard, properties = {}) {
 function applyDamageToHero(session, target, amount, source, sourceEnemy = null, options = {}) {
   if (!target || target.life <= 0 || amount <= 0) return 0;
 
+  if (target.trapImmunityRounds && target.trapImmunityRounds > 0 && session.activeTrap && source === session.activeTrap.name) {
+    session.log.unshift(`[Imunidade] ${target.name} ignorou o dano da armadilha ${source} devido a Antecipação do Perigo.`);
+    return 0;
+  }
+
   if (sourceEnemy) {
     sourceEnemy.currentTargetId = target.id;
   }
@@ -2234,7 +2239,16 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
     amount += 1;
   }
 
-  if (!options.skipRedirect && sourceEnemy) {
+  if (!options.skipRedirect) {
+    if (target.redirectTargetId) {
+      const redirectTarget = session.players.find(p => p.id === target.redirectTargetId && p.life > 0);
+      if (redirectTarget && redirectTarget.id !== target.id) {
+        session.log.unshift(`Redirecionar: todo o dano a ${target.name} é redirecionado para ${redirectTarget.name}.`);
+        return applyDamageToHero(session, redirectTarget, amount, source, sourceEnemy, { ...options, skipRedirect: true });
+      }
+    }
+
+    if (sourceEnemy) {
     // Redirect all damage to Guardian if Bastião Supremo is active
     const guardian = session.players.find((player) => player.life > 0 && player.bastiaoSupremoActive && player.id !== target.id);
     if (guardian) {
@@ -2268,6 +2282,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
         amount = amount - half;
       }
     }
+    }
   }
 
   if (options.isBastiaoSupremoRedirect) {
@@ -2289,6 +2304,20 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   if (reduction > 0) {
     amount = Math.max(1, amount - reduction);
     session.log.unshift(`${target.name} reduziu o dano recebido em ${reduction}.`);
+  }
+
+  if (target.profecia_tokens && target.profecia_tokens.length > 0) {
+    const shieldProphecies = target.profecia_tokens.filter(tok => tok && tok.type === 'shield');
+    if (shieldProphecies.length > 0) {
+      let addedShield = 0;
+      shieldProphecies.forEach(tok => {
+        addedShield += tok.value;
+      });
+      target.shield += addedShield;
+      target.maxShield = Math.max(target.maxShield || 0, target.shield);
+      session.log.unshift(`[Profecia Protetora] ${target.name} ganhou ${addedShield} de Escudo.`);
+      target.profecia_tokens = target.profecia_tokens.filter(tok => tok && tok.type !== 'shield');
+    }
   }
 
   adjustActiveShields(target);
@@ -2377,6 +2406,18 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   const totalReflect = (target.reflectDamage || 0) + (target.activeShields || []).reduce((sum, s) => sum + (s.reflect || 0), 0);
   if (damage > 0 && totalReflect > 0 && sourceEnemy?.life > 0) {
     applyDamageToEnemy(session, sourceEnemy, totalReflect, `${target.name} refletiu`, false);
+  }
+  if (damage > 0 && target.life > 0 && target.profecia_tokens && target.profecia_tokens.length > 0) {
+    const healProphecies = target.profecia_tokens.filter(tok => tok && tok.type === 'heal');
+    if (healProphecies.length > 0) {
+      let totalHeal = 0;
+      healProphecies.forEach(tok => {
+        totalHeal += tok.value;
+      });
+      applyHealToHero(session, target, totalHeal, "Profecia");
+      session.log.unshift(`[Profecia] ${target.name} curou ${totalHeal} de Vida.`);
+      target.profecia_tokens = target.profecia_tokens.filter(tok => tok && tok.type !== 'heal');
+    }
   }
   return damage;
 }
@@ -2890,11 +2931,13 @@ function addPlayer(session, name) {
     energy: 0,
     shield: 0,
     protectingId: null,
+    redirectTargetId: null,
     interceptReady: false,
     reflectDamage: 0,
     reduceDamage: 0,
     statusEffects: makeStatusEffects(),
     profecia_tokens: [],
+    trapImmunityRounds: 0,
     sobrecarga_pendente: 0,
     roundStats: makeRoundStats(),
     deck: [],
@@ -2994,6 +3037,7 @@ function startGame(session) {
     player.activeShields = [];
     player.carga_de_batalha = 0;
     player.protectingId = null;
+    player.redirectTargetId = null;
     player.interceptReady = false;
     player.reflectDamage = 0;
     player.reduceDamage = 0;
@@ -3051,6 +3095,19 @@ function startNextRound(session) {
     if (player.life > 0 && player.statusEffects?.veneno > 0) {
       const dmg = player.statusEffects.veneno;
       applyDamageToHero(session, player, dmg, "Veneno", null, { skipRedirect: true });
+    }
+  });
+
+  // 1b. Tick Renovação for players (antes da Restauração e Compra)
+  session.players.forEach((player) => {
+    if (player.life > 0 && player.statusEffects?.renovacao && player.statusEffects.renovacao.duration > 0) {
+      const healAmount = player.statusEffects.renovacao.value;
+      applyHealToHero(session, player, healAmount, "Renovação");
+      session.log.unshift(`[Renovação] ${player.name} curou ${healAmount} de Vida (${player.statusEffects.renovacao.duration} rodadas restantes).`);
+      player.statusEffects.renovacao.duration -= 1;
+      if (player.statusEffects.renovacao.duration === 0) {
+        player.statusEffects.renovacao.value = 0;
+      }
     }
   });
   session.enemies.forEach((enemy) => {
@@ -3153,6 +3210,7 @@ function startNextRound(session) {
     player.energy = finalEnergy;
     player.sobrecarga_pendente = 0;
     player.protectingId = null;
+    player.redirectTargetId = null;
     player.interceptReady = false;
     player.reflectDamage = 0;
     player.reduceDamage = 0;
@@ -3169,7 +3227,22 @@ function startNextRound(session) {
     player.turnEnded = player.life <= 0;
     player.roundStats = makeRoundStats();
     player.skipReactionsThisRound = false;
-    player.profecia_tokens = [];
+    if (player.profecia_tokens) {
+      player.profecia_tokens.forEach(tok => {
+        if (tok && typeof tok === 'object') {
+          tok.duration -= 1;
+        }
+      });
+      player.profecia_tokens = player.profecia_tokens.filter(tok => tok && typeof tok === 'object' && tok.duration > 0);
+    } else {
+      player.profecia_tokens = [];
+    }
+    if (player.trapImmunityRounds && player.trapImmunityRounds > 0) {
+      player.trapImmunityRounds -= 1;
+      if (player.trapImmunityRounds === 0) {
+        session.log.unshift(`Imunidade a armadilhas de ${player.name} expirou.`);
+      }
+    }
     player.proxima_carta_desconto_1 = false;
     
     // Draw logic checking Vácuo
@@ -3781,138 +3854,105 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   // Oraculo Lunar custom cards
+  if (card.id === "cura-de-emergencia") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target.profecia_tokens) target.profecia_tokens = [];
+    target.profecia_tokens.push({ value: 8, duration: 2, type: 'heal' });
+    session.log.unshift(`${player.name} usou Premonição Vital em ${target.name}: colocou Profecia Vital (valor: 8, duração: 2r).`);
+  }
+
+  if (card.id === "bencao-protetora") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target.profecia_tokens) target.profecia_tokens = [];
+    target.profecia_tokens.push({ value: 5, duration: 2, type: 'shield' });
+    session.log.unshift(`${player.name} usou Profecia Protetora em ${target.name}: colocou Profecia Protetora (valor: 5, duração: 2r).`);
+  }
+
+  if (card.id === "voz-do-oraculo") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    target.trapImmunityRounds = 2;
+    session.log.unshift(`${player.name} usou Antecipação do Perigo em ${target.name}: imune a danos de armadilhas por 2 rodadas.`);
+  }
+
   if (card.id === "cura-menor") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    if (target.statusEffects && target.statusEffects.veneno > 0) {
-      target.statusEffects.veneno = 0;
-      session.log.unshift(`${target.name} teve todo o Veneno removido por Cura Menor.`);
+    const amount = (target.life < target.maxLife / 2) ? 6 : 4;
+    applyHealToHero(session, target, amount, card.name);
+    session.log.unshift(`${player.name} usou Cura Menor em ${target.name}: curou ${amount} de Vida.`);
+  }
+
+  if (card.id === "cura-em-ondas") {
+    session.players.forEach(p => {
+      if (p.life > 0) {
+        if (!p.statusEffects) p.statusEffects = makeStatusEffects();
+        p.statusEffects.renovacao = { value: 2, duration: 3 };
+        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 2 por 3 rodadas com Prece da Regeneração.`);
+      }
+    });
+  }
+
+  if (card.id === "planejamento") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    // draw bypassing limit
+    const targetAmount = 2;
+    const drawn = [];
+    while (drawn.length < targetAmount) {
+      if (target.deck.length === 0) {
+        if (target.discard.length === 0) break;
+        target.deck = shuffle(target.discard);
+        target.discard = [];
+      }
+      drawn.push(target.deck.shift());
+    }
+    target.hand.push(...drawn);
+    
+    let limit = target.maxHandSize || 5;
+    if (session.terreno_ativo === "TERRENO_COSMICO") {
+      limit += 1;
+    }
+    const excess = target.hand.length - limit;
+    if (excess > 0) {
+      target.pendingDiscard = (target.pendingDiscard || 0) + excess;
+      session.log.unshift(`${target.name} comprou ${drawn.length} cartas com Planejamento. Mão excedeu o limite máximo (${limit}), deve descartar ${excess} carta(s).`);
+    } else {
+      session.log.unshift(`${target.name} comprou ${drawn.length} cartas com Planejamento.`);
+    }
+  }
+
+  if (card.id === "redistribuir-escudos") {
+    const p1 = session.players.find((p) => p.id === payload.fromId && p.life > 0);
+    const p2 = session.players.find((p) => p.id === payload.targetId && p.life > 0);
+    if (p1 && p2 && p1.id !== p2.id) {
+      const tempShield = p1.shield;
+      p1.shield = p2.shield;
+      p2.shield = tempShield;
+      adjustActiveShields(p1);
+      adjustActiveShields(p2);
+      session.log.unshift(`${player.name} usou Troca de Escudos: trocou os escudos de ${p1.name} e ${p2.name}.`);
+    } else {
+      throw new Error("Selecione dois aliados diferentes para trocar escudos.");
     }
   }
 
   if (card.id === "absolvicao") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    if (target.statusEffects) {
-      target.statusEffects.veneno = 0;
-      target.statusEffects.queimadura = { value: 0, duration: 0 };
-      target.statusEffects.vacuo = false;
-      target.statusEffects.enfraquecido = 0;
-      target.statusEffects.exposto = false;
-      session.log.unshift(`${target.name} teve todos os efeitos de status removidos por Absolvição.`);
+    if (target.profecia_tokens && target.profecia_tokens.length > 0) {
+      drawCards(target, 2);
+      target.energy = Math.min(target.maxEnergy, target.energy + 1);
+      session.log.unshift(`${player.name} usou Sintonizar Destinos em ${target.name}: como ele tinha Profecia ativa, ele comprou 2 cartas e recuperou 1 de Energia.`);
+    } else {
+      session.log.unshift(`${player.name} usou Sintonizar Destinos em ${target.name}, mas ele não possuía nenhuma Profecia ativa.`);
     }
   }
 
   if (card.id === "profecia-menor") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
     if (!target.profecia_tokens) target.profecia_tokens = [];
-    target.profecia_tokens.push(5);
-    session.log.unshift(`${player.name} colocou Profecia de 5 em ${target.name}.`);
+    target.profecia_tokens.push({ value: 6, duration: 2, type: 'heal' });
+    session.log.unshift(`${player.name} colocou Profecia (valor: 6, duração: 2r) em ${target.name}.`);
   }
 
   if (card.id === "pressagio") {
-    const isCommon = session.roomNumber <= 4;
-    const currentDeck = isCommon ? session.commonEnemyDeck : session.brutalEnemyDeck;
-    const cardsList = currentDeck.slice(0, 2);
-    session.pendingIntentionLook = {
-      cardUid: card.uid,
-      casterId: player.id,
-      maxCards: Math.min(2, currentDeck.length),
-      cards: cardsList.map(id => {
-        const temp = monsterTemplates[id];
-        return {
-          id: temp.id,
-          name: temp.name,
-          presagioText: `Vida: ${temp.maxLife} | ATK: ${temp.attack} | Categoria: ${temp.category === 'brutal' ? 'Brutal' : 'Comum'}`
-        };
-      }),
-      canDiscard: false
-    };
-    session.log.unshift(`${player.name} jogou Presságio. Aguardando reordenar o topo do baralho de Monstros.`);
-  }
-
-  if (card.id === "toque-sagrado") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    applyHealToHero(session, target, 6, card.name);
-    if (target.statusEffects) {
-      target.statusEffects.veneno = 0;
-      target.statusEffects.queimadura = { value: 0, duration: 0 };
-      target.statusEffects.vacuo = false;
-      target.statusEffects.enfraquecido = 0;
-      target.statusEffects.exposto = false;
-    }
-    session.log.unshift(`${player.name} usou Toque Sagrado em ${target.name}: curou 6 de Vida e removeu todos os status.`);
-  }
-
-  if (card.id === "cura-de-alma") {
-    session.players.filter(ally => ally.life > 0).forEach(ally => {
-      const hasStatus = ally.statusEffects && (
-        ally.statusEffects.veneno > 0 ||
-        ally.statusEffects.queimadura.duration > 0 ||
-        ally.statusEffects.vacuo ||
-        ally.statusEffects.enfraquecido > 0 ||
-        ally.statusEffects.exposto
-      );
-      const amount = hasStatus ? 6 : 3;
-      applyHealToHero(session, ally, amount, card.name);
-    });
-    session.log.unshift(`${player.name} usou Cura de Alma!`);
-  }
-
-  if (card.id === "luz-sagrada") {
-    const target = session.enemies.find(e => e.uid === payload.targetId && e.life > 0) || session.enemies.find(e => e.life > 0);
-    if (target) {
-      const hasAnyStatus = session.players.some(ally => ally.life > 0 && ally.statusEffects && (
-        ally.statusEffects.veneno > 0 ||
-        ally.statusEffects.queimadura.duration > 0 ||
-        ally.statusEffects.vacuo ||
-        ally.statusEffects.enfraquecido > 0 ||
-        ally.statusEffects.exposto
-      ));
-      const baseDmg = hasAnyStatus ? 8 : 5;
-      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, target, dmg, card.name, false, player);
-      session.log.unshift(`${player.name} usou Luz Sagrada em ${target.name} e causou ${dmg} de dano (base: ${baseDmg}).`);
-    }
-  }
-
-  if (card.id === "profecia-dupla") {
-    const target1 = getCardPlayerTarget(session, player, payload.targetId, card);
-    if (!target1.profecia_tokens) target1.profecia_tokens = [];
-    target1.profecia_tokens.push(4);
-    
-    const otherAllies = session.players.filter(p => p.life > 0 && p.id !== target1.id);
-    if (otherAllies.length > 0) {
-      otherAllies.sort((a, b) => a.life - b.life);
-      const target2 = otherAllies[0];
-      if (!target2.profecia_tokens) target2.profecia_tokens = [];
-      target2.profecia_tokens.push(4);
-      session.log.unshift(`${player.name} colocou Profecia de 4 em ${target1.name} e ${target2.name} com Profecia Dupla.`);
-    } else {
-      session.log.unshift(`${player.name} colocou Profecia de 4 em ${target1.name} com Profecia Dupla (nenhum outro aliado vivo).`);
-    }
-  }
-
-  if (card.id === "bencao-arcana") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    target.proxima_carta_desconto_1 = true;
-    session.log.unshift(`${player.name} concedeu Bênção Arcana para ${target.name} (desconto de 1 de energia na próxima carta).`);
-  }
-
-  if (card.id === "purificar") {
-    if (session.activeTrap) {
-      const trapName = session.activeTrap.name;
-      session.trapDiscard.push(session.activeTrap);
-      session.activeTrap = null;
-      session.log.unshift(`${player.name} purificou a armadilha ${trapName}!`);
-    }
-    session.players.forEach(p => {
-      if (p.life > 0) {
-        drawCards(p, 1);
-      }
-    });
-    session.log.unshift(`Purificar: Todos os aliados vivos compraram 1 carta.`);
-  }
-
-  if (card.id === "visao-do-futuro") {
     const isCommon = session.roomNumber <= 4;
     const currentDeck = isCommon ? session.commonEnemyDeck : session.brutalEnemyDeck;
     const cardsList = currentDeck.slice(0, 3);
@@ -3928,17 +3968,62 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
           presagioText: `Vida: ${temp.maxLife} | ATK: ${temp.attack} | Categoria: ${temp.category === 'brutal' ? 'Brutal' : 'Comum'}`
         };
       }),
-      canDiscard: true
+      canDiscard: false
     };
-    session.log.unshift(`${player.name} jogou Visão do Futuro. Aguardando descarte e reorganização do topo de Monstros.`);
+    session.log.unshift(`${player.name} jogou Presságio. Aguardando reordenar o topo do baralho de Monstros.`);
+  }
+
+  if (card.id === "toque-sagrado") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    session.log.unshift(`${player.name} usou Toque Divino em ${target.name}.`);
+  }
+
+  if (card.id === "cura-de-alma") {
+    session.players.filter(ally => ally.life > 0).forEach(ally => {
+      const isLowLife = ally.life <= 10;
+      const amount = isLowLife ? 6 : 3;
+      applyHealToHero(session, ally, amount, card.name);
+    });
+    session.log.unshift(`${player.name} usou Cura de Alma!`);
+  }
+
+  if (card.id === "raio-trovejante") {
+    const target = session.enemies.find(e => e.uid === payload.targetId && e.life > 0) || session.enemies.find(e => e.life > 0);
+    if (target) {
+      const hasActiveProphecyOrRenovacao = session.players.some(ally => ally.life > 0 && (
+        (ally.profecia_tokens && ally.profecia_tokens.length > 0) ||
+        (ally.statusEffects?.renovacao && ally.statusEffects.renovacao.duration > 0)
+      ));
+      const baseDmg = hasActiveProphecyOrRenovacao ? 8 : 5;
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Raio Trovejante em ${target.name} e causou ${dmg} de dano (base: ${baseDmg}).`);
+    }
+  }
+
+  if (card.id === "profecia-dupla") {
+    const target1 = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target1.profecia_tokens) target1.profecia_tokens = [];
+    target1.profecia_tokens.push({ value: 5, duration: 2, type: 'heal' });
+    
+    const otherAllies = session.players.filter(p => p.life > 0 && p.id !== target1.id);
+    if (otherAllies.length > 0) {
+      otherAllies.sort((a, b) => a.life - b.life);
+      const target2 = otherAllies[0];
+      if (!target2.profecia_tokens) target2.profecia_tokens = [];
+      target2.profecia_tokens.push({ value: 5, duration: 2, type: 'heal' });
+      session.log.unshift(`${player.name} colocou Profecia (valor: 5, duração: 2r) em ${target1.name} e ${target2.name} com Profecia Dupla.`);
+    } else {
+      session.log.unshift(`${player.name} colocou Profecia (valor: 5, duração: 2r) em ${target1.name} com Profecia Dupla (nenhum outro aliado vivo).`);
+    }
   }
 
   if (card.id === "luz-purificadora") {
     session.players.forEach(p => {
-      if (p.life > 0 && p.statusEffects && p.statusEffects.queimadura?.duration > 0) {
-        p.statusEffects.queimadura = { value: 0, duration: 0 };
-        applyHealToHero(session, p, 3, card.name);
-        session.log.unshift(`Luz Purificadora removeu Queimadura de ${p.name} e curou-o em 3.`);
+      if (p.life > 0) {
+        if (!p.statusEffects) p.statusEffects = makeStatusEffects();
+        p.statusEffects.renovacao = { value: 3, duration: 2 };
+        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 3 por 2 rodadas com Ondas Regenerativas.`);
       }
     });
   }
@@ -3953,9 +4038,14 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "renovacao") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    applyHealToHero(session, target, 8, card.name);
-    drawCards(target, 1);
-    session.log.unshift(`${player.name} usou Renovação em ${target.name}: curou 8 e fez ${target.name} comprar 1 carta.`);
+    let healedImmediately = false;
+    if (target.statusEffects?.renovacao && target.statusEffects.renovacao.duration > 0) {
+      applyHealToHero(session, target, 4, card.name);
+      healedImmediately = true;
+    }
+    if (!target.statusEffects) target.statusEffects = makeStatusEffects();
+    target.statusEffects.renovacao = { value: 4, duration: 3 };
+    session.log.unshift(`${player.name} usou Renovação Contínua em ${target.name}: aplicou Renovação 4 por 3 rodadas.${healedImmediately ? " Curou 4 imediatamente por já ter Renovação ativa." : ""}`);
   }
 
   if (card.id === "julgamento-divino") {
@@ -3964,29 +4054,9 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       applyDamageToEnemy(session, enemy, getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session)), card.name, false, player)
     );
     session.players.filter(p => p.life > 0).forEach(p => {
-      if (p.statusEffects) {
-        let removed = "";
-        if (p.statusEffects.vacuo) {
-          p.statusEffects.vacuo = false;
-          removed = "Vácuo";
-        } else if (p.statusEffects.exposto) {
-          p.statusEffects.exposto = false;
-          removed = "Exposto";
-        } else if (p.statusEffects.queimadura.duration > 0) {
-          p.statusEffects.queimadura = { value: 0, duration: 0 };
-          removed = "Queimadura";
-        } else if (p.statusEffects.veneno > 0) {
-          p.statusEffects.veneno = 0;
-          removed = "Veneno";
-        } else if (p.statusEffects.enfraquecido > 0) {
-          p.statusEffects.enfraquecido = 0;
-          removed = "Enfraquecido";
-        }
-        if (removed) {
-          session.log.unshift(`Julgamento Divino removeu ${removed} de ${p.name}.`);
-        }
-      }
+      addShieldToHero(session, p, 3, card);
     });
+    session.log.unshift(`${player.name} usou Julgamento Divino: causou 4 de dano a todos os inimigos e concedeu 3 de Escudo a todos os aliados.`);
   }
 
   // Batedor (Archer) custom cards
@@ -4031,12 +4101,15 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "cacada") {
-    session.pendingReciclagem = {
-      playerId: player.id,
-      discardedCount: 0,
-      initialCardUids: player.hand.map(c => c.uid)
-    };
-    session.log.unshift(`${player.name} usou Reciclagem. Escolhendo cartas para trocar.`);
+    const handSizeBefore = player.hand.length;
+    if (handSizeBefore > 0) {
+      player.discard.push(...player.hand);
+      player.hand = [];
+      const drawn = drawCards(player, handSizeBefore);
+      session.log.unshift(`${player.name} usou Reciclagem! Descartou todas as ${handSizeBefore} cartas da mão e comprou ${drawn} novas cartas.`);
+    } else {
+      session.log.unshift(`${player.name} usou Reciclagem, mas não tinha cartas na mão.`);
+    }
   }
 
   if (card.id === "flecha-de-abertura") {
@@ -4126,9 +4199,12 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "concentracao") {
-    player.concentracao_ativa = true;
-    player.force_next_round_energy_1 = true;
-    session.log.unshift(`${player.name} usou Concentração! Suas cartas de ataque custarão 1 a menos esta rodada, mas começará a próxima rodada com apenas 1 de Energia.`);
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target || target.id === player.id) {
+      throw new Error("Você precisa escolher um herói aliado para redirecionar o dano.");
+    }
+    player.redirectTargetId = target.id;
+    session.log.unshift(`${player.name} usou Redirecionar em ${target.name}. Todo o dano que receberia nesta rodada será redirecionado para ele.`);
   }
 
   if (card.id === "flecha-perfurante") {
@@ -4817,9 +4893,7 @@ function finishDungeonTurn(session) {
 }
 
 function canPlayReactionCard(session, player, card, pending) {
-  const isSolo = session.players.filter(p => p.life > 0).length === 1;
-
-  if (card.id === "voz-do-oraculo" || card.id === "absorcao-arcana") {
+  if (card.id === "absorcao-arcana") {
     return pending.type === "trap";
   }
   if (card.id === "contra-feitico") {
@@ -4835,12 +4909,6 @@ function canPlayReactionCard(session, player, card, pending) {
       }
     }
     return false;
-  }
-  if (card.id === "bencao-protetora") {
-    return pending.type === "status_apply";
-  }
-  if (card.id === "cura-de-emergencia") {
-    return pending.type === "cura_emergencia";
   }
   return false;
 }
@@ -4976,17 +5044,7 @@ function playReaction(session, player, payload) {
 
   // Oráculo and Arcanista reaction handlers continue below...
 
-  if (card.id === "voz-do-oraculo") {
-    const targetId = payload.targetId;
-    session.pendingReaction = null;
-    const callback = session.pendingTrapCallback;
-    session.pendingTrapCallback = null;
-    session.log.unshift(`${player.name} usou Voz do Oráculo e tornou um herói imune.`);
-    if (callback) {
-      callback([targetId]);
-    }
-    return;
-  }
+
 
   if (card.id === "absorcao-arcana") {
     session.pendingReaction = null;
@@ -5032,27 +5090,7 @@ function playReaction(session, player, payload) {
     return;
   }
 
-  if (card.id === "bencao-protetora") {
-    session.pendingReaction = null;
-    const callback = session.pendingStatusCallback;
-    session.pendingStatusCallback = null;
-    session.log.unshift(`${player.name} usou Bênção Protetora e negou a aplicação de status.`);
-    if (callback) {
-      callback(true); // negated = true
-    }
-    return;
-  }
 
-  if (card.id === "cura-de-emergencia") {
-    const targetId = payload.targetId;
-    session.pendingReaction = null;
-    const callback = session.pendingCuraCallback;
-    session.pendingCuraCallback = null;
-    if (callback) {
-      callback(targetId);
-    }
-    return;
-  }
 
   const enemy = session.enemies.find((candidate) => candidate.uid === pending.enemyUid && candidate.life > 0);
   const target = session.players.find((candidate) => candidate.id === pending.targetId && candidate.life > 0);
@@ -5236,24 +5274,14 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
 }
 
 function triggerTrapEffect(session, trap, affectedPlayerIds, executeEffectFn) {
-  const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
-  const hasVoz = oraculo && oraculo.hand.some(c => c.id === "voz-do-oraculo");
-  
   const vince = session.players.find(p => p.heroId === "mago" && p.life > 0 && !p.skipReactionsThisRound);
   const hasAbsorcao = vince && vince.hand.some(c => c.id === "absorcao-arcana");
   
-  if (hasVoz || hasAbsorcao) {
-    const eligiblePlayerIds = [];
-    const playableCardUids = {};
-    
-    if (hasVoz) {
-      eligiblePlayerIds.push(oraculo.id);
-      playableCardUids[oraculo.id] = oraculo.hand.filter(c => c.id === "voz-do-oraculo").map(c => c.uid);
-    }
-    if (hasAbsorcao) {
-      eligiblePlayerIds.push(vince.id);
-      playableCardUids[vince.id] = vince.hand.filter(c => c.id === "absorcao-arcana").map(c => c.uid);
-    }
+  if (hasAbsorcao) {
+    const eligiblePlayerIds = [vince.id];
+    const playableCardUids = {
+      [vince.id]: vince.hand.filter(c => c.id === "absorcao-arcana").map(c => c.uid)
+    };
     
     session.pendingReaction = {
       id: randomUUID(),
@@ -5276,31 +5304,6 @@ function triggerTrapEffect(session, trap, affectedPlayerIds, executeEffectFn) {
 }
 
 function triggerStatusApplyReaction(session, enemy, target, statusType, statusValue, executeApplyFn) {
-  const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
-  const hasBencao = oraculo && oraculo.hand.some(c => c.id === "bencao-protetora");
-  
-  if (hasBencao) {
-    session.pendingReaction = {
-      id: randomUUID(),
-      type: "status_apply",
-      enemyUid: enemy.uid,
-      enemyName: enemy.name,
-      targetId: target.id,
-      targetName: target.name,
-      statusType,
-      statusValue,
-      ruleText: `Bênção Protetora: Nega a aplicação de ${statusType} em ${target.name}.`,
-      eligiblePlayerIds: [oraculo.id],
-      skippedPlayerIds: [],
-      playableCardUids: {
-        [oraculo.id]: oraculo.hand.filter(c => c.id === "bencao-protetora").map(c => c.uid)
-      }
-    };
-    session.pendingStatusCallback = executeApplyFn;
-    session.log.unshift(`[Status] Bênção Protetora pode ser usada para negar o status ${statusType} em ${target.name}. Reações abertas.`);
-    return true; // indicates paused
-  }
-  
   executeApplyFn(false); // apply normally (not negated)
   return false;
 }
@@ -5422,41 +5425,6 @@ function resolveEnemyAttackStage4(session, enemy, target, damage) {
 }
 
 function resolveEnemyAttackStage5(session, enemy, target, damage) {
-  if (damage > 0) {
-    const lowLifeHeroes = session.players.filter(p => p.life > 0 && p.life <= 8);
-    if (lowLifeHeroes.length > 0) {
-      const oraculo = session.players.find(p => p.heroId === "oraculo" && p.life > 0 && !p.skipReactionsThisRound);
-      const hasCuraEmergencia = oraculo && oraculo.hand.some(c => c.id === "cura-de-emergencia");
-      if (hasCuraEmergencia) {
-        session.pendingReaction = {
-          id: randomUUID(),
-          type: "cura_emergencia",
-          enemyUid: enemy.uid,
-          enemyName: enemy.name,
-          eligiblePlayerIds: [oraculo.id],
-          skippedPlayerIds: [],
-          lowLifeHeroIds: lowLifeHeroes.map(p => p.id),
-          ruleText: `Cura de Emergência: Cura 5 de Vida em um herói com 8 ou menos de Vida.`,
-          playableCardUids: {
-            [oraculo.id]: oraculo.hand.filter(c => c.id === "cura-de-emergencia").map(c => c.uid)
-          }
-        };
-        session.pendingCuraCallback = (chosenHeroId) => {
-          if (chosenHeroId) {
-            const h = session.players.find(p => p.id === chosenHeroId);
-            if (h && h.life > 0 && h.life <= 8) {
-              applyHealToHero(session, h, 5, "Cura de Emergência");
-              session.log.unshift(`[Reação] Cura de Emergência: ${h.name} curou 5 de Vida.`);
-            }
-          }
-          resolveEnemyAttackStage6(session, enemy, target, damage);
-        };
-        session.log.unshift(`[Reação] Cura de Emergência pode ser usada. Reações abertas.`);
-        return;
-      }
-    }
-  }
-  
   resolveEnemyAttackStage6(session, enemy, target, damage);
 }
 
@@ -5891,6 +5859,7 @@ async function handleApi(req, res) {
             player.energy = player.maxEnergy;
             player.shield = 0;
             player.protectingId = null;
+            player.redirectTargetId = null;
             player.interceptReady = false;
             player.reflectDamage = 0;
             player.reduceDamage = 0;
