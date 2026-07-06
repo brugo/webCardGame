@@ -47,6 +47,7 @@ function getCardArt(card) {
     if (card.heroId === "guardiao") return "/assets/guardiao-card.jpg";
     if (card.heroId === "batedor") return "/assets/batedor-card.jpg";
     if (card.heroId === "mago") return "/assets/mago-card.jpg";
+    if (card.heroId === "oraculo") return "/assets/oraculo-card.jpg";
   }
   return cardArt;
 }
@@ -55,6 +56,7 @@ function getHeroCardArt(heroId) {
   if (heroId === "guardiao") return "/assets/guardiao-card.jpg";
   if (heroId === "batedor") return "/assets/batedor-card.jpg";
   if (heroId === "mago") return "/assets/mago-card.jpg";
+  if (heroId === "oraculo") return "/assets/oraculo-card.jpg";
   return "/assets/hero-card-example.png";
 }
 
@@ -111,7 +113,7 @@ const glossaryEntries = [
   ["Carta de Intencao", "Define o comportamento dos inimigos da rodada."],
   ["Descanso", "Apos concluir uma sala, o grupo escolhe um beneficio."],
   ["Recompensa", "Beneficio recebido ao concluir uma sala."],
-  ["Energia", "Recurso usado para jogar cartas. Cada heroi inicia o turno com sua Energia maxima (Donovan: 4, Oraculo: 5, Elerion: 4, Arcanista: 6). Ela e restaurada a cada rodada e nao acumula."],
+  ["Energia", "Recurso usado para jogar cartas. Cada heroi inicia o turno com sua Energia maxima (Donovan: 4, Niely: 5, Elerion: 4, Arcanista: 6). Ela e restaurada a cada rodada e nao acumula."],
   ["Custos", "0 Energia: Reacoes. 1 Energia: acoes simples. 2 Energias: acoes poderosas."]
 ];
 
@@ -1719,7 +1721,7 @@ function renderIntentionLookModal(state, me) {
     `;
   } else {
     contentHtml = `
-      <p class="muted" style="text-align: center; padding: 20px;">O Oráculo está olhando e reordenando os Monstros do topo do baralho...</p>
+      <p class="muted" style="text-align: center; padding: 20px;">Niely está olhando e reordenando os Monstros do topo do baralho...</p>
     `;
   }
 
@@ -2195,7 +2197,7 @@ function renderPlayerHud(player) {
   return `
     <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${player.id === local.playerId ? "is-you" : ""} ${player.turnEnded ? "turn-ended" : ""}">
       <div class="portrait">
-        <img src="${player.heroId === 'guardiao' ? '/assets/guardiao-card.jpg' : player.heroId === 'batedor' ? '/assets/batedor-card.jpg' : player.heroId === 'mago' ? '/assets/mago-card.jpg' : cardArt}" alt="" />
+        <img src="${getHeroCardArt(player.heroId)}" alt="" />
       </div>
       <div class="hud-main">
         <div class="hud-title">
@@ -2243,7 +2245,7 @@ function renderHeroCard(hero, selected) {
     <article class="hero-choice ${selected ? "selected" : ""}">
       <article class="tcg-card hero-preview">
         <div class="card-cost">${hero.energy}</div>
-        <img src="${hero.id === 'guardiao' ? '/assets/guardiao-card.jpg' : hero.id === 'batedor' ? '/assets/batedor-card.jpg' : hero.id === 'mago' ? '/assets/mago-card.jpg' : cardArt}" alt="" />
+        <img src="${getHeroCardArt(hero.id)}" alt="" />
         <div class="card-body">
           <strong>${escapeHtml(hero.name)}</strong>
           <span>${hero.life} vida | ${hero.energy} energia</span>
@@ -2943,7 +2945,7 @@ function exportToPDF() {
     <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
     <ul>
       <li><strong>Donovan (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
-      <li><strong>Oráculo Lunar (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
+      <li><strong>Niely (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
       <li><strong>Elerion (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
       <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
     </ul>
@@ -2967,7 +2969,7 @@ function exportToPDF() {
       <li><strong>Menos Vida atual:</strong> O monstro ataca o herói com menos Vida restante.</li>
       <li><strong>Menos Escudo atual:</strong> Se a vida for idêntica, ataca quem tiver menos Escudo.</li>
       <li><strong>Menos Cartas na Mão:</strong> Se ambos forem iguais, ataca quem tiver menos cartas na mão.</li>
-      <li><strong>Ordem de Turno / Lobby:</strong> Se o empate persistir, o monstro ataca conforme a ordem do lobby (Donovan &rarr; Oráculo &rarr; Elerion &rarr; Mago).</li>
+      <li><strong>Ordem de Turno / Lobby:</strong> Se o empate persistir, o monstro ataca conforme a ordem do lobby (Donovan &rarr; Niely &rarr; Elerion &rarr; Mago).</li>
     </ol>
     <p><em>Importante:</em> O critério é avaliado no exato momento do ataque. Se a intenção for "menos escudo" e ambos os jogadores tiveram seus escudos zerados por ataques anteriores na mesma rodada, o histórico não conta; é considerado um empate (0x0) e segue a ordem de desempate acima (menos Vida atual).</p>
 
@@ -3298,7 +3300,7 @@ function renderRulesModal() {
           <p>Cada jogador escolhe um herói com atributos iniciais e um baralho próprio de cartas:</p>
           <ul>
             <li><strong>Donovan (32 Vida, 4 Energia):</strong> Focado em escudos, redução de dano e reações para interceptar golpes e proteger os aliados.</li>
-            <li><strong>Oráculo Lunar (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
+            <li><strong>Niely (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
             <li><strong>Elerion (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
             <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
           </ul>
@@ -3328,7 +3330,7 @@ function renderRulesModal() {
             <li><strong>1º Critério:</strong> Monstro ataca quem tiver <strong>menos Vida atual</strong>.</li>
             <li><strong>2º Critério:</strong> Se a vida for idêntica, ataca quem tiver <strong>menos Escudo atual</strong>.</li>
             <li><strong>3º Critério:</strong> Se ainda empatar, ataca quem tiver <strong>menos cartas na mão</strong>.</li>
-            <li><strong>4º Critério:</strong> Em caso de empate absoluto, o monstro ataca de acordo com a ordem do lobby (Donovan &rarr; Oráculo &rarr; Elerion &rarr; Mago).</li>
+            <li><strong>4º Critério:</strong> Em caso de empate absoluto, o monstro ataca de acordo com a ordem do lobby (Donovan &rarr; Niely &rarr; Elerion &rarr; Mago).</li>
           </ul>
           <p>⚠️ <em>Importante:</em> O critério é avaliado no **exato momento** do ataque. Se a intenção for "menos escudo" e ambos os jogadores tiveram seus escudos zerados por ataques anteriores na mesma rodada, o histórico não conta; é considerado um empate ($0 \times 0$) e segue a ordem de desempate acima (menos Vida atual).</p>
         </section>

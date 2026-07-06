@@ -658,7 +658,7 @@ const heroes = {
   },
   oraculo: {
     id: "oraculo",
-    name: "Oraculo Lunar",
+    name: "Niely",
     life: 24,
     energy: 5,
     supreme: "luz-da-esperanca",
