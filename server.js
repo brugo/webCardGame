@@ -4786,10 +4786,6 @@ function finishDungeonTurn(session) {
   if (!session.queimaduraTickApplied) {
     applyQueimaduraTick(session);
     session.queimaduraTickApplied = true;
-    
-    if (checkFlechadaOportunidade(session, () => finishDungeonTurn(session))) {
-      return;
-    }
   }
   if (!session.endDungeonEffectsApplied) {
     const paused = applyEndOfDungeonEffects(session);
