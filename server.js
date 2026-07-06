@@ -3088,19 +3088,24 @@ function startNextRound(session) {
   if (completedRoom) {
     const allRewardsClaimed = session.players.every((p) => p.life <= 0 || p.hasClaimedRoomReward);
     if (!allRewardsClaimed) {
-      throw new Error("Todos os jogadores ativos devem escolher suas recompensas antes de iniciar a proxima sala.");
+      // Room was just completed (e.g. by delayed damage like Companheiro Animal).
+      // Let the turn begin normally so players can claim their rewards first.
+      // They will call startNextRound again after claiming rewards.
+      session.log.unshift("Os inimigos foram derrotados! Escolham suas recompensas antes de avançar.");
+      // Continue below to set up the round properly (energy, draw, etc.)
+    } else {
+      session.players.forEach((player) => {
+        player.hasClaimedRoomReward = false;
+        if (player.justChoseRedraw) {
+          player.hasRedrawAvailable = true;
+          player.justChoseRedraw = false;
+        } else {
+          player.hasRedrawAvailable = false;
+        }
+      });
+      archiveCurrentEnemies(session);
+      drawNextRoom(session);
     }
-    session.players.forEach((player) => {
-      player.hasClaimedRoomReward = false;
-      if (player.justChoseRedraw) {
-        player.hasRedrawAvailable = true;
-        player.justChoseRedraw = false;
-      } else {
-        player.hasRedrawAvailable = false;
-      }
-    });
-    archiveCurrentEnemies(session);
-    drawNextRoom(session);
   } else {
     session.roomRound += 1;
   }
