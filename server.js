@@ -4028,7 +4028,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   if (card.id === "cacada") {
     session.pendingReciclagem = {
       playerId: player.id,
-      discardedCount: 0
+      discardedCount: 0,
+      initialCardUids: player.hand.map(c => c.uid)
     };
     session.log.unshift(`${player.name} usou Reciclagem. Escolhendo cartas para trocar.`);
   }
@@ -6075,12 +6076,17 @@ async function handleApi(req, res) {
           if (!session.pendingReciclagem || session.pendingReciclagem.playerId !== player.id) {
             throw new Error("Voce nao esta em um processo de reciclagem.");
           }
-          const idx = player.hand.findIndex((c) => c.uid === body.cardUid);
+          const cardUid = body.cardUid;
+          if (!session.pendingReciclagem.initialCardUids || !session.pendingReciclagem.initialCardUids.includes(cardUid)) {
+            throw new Error("Esta carta nao estava na sua mao no inicio da reciclagem.");
+          }
+          const idx = player.hand.findIndex((c) => c.uid === cardUid);
           if (idx === -1) throw new Error("Carta nao encontrada na mao.");
           const discarded = player.hand.splice(idx, 1)[0];
           player.discard.push(discarded);
           drawCards(player, 1);
           session.pendingReciclagem.discardedCount += 1;
+          session.pendingReciclagem.initialCardUids = session.pendingReciclagem.initialCardUids.filter(uid => uid !== cardUid);
           session.log.unshift(`${player.name} descartou ${discarded.name} e comprou 1 nova com Reciclagem.`);
         } else if (body.type === "finishReciclagem") {
           if (!session.pendingReciclagem || session.pendingReciclagem.playerId !== player.id) {

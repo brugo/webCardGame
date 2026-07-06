@@ -2461,9 +2461,10 @@ function renderPendingDiscardModal(state, me) {
 
 function renderPendingReciclagemModal(state, me) {
   if (local.animRunning) return "";
-  if (!state.pendingReciclagem) return "";
-  if (state.pendingReciclagem.playerId !== me.id) {
-    const waitingPlayerName = state.players.find(p => p.id === state.pendingReciclagem.playerId)?.name || "Elerion";
+  const rec = state.pendingReciclagem;
+  if (!rec) return "";
+  if (rec.playerId !== me.id) {
+    const waitingPlayerName = state.players.find(p => p.id === rec.playerId)?.name || "Elerion";
     return `
       <div class="modal-lightbox">
         <div class="modal-content text-center">
@@ -2474,19 +2475,23 @@ function renderPendingReciclagemModal(state, me) {
     `;
   }
 
+  const eligibleCards = me.hand.filter(c => rec.initialCardUids && rec.initialCardUids.includes(c.uid));
+
   return `
     <div class="modal-lightbox">
       <div class="modal-content">
         <h2>Reciclagem</h2>
         <p class="muted">Escolha quais cartas descartar da sua mão para comprar novas de graça.</p>
-        <p class="accent" style="margin: 10px 0; font-size: 1.1em;">Cartas trocadas nesta ação: <strong>${state.pendingReciclagem.discardedCount}</strong></p>
+        <p class="accent" style="margin: 10px 0; font-size: 1.1em;">Cartas trocadas nesta ação: <strong>${rec.discardedCount}</strong></p>
         
         <div style="margin-bottom: 20px;">
-          <button id="finishReciclagem" class="primary" style="padding: 10px 20px; font-weight: bold; font-size: 1.1em;">Finalizar Troca</button>
+          <button id="finishReciclagem" class="primary" style="padding: 10px 20px; font-weight: bold; font-size: 1.1em;">Confirmar Troca</button>
         </div>
 
         <div class="reaction-cards">
-          ${me.hand.map((card) => `
+          ${eligibleCards.length === 0 ? `
+            <p class="muted" style="margin: 20px 0; text-align: center; width: 100%;">Não restam mais cartas elegíveis da sua mão inicial para trocar.</p>
+          ` : eligibleCards.map((card) => `
             <article class="tcg-card reaction-choice">
               <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
               <div class="card-body">
