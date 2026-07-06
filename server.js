@@ -5592,6 +5592,7 @@ function sanitizeSession(session, viewerId) {
     pendingAmplificar: session.pendingAmplificar,
     pendingCataclismoArcano: session.pendingCataclismoArcano,
     pendingTempestadeEletrica: session.pendingTempestadeEletrica,
+    pendingReciclagem: session.pendingReciclagem || null,
     terreno_ativo: session.terreno_ativo,
     cartas_jogadas_esta_rodada: session.cartas_jogadas_esta_rodada || [],
     pendingIntentionLook: session.pendingIntentionLook,
