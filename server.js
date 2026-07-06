@@ -690,7 +690,7 @@ const heroes = {
   },
   batedor: {
     id: "batedor",
-    name: "Batedor Verde",
+    name: "Elerion",
     life: 28,
     energy: 4,
     supreme: "tempestade-de-flechas",
@@ -4139,7 +4139,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       p.energy = Math.min(p.maxEnergy, p.energy + 1);
     });
     drawCards(player, 1);
-    session.log.unshift(`${player.name} usou Rastrear. Todos os aliados recuperaram 1 de Energia e o Batedor comprou 1 carta.`);
+    session.log.unshift(`${player.name} usou Rastrear. Todos os aliados recuperaram 1 de Energia e Elerion comprou 1 carta.`);
   }
 
   if (card.id === "cacada-implacavel") {
