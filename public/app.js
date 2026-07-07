@@ -338,14 +338,14 @@ function applyEventToVisualState(event, state) {
     if (event.type === "damage") {
       let dmg = amount;
       const currentShield = local.visualShield[targetId] || 0;
-      const blocked = Math.min(currentShield, dmg);
+      const blocked = event.ignoreShield ? 0 : Math.min(currentShield, dmg);
       local.visualShield[targetId] = currentShield - blocked;
       dmg -= blocked;
       local.visualLife[targetId] = Math.max(0, (local.visualLife[targetId] || 0) - dmg);
     } else if (event.type === "heal") {
       local.visualLife[targetId] = Math.min(player.maxLife, (local.visualLife[targetId] || 0) + amount);
     } else if (event.type === "shield") {
-      local.visualShield[targetId] = amount;
+      local.visualShield[targetId] = (local.visualShield[targetId] || 0) + amount;
     }
   } else if (event.targetType === "enemy") {
     const enemy = state.enemies.find(e => e.uid === targetId);
@@ -357,14 +357,14 @@ function applyEventToVisualState(event, state) {
     if (event.type === "damage") {
       let dmg = amount;
       const currentShield = local.visualShield[targetId] || 0;
-      const blocked = Math.min(currentShield, dmg);
+      const blocked = event.ignoreShield ? 0 : Math.min(currentShield, dmg);
       local.visualShield[targetId] = currentShield - blocked;
       dmg -= blocked;
       local.visualLife[targetId] = Math.max(0, (local.visualLife[targetId] || 0) - dmg);
     } else if (event.type === "heal") {
       local.visualLife[targetId] = Math.min(enemy.maxLife, (local.visualLife[targetId] || 0) + amount);
     } else if (event.type === "shield") {
-      local.visualShield[targetId] = amount;
+      local.visualShield[targetId] = (local.visualShield[targetId] || 0) + amount;
     }
   }
 }
@@ -594,6 +594,8 @@ function ingestVisualEvents(state) {
       local.completedVisualEventIds.add(event.id);
       render();
 
+      if (event.type === "summon") return;
+
       const elId = event.targetType === "enemy" ? `card-enemy-${event.targetId}` : `hud-player-${event.targetId}`;
       const el = document.getElementById(elId);
       if (!el) return;
@@ -697,6 +699,7 @@ async function showCinematicBanner(title, subtitle, cssClass, duration) {
   let eyebrowText = "🏰 Masmorra";
   if (cssClass === "dungeon-turn") eyebrowText = "⚔️ Fase da Dungeon";
   else if (cssClass === "hero-turn") eyebrowText = "🛡️ Fase dos Heróis";
+  else if (cssClass === "trap-change") eyebrowText = "⚠️ Armadilha";
   const banner = document.createElement("div");
   banner.className = "cinematic-banner enter " + (cssClass || "");
   banner.innerHTML =
@@ -739,17 +742,20 @@ async function showRoomReveal(room, roomNumber, enemies) {
 
 function buildMonsterCardHtml(enemy) {
   const healthPct = Math.max(0, Math.min(100, Math.round((enemy.life / enemy.maxLife) * 100)));
+  const isMystic = enemy.category === "mystic";
   return "<article class=\"monster-card " + enemy.category + "\" style=\"pointer-events:none;width:200px;height:290px;border-radius:16px;\">" +
     "<div class=\"monster-art\"><img src=\"" + getEnemyArt(enemy) + "\" alt=\"\" /></div>" +
     "<div class=\"monster-vertical-name\">" + escapeHtml(enemy.name) + "</div>" +
-    "<div class=\"monster-badge-left\">" +
-      (enemy.shield > 0 ? "<div class=\"stat-badge shield\"><span class=\"badge-bg\">\uD83D\uDEE1\uFE0F</span><span class=\"badge-value\">" + enemy.shield + "</span></div>" : "") +
-      "<div class=\"stat-badge attack\"><span class=\"badge-bg\">\u2694\uFE0F</span><span class=\"badge-value\">" + enemy.attack + "</span></div>" +
-    "</div>" +
-    "<div class=\"monster-health-vial\" style=\"--health-pct:" + healthPct + "%;\">" +
-      "<div class=\"vial-liquid\"></div><div class=\"vial-glass\"></div>" +
-      "<span class=\"vial-value\">" + enemy.life + "</span>" +
-    "</div>" +
+    (!isMystic ? (
+      "<div class=\"monster-badge-left\">" +
+        (enemy.shield > 0 ? "<div class=\"stat-badge shield\"><span class=\"badge-bg\">\uD83D\uDEE1\uFE0F</span><span class=\"badge-value\">" + enemy.shield + "</span></div>" : "") +
+        "<div class=\"stat-badge attack\"><span class=\"badge-bg\">\u2694\uFE0F</span><span class=\"badge-value\">" + enemy.attack + "</span></div>" +
+      "</div>" +
+      "<div class=\"monster-health-vial\" style=\"--health-pct:" + healthPct + "%;\">" +
+        "<div class=\"vial-liquid\"></div><div class=\"vial-glass\"></div>" +
+        "<span class=\"vial-value\">" + enemy.life + "</span>" +
+      "</div>"
+    ) : "") +
   "</article>";
 }
 
@@ -821,6 +827,7 @@ async function showMonsterEntrySpotlight(enemy) {
 }
 
 function fireVisualEffect(event) {
+  if (event.type === "summon") return;
   const elId = event.targetType === "enemy" ? ("card-enemy-" + event.targetId) : ("hud-player-" + event.targetId);
   const el = document.getElementById(elId);
   if (!el) return;
@@ -890,6 +897,11 @@ async function queueCinematicDungeonStart(state) {
 
   // Show dungeon turn banner
   await showCinematicBanner("Turno " + round + " da Dungeon", "Os inimigos atacam!", "dungeon-turn");
+
+  // Show trap change banner if a new trap just entered play
+  if (state.trapJustChanged && state.activeTrap) {
+    await showCinematicBanner("\ud83d\udd25 Nova Armadilha em Jogo", state.activeTrap.name + ": " + state.activeTrap.text, "trap-change");
+  }
 
   // Case A: No reactions available — everything resolved instantly by server
   // We need to animate each monster's attack sequentially on the client
@@ -1321,7 +1333,7 @@ function renderGame() {
         </section>
 
         <aside class="right-rail">
-          ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds)}
+          ${renderTrapCard(state.activeTrap, state.activeTrapDisabledRounds, state.trapTurnAge)}
           ${renderTerrainCard(state.terreno_ativo)}
           <div class="glass-panel compact-panel">
             ${renderTurnControls(state, me)}
@@ -1385,6 +1397,13 @@ function renderGame() {
     }
   });
   document.querySelector("#playSelectedCard")?.addEventListener("click", playSelectedCard);
+  document.querySelector("#discardSelectedCard")?.addEventListener("click", () => {
+    if (confirm("Você realmente deseja descartar esta carta?")) {
+      const cardUid = local.selectedCardUid;
+      local.selectedCardUid = "";
+      action({ type: "voluntaryDiscard", cardUid });
+    }
+  });
   document.querySelector("#skipReaction")?.addEventListener("click", () => action({ type: "skipReaction" }));
   document.querySelector("#skipReactionsThisRound")?.addEventListener("click", () => action({ type: "skipReactionsThisRound" }));
   document.querySelectorAll("[data-reaction-card]").forEach((button) => {
@@ -1550,6 +1569,7 @@ function playSelectedCard() {
   button.disabled = true;
   window.setTimeout(() => {
     const target = document.querySelector("#selectedCardTarget");
+    const target2 = document.querySelector("#selectedCardTarget2");
     const fromTarget = document.querySelector("#selectedCardFrom");
     const amountInput = document.querySelector("#shieldMoveAmount");
     if (isSupreme) {
@@ -1563,6 +1583,7 @@ function playSelectedCard() {
         type: "playCard",
         cardUid: card.uid,
         targetId: target?.value,
+        targetId2: target2?.value,
         fromId: fromTarget?.value,
         shieldAmount: amountInput ? Number(amountInput.value) : undefined
       });
@@ -1823,17 +1844,19 @@ function renderSelectedCardModal(state, me) {
   }
   if (!card) return "";
 
-  const canTargetMonster = ((card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge) && card.id !== "companheiro-animal";
+  const canTargetMonster = ((card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge) && card.id !== "companheiro-animal" && !card.twoTargets;
   const needsReviveTarget = Boolean(card.revive);
   const canTargetDefeated = needsReviveTarget;
-  const canTargetPlayer = (card.type === "heal" && !card.allHeal && !card.revive) || card.target === "ally" || card.provoke || (card.planning && card.target === "ally");
+  const canTargetPlayer = ((card.type === "heal" && !card.allHeal && !card.revive) || card.target === "ally" || card.provoke || (card.planning && card.target === "ally")) && !card.twoTargets;
   const needsMoveShield = Boolean(card.moveShield);
+  const needsTwoEnemies = card.twoTargets === "enemies";
+  const needsTwoAllies = card.twoTargets === "allies";
 
   let targetSelect = "";
   if (canTargetMonster) {
     targetSelect = `<label>Alvo
       <select id="selectedCardTarget">
-        ${state.enemies.filter((e) => e.life > 0).map((e) => `<option value="${e.uid}">${escapeHtml(e.name)}</option>`).join("")}
+        ${state.enemies.filter((e) => e.life > 0 && e.category !== "mystic").map((e) => `<option value="${e.uid}">${escapeHtml(e.name)}</option>`).join("")}
       </select></label>`;
   } else if (canTargetDefeated) {
     targetSelect = `<label>Aliado derrotado
@@ -1845,6 +1868,32 @@ function renderSelectedCardModal(state, me) {
       <select id="selectedCardTarget">
         ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
       </select></label>`;
+  } else if (needsTwoEnemies) {
+    targetSelect = `
+      <label>Alvo 1
+        <select id="selectedCardTarget">
+          ${state.enemies.filter((e) => e.life > 0 && e.category !== "mystic").map((e) => `<option value="${e.uid}">${escapeHtml(e.name)}</option>`).join("")}
+        </select>
+      </label>
+      <label style="margin-top: 8px; display: block;">Alvo 2
+        <select id="selectedCardTarget2">
+          ${state.enemies.filter((e) => e.life > 0 && e.category !== "mystic").map((e) => `<option value="${e.uid}">${escapeHtml(e.name)}</option>`).join("")}
+        </select>
+      </label>
+    `;
+  } else if (needsTwoAllies) {
+    targetSelect = `
+      <label>Aliado 1
+        <select id="selectedCardTarget">
+          ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+        </select>
+      </label>
+      <label style="margin-top: 8px; display: block;">Aliado 2
+        <select id="selectedCardTarget2">
+          ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+        </select>
+      </label>
+    `;
   }
 
   let moveShieldControls = "";
@@ -1880,6 +1929,9 @@ function renderSelectedCardModal(state, me) {
         ${targetSelect}
         ${moveShieldControls}
         <button id="playSelectedCard" ${blocked ? "disabled" : ""}>Jogar</button>
+        ${(!me.supremeCard || me.supremeCard.uid !== card.uid) ? `
+          <button id="discardSelectedCard" class="secondary" style="margin-top: 8px; width: 100%;">Descartar</button>
+        ` : ""}
       </article>
     </div>
   `;
@@ -1980,24 +2032,40 @@ function renderTormentCard(torment) {
   `;
 }
 
-function renderTrapCard(trap, disabledRounds) {
+function renderTrapCard(trap, disabledRounds, trapTurnAge) {
   if (!trap) {
     return `
       <article class="trap-card glass-panel">
         <span class="eyebrow">Armadilha</span>
         <div class="trap-art"><img src="${trapArts[0]}" alt="" /></div>
         <h2>Aguardando armadilha</h2>
+        <p class="trap-counter-text" style="color: #999; font-size: 0.85rem; margin-top: 6px;">A primeira armadilha aparecerá no próximo turno da dungeon.</p>
       </article>
     `;
   }
 
   const isDisabled = disabledRounds && disabledRounds > 0;
+  const turnAge = trapTurnAge || 1;
+  const turnsTotal = 4;
+  const turnsDisplay = Math.min(turnAge, turnsTotal);
+  const isAboutToChange = turnsDisplay >= turnsTotal;
+  
   return `
     <article class="trap-card glass-panel ${isDisabled ? 'trap-disabled' : ''}">
       <span class="eyebrow">${isDisabled ? `Desativada (${disabledRounds} rod.)` : 'Armadilha ativa'}</span>
       <div class="trap-art"><img src="${getTrapArt(trap)}" alt="" /><span>${escapeHtml(trap.id)}</span></div>
       <h2>${escapeHtml(trap.name)}</h2>
       <p>${escapeHtml(trap.text)}</p>
+      <div class="trap-turn-counter ${isAboutToChange ? 'trap-about-to-change' : ''}">
+        <span class="trap-counter-label">Duração:</span>
+        <div class="trap-counter-bar">
+          ${Array.from({length: turnsTotal}, (_, i) => 
+            `<div class="trap-counter-pip ${i < turnsDisplay ? 'filled' : ''}"></div>`
+          ).join('')}
+        </div>
+        <span class="trap-counter-text">${turnsDisplay}/${turnsTotal}</span>
+        ${isAboutToChange ? '<span class="trap-counter-warning">⚡ Troca em breve</span>' : ''}
+      </div>
     </article>
   `;
 }
@@ -2060,10 +2128,13 @@ function renderSummaryCard(state) {
   let trapText = "Sem armadilha ativa.";
   if (state.activeTrap) {
     const isTrapDisabled = state.activeTrapDisabledRounds && state.activeTrapDisabledRounds > 0;
+    const turnAge = state.trapTurnAge || 1;
+    const turnsDisplay = Math.min(turnAge, 4);
+    const counterText = ` (${turnsDisplay}/4)`;
     if (isTrapDisabled) {
       trapText = `<strong>${escapeHtml(state.activeTrap.name)} (Desativada por ${state.activeTrapDisabledRounds} rod.):</strong> ${escapeHtml(state.activeTrap.text)}`;
     } else {
-      trapText = `<strong>${escapeHtml(state.activeTrap.name)}:</strong> ${escapeHtml(state.activeTrap.text)}`;
+      trapText = `<strong>${escapeHtml(state.activeTrap.name)}${counterText}:</strong> ${escapeHtml(state.activeTrap.text)}`;
     }
   }
 
@@ -2294,6 +2365,7 @@ function renderMonsterCard(enemy) {
       </div>
 
       <!-- Badges de Ataque e Escudo (Canto Inferior Esquerdo) -->
+      ${enemy.category !== "mystic" ? `
       <div class="monster-badge-left">
         ${visualShield > 0 ? `
           <div class="stat-badge shield" title="Escudo: ${visualShield}">
@@ -2306,13 +2378,16 @@ function renderMonsterCard(enemy) {
           <span class="badge-value">${enemy.attack}</span>
         </div>
       </div>
+      ` : ""}
 
       <!-- Pote de Vida Estilo Diablo (Canto Inferior Direito) -->
+      ${enemy.category !== "mystic" ? `
       <div class="monster-health-vial" title="Vida: ${visualLife}/${enemy.maxLife}" style="--health-pct: ${healthPct}%;">
         <div class="vial-liquid"></div>
         <div class="vial-glass"></div>
         <span class="vial-value">${visualLife}</span>
       </div>
+      ` : ""}
     </article>
   `;
 }
@@ -2608,12 +2683,20 @@ function renderEnergyAllocationModal(state, me) {
   if (!alloc) return "";
   const alivePlayers = state.players.filter((p) => p.life > 0);
   
+  const fromPlayers = alivePlayers.filter(p => p.energy > 0);
+  const defaultFrom = fromPlayers[0];
+  const defaultMax = defaultFrom ? defaultFrom.energy : 0;
+  let amountOptions = "";
+  for (let i = 1; i <= defaultMax; i++) {
+    amountOptions += `<option value="${i}">${i}⚡</option>`;
+  }
+
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="energyAllocTitle">
       <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
         <span class="eyebrow">Manipulacao de Energia</span>
         <h2 id="energyAllocTitle">Mover Energia</h2>
-        <p class="muted">Escolha a origem, o destino e a quantidade de energia (limite 2⚡).</p>
+        <p class="muted">Escolha a origem, o destino e a quantidade de energia (livremente).</p>
         
         <div class="energy-alloc-fields" style="display: flex; flex-direction: column; gap: 12px; margin: 16px 0; text-align: left;">
           <label style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
@@ -2637,8 +2720,7 @@ function renderEnergyAllocationModal(state, me) {
           <label style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
             <strong>Quantidade:</strong>
             <select id="energyAllocAmount" style="padding: 6px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
-              <option value="1">1⚡</option>
-              <option value="2">2⚡</option>
+              ${amountOptions}
             </select>
           </label>
         </div>
@@ -2685,7 +2767,7 @@ function renderEcoArcanoModal(state, me) {
             <label style="display: flex; flex-direction: column; gap: 4px;">
               <strong>Carta a copiar:</strong>
               <select id="ecoCardSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
-                ${eligible.map(c => `<option value="${c.id}" data-type="${c.type}" data-target="${c.target || ""}">${escapeHtml(c.name)} (${c.cost}⚡) - ${escapeHtml(c.text)}</option>`).join("")}
+                ${eligible.map(c => `<option value="${c.id}" data-type="${c.type}" data-target="${c.target || ""}" data-twotargets="${c.twoTargets || ""}">${escapeHtml(c.name)} (${c.cost}⚡) - ${escapeHtml(c.text)}</option>`).join("")}
               </select>
             </label>
             
@@ -2754,7 +2836,7 @@ function renderEspelhoArcanoModal(state, me) {
   const mirror = state.pendingEspelhoArcano;
   if (!mirror || mirror.casterId !== me?.id) return "";
 
-  const aliveEnemies = state.enemies.filter(e => e.life > 0);
+  const aliveEnemies = state.enemies.filter(e => e.life > 0 && e.category !== "mystic");
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="espelhoArcanoTitle">
       <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
@@ -2866,7 +2948,7 @@ function renderTempestadeEletricaModal(state, me) {
   const temp = state.pendingTempestadeEletrica;
   if (!temp || temp.casterId !== me?.id) return "";
 
-  const aliveEnemies = state.enemies.filter(e => e.life > 0);
+  const aliveEnemies = state.enemies.filter(e => e.life > 0 && e.category !== "mystic");
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="tempestadeEletricaTitle">
       <div class="glass-panel reaction-panel shield-alloc-modal" style="max-width: 480px;">
@@ -3570,6 +3652,24 @@ function bindGlobalControls() {
   });
   
   // Energy allocation click listener
+  const energyFromSelect = document.querySelector("#energyAllocFrom");
+  if (energyFromSelect) {
+    energyFromSelect.addEventListener("change", (e) => {
+      const fromId = e.target.value;
+      const player = state.players.find(p => p.id === fromId);
+      const amountSelect = document.querySelector("#energyAllocAmount");
+      if (amountSelect && player) {
+        amountSelect.innerHTML = "";
+        for (let i = 1; i <= player.energy; i++) {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = `${i}⚡`;
+          amountSelect.appendChild(opt);
+        }
+      }
+    });
+  }
+
   document.querySelector("#confirmEnergyAlloc")?.addEventListener("click", () => {
     const fromId = document.querySelector("#energyAllocFrom")?.value;
     const toId = document.querySelector("#energyAllocTo")?.value;
@@ -3594,21 +3694,60 @@ function bindGlobalControls() {
       const cardId = option.value;
       const cardType = option.dataset.type;
       const cardTarget = option.dataset.target;
+      const cardTwoTargets = option.dataset.twotargets;
       const targetSelect = document.querySelector("#ecoTargetSelect");
-      if (targetSelect) {
-        targetSelect.innerHTML = "";
-        const needsEnemy = cardType === "attack" && cardId !== "bola-de-fogo" && cardId !== "chuva-de-flechas" && cardId !== "explosao-divina";
+      const targetContainer = document.querySelector("#ecoTargetContainer");
+      if (targetSelect && targetContainer) {
+        targetContainer.innerHTML = "";
+        
+        const needsTwoEnemies = cardTwoTargets === "enemies";
+        const needsTwoAllies = cardTwoTargets === "allies";
+        const needsEnemy = cardTarget === "enemy" || (cardType === "attack" && cardId !== "bola-de-fogo" && cardId !== "chuva-de-flechas" && cardId !== "explosao-divina" && cardId !== "raio-congelante" && cardId !== "tempestade-eletrica");
         const needsAlly = cardTarget === "ally";
-        if (needsEnemy) {
-          local.state.enemies.filter(e => e.life > 0).forEach(e => {
-            targetSelect.insertAdjacentHTML("beforeend", `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`);
-          });
+        
+        if (needsTwoEnemies) {
+          targetContainer.innerHTML = `
+            <strong>Alvo 1:</strong>
+            <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+            <strong>Alvo 2:</strong>
+            <select id="ecoTargetSelect2" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+          `;
+        } else if (needsTwoAllies) {
+          targetContainer.innerHTML = `
+            <strong>Aliado 1:</strong>
+            <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
+              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+            <strong>Aliado 2:</strong>
+            <select id="ecoTargetSelect2" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+          `;
+        } else if (needsEnemy) {
+          targetContainer.innerHTML = `
+            <strong>Alvo da magia:</strong>
+            <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+          `;
         } else if (needsAlly) {
-          local.state.players.filter(p => p.life > 0).forEach(p => {
-            targetSelect.insertAdjacentHTML("beforeend", `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`);
-          });
+          targetContainer.innerHTML = `
+            <strong>Alvo da magia:</strong>
+            <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+          `;
         } else {
-          targetSelect.insertAdjacentHTML("beforeend", `<option value="">Nao requer alvo</option>`);
+          targetContainer.innerHTML = `
+            <strong>Alvo da magia (se necessario):</strong>
+            <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              <option value="">Nao requer alvo</option>
+            </select>
+          `;
         }
       }
     };
@@ -3618,7 +3757,8 @@ function bindGlobalControls() {
   document.querySelector("#confirmEco")?.addEventListener("click", () => {
     const cardId = document.querySelector("#ecoCardSelect")?.value;
     const targetId = document.querySelector("#ecoTargetSelect")?.value;
-    action({ type: "confirmEcoArcano", copiedCardId: cardId, targetId });
+    const targetId2 = document.querySelector("#ecoTargetSelect2")?.value;
+    action({ type: "confirmEcoArcano", copiedCardId: cardId, targetId, targetId2 });
   });
   document.querySelector("#cancelEco")?.addEventListener("click", () => {
     action({ type: "cancelEcoArcano" });
@@ -3632,20 +3772,58 @@ function bindGlobalControls() {
       const me = getMe();
       const card = me?.hand.find(c => c.uid === cardUid);
       const targetSelect = document.querySelector("#distorcaoTargetSelect");
-      if (card && targetSelect) {
-        targetSelect.innerHTML = "";
-        const needsEnemy = card.type === "attack" && card.id !== "bola-de-fogo" && card.id !== "chuva-de-flechas" && card.id !== "explosao-divina" && card.id !== "raio-congelante" && card.id !== "tempestade-eletrica";
+      const targetContainer = document.querySelector("#distorcaoTargetContainer");
+      if (card && targetSelect && targetContainer) {
+        targetContainer.innerHTML = "";
+        
+        const needsTwoEnemies = card.twoTargets === "enemies";
+        const needsTwoAllies = card.twoTargets === "allies";
+        const needsEnemy = card.target === "enemy" || (card.type === "attack" && !card.areaDamage && card.id !== "bola-de-fogo" && card.id !== "chuva-de-flechas" && card.id !== "explosao-divina" && card.id !== "raio-congelante" && card.id !== "tempestade-eletrica");
         const needsAlly = card.target === "ally";
-        if (needsEnemy) {
-          local.state.enemies.filter(e => e.life > 0).forEach(e => {
-            targetSelect.insertAdjacentHTML("beforeend", `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`);
-          });
+        
+        if (needsTwoEnemies) {
+          targetContainer.innerHTML = `
+            <strong>Alvo 1:</strong>
+            <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+            <strong>Alvo 2:</strong>
+            <select id="distorcaoTargetSelect2" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+          `;
+        } else if (needsTwoAllies) {
+          targetContainer.innerHTML = `
+            <strong>Aliado 1:</strong>
+            <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
+              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+            <strong>Aliado 2:</strong>
+            <select id="distorcaoTargetSelect2" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+          `;
+        } else if (needsEnemy) {
+          targetContainer.innerHTML = `
+            <strong>Alvo da magia:</strong>
+            <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+          `;
         } else if (needsAlly) {
-          local.state.players.filter(p => p.life > 0).forEach(p => {
-            targetSelect.insertAdjacentHTML("beforeend", `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`);
-          });
+          targetContainer.innerHTML = `
+            <strong>Alvo da magia:</strong>
+            <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+          `;
         } else {
-          targetSelect.insertAdjacentHTML("beforeend", `<option value="">Nao requer alvo</option>`);
+          targetContainer.innerHTML = `
+            <strong>Alvo da magia (se necessario):</strong>
+            <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              <option value="">Nao requer alvo</option>
+            </select>
+          `;
         }
       }
     };
@@ -3655,7 +3833,8 @@ function bindGlobalControls() {
   document.querySelector("#confirmDistorcao")?.addEventListener("click", () => {
     const cardUid = document.querySelector("#distorcaoCardSelect")?.value;
     const targetId = document.querySelector("#distorcaoTargetSelect")?.value;
-    action({ type: "playCard", cardUid, targetId });
+    const targetId2 = document.querySelector("#distorcaoTargetSelect2")?.value;
+    action({ type: "playCard", cardUid, targetId, targetId2 });
   });
   document.querySelector("#skipDistorcao")?.addEventListener("click", () => {
     action({ type: "skipDistorcaoTemporal" });
