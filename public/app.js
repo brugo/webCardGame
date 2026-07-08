@@ -749,7 +749,7 @@ function buildMonsterCardHtml(enemy) {
     (!isMystic ? (
       "<div class=\"monster-badge-left\">" +
         (enemy.shield > 0 ? "<div class=\"stat-badge shield\"><span class=\"badge-bg\">\uD83D\uDEE1\uFE0F</span><span class=\"badge-value\">" + enemy.shield + "</span></div>" : "") +
-        "<div class=\"stat-badge attack\"><span class=\"badge-bg\">\u2694\uFE0F</span><span class=\"badge-value\">" + enemy.attack + "</span></div>" +
+        "<div class=\"stat-badge attack" + (enemy.isAttackBuffed ? " buffed" : "") + "\"><span class=\"badge-bg\">\u2694\uFE0F</span><span class=\"badge-value\">" + enemy.attack + "</span></div>" +
       "</div>" +
       "<div class=\"monster-health-vial\" style=\"--health-pct:" + healthPct + "%;\">" +
         "<div class=\"vial-liquid\"></div><div class=\"vial-glass\"></div>" +
@@ -1960,14 +1960,6 @@ function renderTurnControls(state, me) {
     return ``;
   }
 
-  if (state.turn === "players") {
-    return `
-      <button id="endTurn" class="danger" ${me.turnEnded ? "disabled" : ""}>
-        ${me.turnEnded ? "Turno finalizado" : "Finalizar turno"}
-      </button>
-    `;
-  }
-
   if (state.roomComplete) {
     if (!me.hasClaimedRoomReward) {
       return `
@@ -1981,10 +1973,21 @@ function renderTurnControls(state, me) {
         <button disabled class="secondary" style="opacity: 0.6; cursor: not-allowed;">Aguardando Grupo...</button>
       `;
     }
+    return `
+      <button id="startNextRound">Avancar para proxima sala</button>
+    `;
+  }
+
+  if (state.turn === "players") {
+    return `
+      <button id="endTurn" class="danger" ${me.turnEnded ? "disabled" : ""}>
+        ${me.turnEnded ? "Turno finalizado" : "Finalizar turno"}
+      </button>
+    `;
   }
 
   return `
-    <button id="startNextRound">${state.roomComplete ? "Avancar para proxima sala" : "Iniciar proxima rodada"}</button>
+    <button id="startNextRound">Iniciar proxima rodada</button>
   `;
 }
 
@@ -2373,7 +2376,7 @@ function renderMonsterCard(enemy) {
             <span class="badge-value">${visualShield}</span>
           </div>
         ` : ""}
-        <div class="stat-badge attack" title="Ataque: ${enemy.attack}">
+        <div class="stat-badge attack ${enemy.isAttackBuffed ? 'buffed' : ''}" title="Ataque: ${enemy.attack}">
           <span class="badge-bg">⚔️</span>
           <span class="badge-value">${enemy.attack}</span>
         </div>
@@ -4045,9 +4048,41 @@ function renderEndGame() {
   });
 }
 
+// ============================================================
+// SELECT VALUE PRESERVATION
+// Saves all <select> values before re-render and restores them
+// after, so that target selections aren't lost when the game
+// state updates due to another player's action.
+// ============================================================
+function saveSelectValues() {
+  const saved = {};
+  app.querySelectorAll("select[id]").forEach((sel) => {
+    if (sel.value) {
+      saved[sel.id] = sel.value;
+    }
+  });
+  return saved;
+}
+
+function restoreSelectValues(saved) {
+  if (!saved) return;
+  Object.keys(saved).forEach((id) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    // Only restore if the saved value still exists as an option
+    const optionExists = Array.from(sel.options).some((opt) => opt.value === saved[id]);
+    if (optionExists) {
+      sel.value = saved[id];
+    }
+  });
+}
+
 function render() {
   const isGameScreen = local.state?.status === "playing" || local.animRunning;
   document.body.classList.toggle("is-game-screen", Boolean(isGameScreen));
+
+  // Save current select values before re-render
+  const savedSelects = saveSelectValues();
 
   if (!local.sessionId || !local.playerId || !local.token) {
     renderHome();
@@ -4074,6 +4109,9 @@ function render() {
   app.insertAdjacentHTML("beforeend", renderToast());
   app.insertAdjacentHTML("beforeend", renderQuitConfirmModal());
   bindGlobalControls();
+
+  // Restore select values after re-render
+  restoreSelectValues(savedSelects);
 }
 
 render();

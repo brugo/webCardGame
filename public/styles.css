@@ -2006,7 +2006,7 @@ body.is-game-screen .hand-fan .play-card {
 
 body.is-game-screen .hand-fan .play-card:hover,
 body.is-game-screen .hand-fan .play-card:focus-visible {
-  transform: translateX(calc(-50% + var(--hand-offset))) translateY(-226px) scale(1.18) rotate(0deg);
+  transform: translateX(calc(-50% + var(--hand-offset))) translateY(-305px) scale(1.25) rotate(0deg);
   z-index: 24;
 }
 
@@ -4570,5 +4570,15 @@ body.is-game-screen .monster-card .monster-target-badge {
   transform: scale(1.03);
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
+}
+
+/* Buffed Attack Badge styling */
+.stat-badge.attack.buffed {
+  border-color: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.4), 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(0, 0, 0, 0.8);
+}
+.stat-badge.attack.buffed .badge-value {
+  color: #4ade80;
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.6), 0 1px 3px #000;
 }
 

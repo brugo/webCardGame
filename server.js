@@ -3098,7 +3098,7 @@ function startGame(session) {
 
 function startNextRound(session) {
   if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
-  if (session.turn !== "dungeon" || !session.dungeonResolved) {
+  if (!isRoomComplete(session) && (session.turn !== "dungeon" || !session.dungeonResolved)) {
     throw new Error("A proxima rodada so comeca depois do turno da dungeon.");
   }
 
@@ -4613,6 +4613,10 @@ function endTurn(session, player) {
   session.log.unshift(`${player.name} finalizou o turno.`);
   const activePlayers = session.players.filter((candidate) => candidate.life > 0);
   if (activePlayers.length > 0 && activePlayers.every((candidate) => candidate.turnEnded)) {
+    if (isRoomComplete(session)) {
+      session.log.unshift("Todos os inimigos foram derrotados! Escolham suas recompensas.");
+      return;
+    }
     startDungeonTurn(session);
     advanceDungeonTurn(session);
   }
@@ -5528,8 +5532,19 @@ function sanitizeSession(session, viewerId) {
     room: session.room,
     enemies: session.enemies.map(enemy => {
       const target = getEnemyCurrentTarget(session, enemy);
+      let calculatedAttack = enemy.attack;
+      let isAttackBuffed = false;
+      if (enemy.attack > 0) {
+        const hasAliveArauto = session.enemies.some(e => e.id === "arauto" && e.life > 0);
+        if (hasAliveArauto) {
+          calculatedAttack += 3;
+          isAttackBuffed = true;
+        }
+      }
       return {
         ...enemy,
+        attack: calculatedAttack,
+        isAttackBuffed: isAttackBuffed,
         name: (enemy.isEnfurecido && enemy.life <= enemy.maxLife / 2) ? `${enemy.name} (Enfurecido)` : enemy.name,
         currentTargetName: target ? target.name : null,
         currentTargetHeroId: target ? target.heroId : null
