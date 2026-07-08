@@ -1356,36 +1356,21 @@ p {
 }
 
 .table-card-back {
-  position: absolute;
-  inset: 8px;
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  border: 1px solid rgba(255, 215, 133, 0.34);
-  border-radius: 6px;
-  padding: 10px;
-  opacity: 0;
-  transform: rotateY(12deg) scale(0.96);
-  background:
-    radial-gradient(circle at 50% 8%, rgba(255, 215, 133, 0.18), transparent 5rem),
-    linear-gradient(145deg, rgba(45, 27, 16, 0.96), rgba(8, 11, 15, 0.98));
-  box-shadow: inset 0 0 0 1px rgba(255, 246, 223, 0.08);
-  pointer-events: none;
-  transition: opacity 160ms ease, transform 220ms ease;
+  display: none !important; /* Hide the card back completely */
 }
 
 .table-card:hover .table-card-face,
 .table-card:focus-visible .table-card-face,
 .table-card:focus-within .table-card-face {
-  opacity: 0.08;
-  transform: rotateY(-10deg) scale(0.96);
+  opacity: 1;
+  transform: none;
 }
 
 .table-card:hover .table-card-back,
 .table-card:focus-visible .table-card-back,
 .table-card:focus-within .table-card-back {
-  opacity: 1;
-  transform: rotateY(0deg) scale(1);
+  opacity: 0;
+  transform: rotateY(12deg) scale(0.96);
 }
 
 .table-card-back strong {
@@ -1399,6 +1384,21 @@ p {
   font-size: 0.82rem;
   font-weight: 760;
   line-height: 1.28;
+}
+
+/* Card Preview Tooltip for Arena resolved cards */
+.card-preview-tooltip {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.9) translateY(10px);
+  transition: opacity 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.card-preview-tooltip.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 .table-cost {
@@ -2128,7 +2128,7 @@ body.is-game-screen .hand-fan .play-card.reaction-ready {
 
 .toast {
   position: fixed;
-  z-index: 50;
+  z-index: 20000;
   left: 50%;
   bottom: 22px;
   transform: translateX(-50%);
@@ -4591,5 +4591,92 @@ body.is-game-screen .monster-card .monster-target-badge {
   animation: dangerGlowPulse 2s infinite;
   transform: none !important;
   margin: 0 auto;
+}
+
+/* ── Reward Cards Scrollable Container ── */
+.reward-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 190px);
+  gap: 16px;
+  justify-content: center;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px;
+  margin: 0 auto 24px;
+  max-width: 630px;
+  scrollbar-color: rgba(255, 215, 133, 0.62) rgba(0, 0, 0, 0.28);
+  scrollbar-width: thin;
+}
+
+.reward-cards-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.reward-cards-container::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.reward-cards-container::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(0, 0, 0, 0.28);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8b5a24, #ffd785);
+}
+
+@media (max-width: 680px) {
+  .reward-cards-container {
+    grid-template-columns: repeat(2, 190px);
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 460px) {
+  .reward-cards-container {
+    grid-template-columns: 1fr;
+    max-width: 220px;
+  }
+}
+
+/* ── Supreme Crystals ── */
+.supreme-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.supreme-crystals {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.crystal-slot {
+  font-size: 0.85rem;
+  opacity: 0.25;
+  filter: grayscale(100%);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.crystal-slot.active {
+  opacity: 1;
+  filter: grayscale(0%) drop-shadow(0 0 4px #60a5fa);
+  animation: crystalGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes crystalGlow {
+  0% {
+    transform: scale(1);
+    filter: grayscale(0%) drop-shadow(0 0 2px #60a5fa);
+  }
+  100% {
+    transform: scale(1.15);
+    filter: grayscale(0%) drop-shadow(0 0 8px #a855f7);
+  }
 }
 

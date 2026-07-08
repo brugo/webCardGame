@@ -1557,6 +1557,25 @@ const cards = {
     type: "terrain",
     cost: 3,
     text: "Terreno: Enquanto ativo, todos os heróis aumentam o limite máximo de cartas na mão em +1. Persiste até o fim da sala."
+  },
+  "carta-especial-dano": {
+    id: "carta-especial-dano",
+    name: "Fogo Oculto",
+    type: "attack",
+    cost: 0,
+    damage: 10,
+    isSpecialBonusCard: true,
+    text: "Especial. Causa 10 de dano a um inimigo a sua escolha. Não conta para o limite de cartas na mão."
+  },
+  "carta-especial-cura": {
+    id: "carta-especial-cura",
+    name: "Bênção Especial",
+    type: "heal",
+    target: "ally",
+    cost: 0,
+    heal: 10,
+    isSpecialBonusCard: true,
+    text: "Especial. Cure 10 de Vida de um aliado a sua escolha (ou de si mesmo). Não conta para o limite de cartas na mão."
   }
 };
 
@@ -2973,6 +2992,7 @@ function addPlayer(session, name) {
     discard: [],
     supremeCard: null,
     supremeUsed: false,
+    supremeCharges: 1,
     pendingDiscard: 0,
     maxHandSize: 5,
     chosenRewards: [],
@@ -3002,7 +3022,8 @@ function drawCards(player, amount) {
   if (session && session.terreno_ativo === "TERRENO_COSMICO") {
     limit += 1;
   }
-  const maxDrawn = Math.max(0, limit - player.hand.length);
+  const normalHandCount = player.hand.filter(c => !c.isSpecialBonusCard).length;
+  const maxDrawn = Math.max(0, limit - normalHandCount);
   const targetAmount = Math.min(amount, maxDrawn);
   const drawn = [];
   while (drawn.length < targetAmount) {
@@ -3183,9 +3204,8 @@ function startNextRound(session) {
     } else {
       session.players.forEach((player) => {
         player.hasClaimedRoomReward = false;
-        if (player.justChoseRedraw) {
+        if (player.chosenRewards && player.chosenRewards.includes("redraw")) {
           player.hasRedrawAvailable = true;
-          player.justChoseRedraw = false;
         } else {
           player.hasRedrawAvailable = false;
         }
@@ -3471,7 +3491,9 @@ function playCard(session, player, payload) {
     }
   }
 
-  player.played.push(card);
+  if (!card.isSpecialBonusCard) {
+    player.played.push(card);
+  }
 
   const arenaCard = {
     uid: card.uid,
@@ -3952,7 +3974,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     if (session.terreno_ativo === "TERRENO_COSMICO") {
       limit += 1;
     }
-    const excess = target.hand.length - limit;
+    const normalHandCount = target.hand.filter(c => !c.isSpecialBonusCard).length;
+    const excess = normalHandCount - limit;
     if (excess > 0) {
       target.pendingDiscard = (target.pendingDiscard || 0) + excess;
       session.log.unshift(`${target.name} comprou ${drawn.length} cartas com Planejamento. Mão excedeu o limite máximo (${limit}), deve descartar ${excess} carta(s).`);
@@ -5638,6 +5661,7 @@ function sanitizeSession(session, viewerId) {
       played: player.played,
       supremeCard: player.id === viewerId ? player.supremeCard : null,
       supremeUsed: player.supremeUsed,
+      supremeCharges: player.supremeCharges !== undefined ? player.supremeCharges : 1,
       pendingDiscard: player.id === viewerId ? (player.pendingDiscard || 0) : 0,
       maxHandSize: player.maxHandSize || 5,
       chosenRewards: player.chosenRewards || [],
@@ -5950,6 +5974,8 @@ async function handleApi(req, res) {
             p.chosenRewards = [];
             p.hasClaimedRoomReward = false;
             p.hasRedrawAvailable = false;
+            p.supremeCharges = 1;
+            p.supremeUsed = false;
             p.skipReactionsThisRound = false;
             p.statusEffects = makeStatusEffects();
             p.heroId = null;
@@ -5975,7 +6001,8 @@ async function handleApi(req, res) {
           if (session.terreno_ativo === "TERRENO_COSMICO") {
             maxHand += 1;
           }
-          if (player.hand.length >= maxHand) throw new Error("Mao cheia! O limite maximo e de " + maxHand + " cartas.");
+          const normalHandCount = player.hand.filter(c => !c.isSpecialBonusCard).length;
+          if (normalHandCount >= maxHand) throw new Error("Mao cheia! O limite maximo e de " + maxHand + " cartas.");
           if (player.energy < 1) throw new Error("Energia insuficiente para comprar carta.");
 
           const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
@@ -6001,12 +6028,16 @@ async function handleApi(req, res) {
         } else if (body.type === "useSupreme") {
           // Play the hero's supreme card (not in hand/deck, separate slot)
           if (!player.supremeCard) throw new Error("Voce nao possui carta suprema.");
-          if (player.supremeUsed) throw new Error("A Carta Suprema ja foi usada nesta partida.");
+          if (player.supremeCharges === undefined) player.supremeCharges = 1;
+          if (player.supremeUsed || player.supremeCharges <= 0) throw new Error("A Carta Suprema ja foi usada nesta partida.");
           if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
           if (session.turn !== "players") throw new Error("Agora e o turno da dungeon.");
           if (player.turnEnded) throw new Error("Voce ja finalizou seu turno.");
           const sc = player.supremeCard;
-          player.supremeUsed = true;
+          player.supremeCharges -= 1;
+          if (player.supremeCharges <= 0) {
+            player.supremeUsed = true;
+          }
           player.roundStats.cardsPlayed += 1;
           session.arena.unshift({ uid: sc.uid, heroId: player.heroId, name: sc.name, type: sc.type, cost: sc.cost, text: sc.text, playedBy: player.name + " (Suprema)" });
           // Execute supreme effects directly
@@ -6090,17 +6121,28 @@ async function handleApi(req, res) {
           const idx = player.hand.findIndex((c) => c.uid === body.cardUid);
           if (idx === -1) throw new Error("Carta nao encontrada na mao.");
           const card = player.hand[idx];
-          player.discard.push(player.hand.splice(idx, 1)[0]);
-          session.log.unshift(`${player.name} descartou a carta ${card.name} voluntariamente.`);
+          if (card.isSpecialBonusCard) {
+            player.hand.splice(idx, 1);
+            session.log.unshift(`${player.name} descartou a carta especial ${card.name} voluntariamente (removida do jogo).`);
+          } else {
+            player.discard.push(player.hand.splice(idx, 1)[0]);
+            session.log.unshift(`${player.name} descartou a carta ${card.name} voluntariamente.`);
+          }
           broadcast(session);
         } else if (body.type === "discardCard") {
           // Resolve a pending discard (from planejamento)
           if (!(player.pendingDiscard > 0)) throw new Error("Nao ha descarte pendente.");
           const idx = player.hand.findIndex((c) => c.uid === body.cardUid);
           if (idx === -1) throw new Error("Carta nao encontrada na mao.");
-          player.discard.push(player.hand.splice(idx, 1)[0]);
+          const card = player.hand[idx];
+          if (card.isSpecialBonusCard) {
+            player.hand.splice(idx, 1);
+            session.log.unshift(`${player.name} descartou a carta especial ${card.name} (removida do jogo).`);
+          } else {
+            player.discard.push(player.hand.splice(idx, 1)[0]);
+            session.log.unshift(`${player.name} descartou uma carta.`);
+          }
           player.pendingDiscard -= 1;
-          session.log.unshift(`${player.name} descartou uma carta.`);
         } else if (body.type === "reciclagemDiscard") {
           if (!session.pendingReciclagem || session.pendingReciclagem.playerId !== player.id) {
             throw new Error("Voce nao esta em um processo de reciclagem.");
@@ -6112,11 +6154,15 @@ async function handleApi(req, res) {
           const idx = player.hand.findIndex((c) => c.uid === cardUid);
           if (idx === -1) throw new Error("Carta nao encontrada na mao.");
           const discarded = player.hand.splice(idx, 1)[0];
-          player.discard.push(discarded);
+          if (discarded.isSpecialBonusCard) {
+            session.log.unshift(`${player.name} descartou ${discarded.name} com Reciclagem (removida do jogo) e comprou 1 nova.`);
+          } else {
+            player.discard.push(discarded);
+            session.log.unshift(`${player.name} descartou ${discarded.name} e comprou 1 nova com Reciclagem.`);
+          }
           drawCards(player, 1);
           session.pendingReciclagem.discardedCount += 1;
           session.pendingReciclagem.initialCardUids = session.pendingReciclagem.initialCardUids.filter(uid => uid !== cardUid);
-          session.log.unshift(`${player.name} descartou ${discarded.name} e comprou 1 nova com Reciclagem.`);
         } else if (body.type === "finishReciclagem") {
           if (!session.pendingReciclagem || session.pendingReciclagem.playerId !== player.id) {
             throw new Error("Voce nao esta em um processo de reciclagem.");
@@ -6247,20 +6293,52 @@ async function handleApi(req, res) {
 
           const rewardId = body.rewardId;
           if (rewardId) {
-            if (!["energy", "handSize", "redraw"].includes(rewardId)) throw new Error("Recompensa invalida.");
+            const allowed = ["energy", "handSize", "redraw", "crystal", "specialDamageCard", "specialHealCard"];
+            if (!allowed.includes(rewardId)) throw new Error("Recompensa invalida.");
             if (!player.chosenRewards) player.chosenRewards = [];
-            if (player.chosenRewards.includes(rewardId)) throw new Error("Recompensa ja escolhida anteriormente.");
+            
+            if (rewardId === "crystal") {
+              const crystalCount = player.chosenRewards.filter(r => r === "crystal").length;
+              if (crystalCount >= 3) throw new Error("Recompensa de Cristal ja foi escolhida 3 vezes.");
+            } else {
+              if (player.chosenRewards.includes(rewardId)) throw new Error("Recompensa ja escolhida anteriormente.");
+            }
             
             player.chosenRewards.push(rewardId);
+            let rewardName = "";
             if (rewardId === "energy") {
               player.maxEnergy += 1;
               player.energy = player.maxEnergy;
+              rewardName = "Energia Maxima +1";
             } else if (rewardId === "handSize") {
               player.maxHandSize = (player.maxHandSize || 5) + 1;
+              rewardName = "Tamanho da Mao +1";
             } else if (rewardId === "redraw") {
               player.justChoseRedraw = true;
+              rewardName = "Troca de Mao";
+            } else if (rewardId === "crystal") {
+              const crystalCount = player.chosenRewards.filter(r => r === "crystal").length;
+              if (crystalCount === 3) {
+                player.supremeCharges = (player.supremeCharges || 1) + 1;
+                player.supremeUsed = false;
+              }
+              rewardName = `Cristal Supremo (${crystalCount}/3)`;
+            } else if (rewardId === "specialDamageCard") {
+              const cardObj = {
+                uid: randomUUID(),
+                ...cards["carta-especial-dano"]
+              };
+              player.hand.push(cardObj);
+              rewardName = "Carta Especial: Dano (Fogo Oculto)";
+            } else if (rewardId === "specialHealCard") {
+              const cardObj = {
+                uid: randomUUID(),
+                ...cards["carta-especial-cura"]
+              };
+              player.hand.push(cardObj);
+              rewardName = "Carta Especial: Cura (Bênção Especial)";
             }
-            session.log.unshift(`${player.name} escolheu a recompensa: ${rewardId === "energy" ? "Energia Maxima +1" : rewardId === "handSize" ? "Tamanho da Mao +1" : "Troca de Mao"}.`);
+            session.log.unshift(`${player.name} escolheu a recompensa: ${rewardName}.`);
           } else {
             session.log.unshift(`${player.name} concluiu a escolha de recompensas.`);
           }

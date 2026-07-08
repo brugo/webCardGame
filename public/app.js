@@ -1812,31 +1812,49 @@ function renderGameStatusPanel(state, me) {
 
 function renderHandDock(me, state) {
   const hasSupreme = me.supremeCard && !me.supremeUsed;
+  const crystalCount = me.chosenRewards ? me.chosenRewards.filter(r => r === "crystal").length : 0;
+  const normalHandCount = me.hand.filter(c => !c.isSpecialBonusCard).length;
+  const maxHand = me.maxHandSize || 5;
+
+  let crystalsHtml = "";
+  if (crystalCount > 0) {
+    crystalsHtml = `
+      <div class="supreme-crystals">
+        ${Array.from({ length: 3 }, (_, i) => `
+          <span class="crystal-slot ${i < crystalCount ? 'active' : ''}" title="Cristais da Suprema: ${crystalCount}/3">💎</span>
+        `).join("")}
+      </div>
+    `;
+  }
+
   return `
     <section class="hand-dock" aria-label="Mao do jogador">
       <div class="hand-meta glass-panel">
-        <button id="buyCard" class="buy-card-btn" title="Comprar carta (1⚡)" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || me.hand.length >= (me.maxHandSize || 5) ? 'disabled' : ''}>
+        <button id="buyCard" class="buy-card-btn" title="Comprar carta (1⚡)" ${state.turn !== 'players' || me.turnEnded || me.energy < 1 || normalHandCount >= maxHand ? 'disabled' : ''}>
           <span class="buy-card-text">+1</span>
           <span class="buy-card-cost">⚡</span>
         </button>
-        ${hasSupreme ? `
+        ${me.supremeCard ? `
           <div class="supreme-container">
-            <button id="useSupreme" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
-              Suprema
-            </button>
-            <div class="supreme-hover-preview">
-              <article class="tcg-card play-card ${me.supremeCard.type} supreme-preview-card">
-                <div class="card-cost">${me.supremeCard.cost}</div>
-                <img src="${getCardArt(me.supremeCard)}" alt="" />
-                <div class="card-body">
-                  <strong>${escapeHtml(me.supremeCard.name)}</strong>
-                  <p>${escapeHtml(me.supremeCard.text)}</p>
-                  ${renderCardTags(me.supremeCard)}
-                </div>
-              </article>
-            </div>
+            ${crystalsHtml}
+            ${hasSupreme ? `
+              <button id="useSupreme" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''}>
+                Suprema
+              </button>
+              <div class="supreme-hover-preview">
+                <article class="tcg-card play-card ${me.supremeCard.type} supreme-preview-card">
+                  <div class="card-cost">${me.supremeCard.cost}</div>
+                  <img src="${getCardArt(me.supremeCard)}" alt="" />
+                  <div class="card-body">
+                    <strong>${escapeHtml(me.supremeCard.name)}</strong>
+                    <p>${escapeHtml(me.supremeCard.text)}</p>
+                    ${renderCardTags(me.supremeCard)}
+                  </div>
+                </article>
+              </div>
+            ` : `<span class="supreme-used muted">Suprema usada</span>`}
           </div>
-        ` : me.supremeUsed ? `<span class="supreme-used muted">Suprema usada</span>` : ""}
+        ` : ""}
         ${me.hasRedrawAvailable ? `
           <div class="supreme-container">
             <button id="useRedraw" class="supreme-btn" ${state.turn !== 'players' || me.turnEnded ? 'disabled' : ''} style="background: linear-gradient(135deg, #a855f7, #6366f1); box-shadow: 0 0 14px rgba(168, 85, 247, 0.5); color: #fff; animation: none;">
@@ -2479,8 +2497,9 @@ function renderHandCard(card, state, index = 0, total = 1) {
 }
 
 function renderArenaCard(card) {
+  const cardDataJson = escapeHtml(JSON.stringify(card));
   return `
-    <article class="table-card ${card.type} ${card.uid === local.justPlayedUid ? "just-played" : ""}" tabindex="0">
+    <article class="table-card ${card.type} ${card.uid === local.justPlayedUid ? "just-played" : ""}" data-card-preview="${cardDataJson}" tabindex="0">
       <div class="table-card-face">
         <img src="${getCardArt(card)}" alt="" />
         <div>
@@ -2627,19 +2646,42 @@ function renderRewardSelectionModal(state, me) {
     {
       id: "redraw",
       name: "Troca de Mao",
-      cost: "1x",
-      desc: "Ganha a opcao de trocar todas as cartas da mao uma vez em qualquer momento da proxima sala."
+      cost: "🔄",
+      desc: "Ganha a opção de trocar todas as cartas da mão uma vez por sala, por todo o jogo."
+    },
+    {
+      id: "crystal",
+      name: "Cristal Supremo",
+      cost: "💎",
+      desc: "Coleta um cristal. Ao acumular 3, você ganha +1 uso da sua Habilidade Suprema (ou recupera o uso caso já tenha gasto)."
+    },
+    {
+      id: "specialDamageCard",
+      name: "Fogo Oculto",
+      cost: "💥",
+      desc: "Adiciona uma carta especial de custo 0 na mão que causa 10 de dano a um inimigo. Não conta para o limite de cartas."
+    },
+    {
+      id: "specialHealCard",
+      name: "Bênção Especial",
+      cost: "💖",
+      desc: "Adiciona uma carta especial de custo 0 na mão que cura 10 de Vida de um aliado. Não conta para o limite de cartas."
     }
   ];
   
-  const allExhausted = options.every(opt => chosen.includes(opt.id));
+  const allExhausted = options.every(opt => {
+    if (opt.id === "crystal") {
+      return chosen.filter(r => r === "crystal").length >= 3;
+    }
+    return chosen.includes(opt.id);
+  });
   
   return `
     <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
       <div class="glass-panel reaction-panel reward-selection-modal" style="max-width: 800px; padding: 24px; text-align: center;">
         <span class="eyebrow">Conclusao de Sala</span>
         <h2 id="rewardTitle">Escolha sua Recompensa</h2>
-        <p class="muted" style="margin-bottom: 20px;">Cada recompensa so pode ser escolhida uma unica vez por partida.</p>
+        <p class="muted" style="margin-bottom: 20px;">Cada recompensa so pode ser escolhida uma unica vez por partida (exceto o Cristal Supremo, ate 3 vezes).</p>
         
         ${allExhausted ? `
           <div class="all-rewards-obtained" style="margin: 32px 0;">
@@ -2650,10 +2692,11 @@ function renderRewardSelectionModal(state, me) {
             Confirmar e Continuar
           </button>
         ` : `
-          <div class="reward-cards-container" style="display: flex; gap: 16px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap;">
+          <div class="reward-cards-container">
             ${options.map(opt => {
-              const isAlreadyChosen = chosen.includes(opt.id);
+              const isAlreadyChosen = opt.id === "crystal" ? chosen.filter(r => r === "crystal").length >= 3 : chosen.includes(opt.id);
               const isSelected = local.selectedRewardId === opt.id;
+              const crystalCount = opt.id === "crystal" ? chosen.filter(r => r === "crystal").length : 0;
               
               return `
                 <article class="tcg-card reward-card-choice ${opt.id} ${isAlreadyChosen ? 'reward-disabled' : ''} ${isSelected ? 'reward-selected' : ''}" 
@@ -2666,7 +2709,11 @@ function renderRewardSelectionModal(state, me) {
                   </div>
                   ${isAlreadyChosen ? `
                     <div class="already-chosen-badge">
-                      JÁ ESCOLHIDA
+                      ${opt.id === "crystal" ? "COMPLETO (3/3)" : "JÁ ESCOLHIDA"}
+                    </div>
+                  ` : (opt.id === "crystal" && crystalCount > 0) ? `
+                    <div class="already-chosen-badge" style="color: #ffd785; background: rgba(0, 0, 0, 0.85); border-color: #ffd785;">
+                      COLETADO ${crystalCount}/3
                     </div>
                   ` : ""}
                 </article>
@@ -4141,6 +4188,7 @@ function render() {
   app.insertAdjacentHTML("beforeend", renderRulesModal());
   app.insertAdjacentHTML("beforeend", renderToast());
   app.insertAdjacentHTML("beforeend", renderQuitConfirmModal());
+  app.insertAdjacentHTML("beforeend", `<div id="card-preview-tooltip" class="card-preview-tooltip"></div>`);
   bindGlobalControls();
 
   // Restore select values after re-render
@@ -4167,3 +4215,99 @@ window.addEventListener("keydown", (event) => {
     }
   }
 });
+
+// ============================================================
+// CARD PREVIEW TOOLTIP FOR ARENA RESOLVED CARDS
+// ============================================================
+
+function getCardTooltipHtml(card) {
+  return `
+    <div class="tcg-card play-card ${card.type}" style="transform: none; margin: 0; min-height: 358px; flex: none; width: 240px; box-shadow: 0 20px 48px rgba(0,0,0,0.8); pointer-events: none;">
+      <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
+      <img src="${getCardArt(card)}" alt="" style="width: 100%; aspect-ratio: 3/4; object-fit: cover; object-position: 50% 38%; border-radius: 7px;" />
+      <div class="card-body" style="background: linear-gradient(180deg, rgba(11, 16, 20, 0.95), rgba(30, 21, 14, 0.98));">
+        <strong style="font-size: 0.98rem; display: block; margin-bottom: 4px;">${escapeHtml(card.name)}</strong>
+        <p style="color: #e8dcc1; font-size: 0.78rem; line-height: 1.25; margin: 0 0 6px 0;">${escapeHtml(card.text)}</p>
+        ${renderCardTags(card)}
+        <div style="margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; font-size: 0.7rem; color: #ffd785; text-align: right; opacity: 0.85;">
+          Jogada por: <strong>${escapeHtml(card.playedBy || "Jogador")}</strong>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function positionTooltip(tableCard, tooltip) {
+  const rect = tableCard.getBoundingClientRect();
+  const tooltipWidth = 240;
+  const tooltipHeight = 368;
+  const gap = 12;
+  
+  // Center horizontally relative to the table-card
+  let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+  // Place above the table-card
+  let top = rect.top - tooltipHeight - gap;
+  
+  // Boundary check - horizontally
+  if (left < 10) {
+    left = 10;
+  } else if (left + tooltipWidth > window.innerWidth - 10) {
+    left = window.innerWidth - tooltipWidth - 10;
+  }
+  
+  // Boundary check - vertically
+  if (top < 10) {
+    // If it goes above the viewport, display below the card instead
+    top = rect.bottom + gap;
+  }
+  
+  // If it still overflows at the bottom, just clamp it
+  if (top + tooltipHeight > window.innerHeight - 10) {
+    top = window.innerHeight - tooltipHeight - 10;
+  }
+  
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+document.addEventListener("mouseover", (event) => {
+  const tableCard = event.target.closest(".table-card");
+  if (tableCard && tableCard.dataset.cardPreview) {
+    const tooltip = document.getElementById("card-preview-tooltip");
+    if (tooltip) {
+      try {
+        const card = JSON.parse(tableCard.dataset.cardPreview);
+        tooltip.innerHTML = getCardTooltipHtml(card);
+        
+        // Position first
+        positionTooltip(tableCard, tooltip);
+        
+        // Add visible class
+        tooltip.classList.add("visible");
+      } catch (e) {
+        console.error("Error rendering card preview:", e);
+      }
+    }
+  }
+});
+
+document.addEventListener("mouseout", (event) => {
+  const tableCard = event.target.closest(".table-card");
+  if (tableCard) {
+    // Check if moving to a child of tableCard
+    if (!event.relatedTarget || !tableCard.contains(event.relatedTarget)) {
+      const tooltip = document.getElementById("card-preview-tooltip");
+      if (tooltip) {
+        tooltip.classList.remove("visible");
+      }
+    }
+  }
+});
+
+// Hide tooltip on scroll to keep it aligned
+window.addEventListener("scroll", () => {
+  const tooltip = document.getElementById("card-preview-tooltip");
+  if (tooltip) {
+    tooltip.classList.remove("visible");
+  }
+}, true);
