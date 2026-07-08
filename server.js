@@ -127,7 +127,11 @@ const trapCards = [
   { id: "TRAP_002", name: "Selo Anticura", text: "Enquanto esta armadilha estiver ativa, impossível receber cura.", effect: "noHealing" },
   { id: "TRAP_003", name: "Portal Místico", text: "Evoque um monstro do baralho de monstros místicos (entra em jogo imediatamente).", effect: "spawnMystic" },
   { id: "TRAP_004", name: "Reforço Inimigo", text: "Evoque um monstro Comum (entra em jogo imediatamente).", effect: "spawnCommon" },
-  { id: "TRAP_005", name: "Fome Arcana", text: "Enquanto esta armadilha estiver ativa, ninguém mais compra cartas no início do turno dos heróis.", effect: "noRoundDraw" }
+  { id: "TRAP_005", name: "Fome Arcana", text: "Enquanto esta armadilha estiver ativa, ninguém mais compra cartas no início do turno dos heróis.", effect: "noRoundDraw" },
+  { id: "TRAP_006", name: "Poucos Recursos", text: "Enquanto esta armadilha estiver ativa, cada herói só pode jogar 1 carta por turno.", effect: "fewResources" },
+  { id: "TRAP_007", name: "Reflexão Instável", text: "Enquanto esta armadilha estiver ativa, todo dano causado a um monstro também é causado imediatamente ao herói que atacou.", effect: "unstableReflection" },
+  { id: "TRAP_008", name: "Buff Sangrento", text: "Enquanto esta armadilha estiver ativa, o dano dos monstros comuns e brutais aumenta em +3.", effect: "bloodyBuff" },
+  { id: "TRAP_009", name: "Banquete de Sangue", text: "Se esta armadilha não for removida pelos heróis, ao sair do jogo ela causa 10 de dano a todos os herois.", effect: "bloodFeast" }
 ];
 
 function makeStatusEffects() {
@@ -2554,6 +2558,13 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
     `${source}: ${shieldDamage} no escudo e ${lifeDamage} de dano em ${target.name}${ignoreShield ? " (ignorou Escudo)" : ""}.${target.statusEffects?.exposto ? " (+1 por estar Exposto)" : ""}`
   );
 
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  if (isTrapActive && session.activeTrap.effect === "unstableReflection" && player && (shieldDamage + lifeDamage) > 0) {
+    const reflectedDamage = shieldDamage + lifeDamage;
+    session.log.unshift(`[Reflexão Instável] ${player.name} sofreu ${reflectedDamage} de dano por reflexão ao atacar ${target.name}.`);
+    applyDamageToHero(session, player, reflectedDamage, session.activeTrap.name, null, { skipRedirect: true });
+  }
+
   // Pulso Reativo shield gain
   if (target.isBoss && lifeDamage >= 8 && isPulsoReativo && target.life > 0) {
     target.shield += 3;
@@ -3419,6 +3430,11 @@ function playCard(session, player, payload) {
     if (actuallyGivesShield && card.type === "defense") {
       throw new Error(`Escudos estão bloqueados pela armadilha ${session.activeTrap.name}.`);
     }
+  }
+
+  const isFewResources = (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) ? false : (session.activeTrap?.effect === "fewResources");
+  if (isFewResources && player.roundStats.cardsPlayed >= 1) {
+    throw new Error(`A armadilha ${session.activeTrap.name} permite que você jogue apenas 1 carta por rodada.`);
   }
 
   player.hand.splice(cardIndex, 1);
@@ -4652,6 +4668,14 @@ function startDungeonTurn(session) {
     session.trapTurnAge += 1;
     // If trap has been active for 4+ game turns (2 rounds), rotate
     if (session.trapTurnAge > 4) {
+      if (session.activeTrap.effect === "bloodFeast") {
+        session.log.unshift(`[Banquete de Sangue] A armadilha não foi removida a tempo e causou 10 de dano a todos os heróis!`);
+        session.players.forEach(p => {
+          if (p.life > 0) {
+            applyDamageToHero(session, p, 10, session.activeTrap.name, null);
+          }
+        });
+      }
       drawTrap(session);
     } else {
       session.trapJustChanged = false;
@@ -5260,6 +5284,11 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
     attack += 3;
   }
 
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal")) {
+    attack += 3;
+  }
+
   if (enemy.isEnfurecido && enemy.life <= enemy.maxLife / 2) {
     attack += 2;
   }
@@ -5540,6 +5569,11 @@ function sanitizeSession(session, viewerId) {
           calculatedAttack += 3;
           isAttackBuffed = true;
         }
+        const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+        if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal")) {
+          calculatedAttack += 3;
+          isAttackBuffed = true;
+        }
       }
       return {
         ...enemy,
@@ -5646,7 +5680,13 @@ async function readJson(req) {
 async function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
-  const filePath = normalize(join(PUBLIC_DIR, pathname));
+  let decodedPathname = pathname;
+  try {
+    decodedPathname = decodeURIComponent(pathname);
+  } catch (e) {
+    // Fallback if decoding fails
+  }
+  const filePath = normalize(join(PUBLIC_DIR, decodedPathname));
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403);
     res.end("Forbidden");

@@ -826,6 +826,26 @@ async function showMonsterEntrySpotlight(enemy) {
   await hideOverlay();
 }
 
+async function showTrapSpotlight(trap) {
+  const overlay = showOverlay();
+  const modal = document.createElement("div");
+  modal.className = "monster-spotlight-modal enter";
+  modal.innerHTML =
+    "<span class=\"spotlight-eyebrow\" style=\"color:#fb7a64; font-size:1.1rem; margin-bottom:10px;\">⚠️ Nova Armadilha em Jogo</span>" +
+    "<div class=\"spotlight-card-wrap\" style=\"width:auto; max-width:90vw; display:flex; justify-content:center;\">" +
+      "<img src=\"" + getTrapArt(trap, false) + "\" alt=\"\" style=\"width:540px; max-width:90vw; height:auto; border-radius:12px; box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 50px rgba(251, 122, 100, 0.4); border: 2px solid rgba(251, 122, 100, 0.6);\" />" +
+    "</div>" +
+    "<div class=\"spotlight-action-text\" style=\"color:#ffe3a8; font-size:1.3rem; font-weight:bold; line-height:1.4; margin-top:20px; max-width:600px;\">" +
+      escapeHtml(trap.text) +
+    "</div>";
+  overlay.appendChild(modal);
+  await sleep(3500);
+  modal.classList.remove("enter");
+  modal.classList.add("exit");
+  await sleep(400);
+  await hideOverlay();
+}
+
 function fireVisualEffect(event) {
   if (event.type === "summon") return;
   const elId = event.targetType === "enemy" ? ("card-enemy-" + event.targetId) : ("hud-player-" + event.targetId);
@@ -900,7 +920,7 @@ async function queueCinematicDungeonStart(state) {
 
   // Show trap change banner if a new trap just entered play
   if (state.trapJustChanged && state.activeTrap) {
-    await showCinematicBanner("\ud83d\udd25 Nova Armadilha em Jogo", state.activeTrap.name + ": " + state.activeTrap.text, "trap-change");
+    await showTrapSpotlight(state.activeTrap);
   }
 
   // Case A: No reactions available — everything resolved instantly by server
@@ -2040,7 +2060,7 @@ function renderTrapCard(trap, disabledRounds, trapTurnAge) {
     return `
       <article class="trap-card glass-panel">
         <span class="eyebrow">Armadilha</span>
-        <div class="trap-art"><img src="${trapArts[0]}" alt="" /></div>
+        <div class="trap-art"><img src="/assets/traps/desativada.png" alt="" /></div>
         <h2>Aguardando armadilha</h2>
         <p class="trap-counter-text" style="color: #999; font-size: 0.85rem; margin-top: 6px;">A primeira armadilha aparecerá no próximo turno da dungeon.</p>
       </article>
@@ -2056,7 +2076,7 @@ function renderTrapCard(trap, disabledRounds, trapTurnAge) {
   return `
     <article class="trap-card glass-panel ${isDisabled ? 'trap-disabled' : ''}">
       <span class="eyebrow">${isDisabled ? `Desativada (${disabledRounds} rod.)` : 'Armadilha ativa'}</span>
-      <div class="trap-art"><img src="${getTrapArt(trap)}" alt="" /><span>${escapeHtml(trap.id)}</span></div>
+      <div class="trap-art"><img src="${getTrapArt(trap, isDisabled)}" alt="" /><span>${escapeHtml(trap.id)}</span></div>
       <h2>${escapeHtml(trap.name)}</h2>
       <p>${escapeHtml(trap.text)}</p>
       <div class="trap-turn-counter ${isAboutToChange ? 'trap-about-to-change' : ''}">
@@ -2116,9 +2136,22 @@ function renderTerrainCard(terrain) {
   `;
 }
 
-function getTrapArt(trap) {
-  const number = Number(String(trap?.id || "").replace(/\D/g, ""));
-  return trapArts[number % trapArts.length];
+function getTrapArt(trap, isDisabled = false) {
+  if (isDisabled || !trap) {
+    return "/assets/traps/desativada.png";
+  }
+  const artMap = {
+    "TRAP_001": "/assets/traps/bloqueio de escudos.png",
+    "TRAP_002": "/assets/traps/selo anticura.png",
+    "TRAP_003": "/assets/traps/portal mistico.png",
+    "TRAP_004": "/assets/traps/reforço inimigo.png",
+    "TRAP_005": "/assets/traps/fome arcana.png",
+    "TRAP_006": "/assets/traps/poucos recursos.png",
+    "TRAP_007": "/assets/traps/reflexao instavel.png",
+    "TRAP_008": "/assets/traps/buff sangrento.png",
+    "TRAP_009": "/assets/traps/banquete de sangue.png"
+  };
+  return artMap[trap.id] || "/assets/traps/desativada.png";
 }
 
 function renderIntentionCard(intention) {

@@ -4582,3 +4582,14 @@ body.is-game-screen .monster-card .monster-target-badge {
   text-shadow: 0 0 4px rgba(74, 222, 128, 0.6), 0 1px 3px #000;
 }
 
+.spotlight-card-wrap .trap-card {
+  width: 220px;
+  height: 320px;
+  border-radius: 16px;
+  border: 2px solid rgba(251, 122, 100, 0.6);
+  box-shadow: 0 0 48px rgba(251, 122, 100, 0.22), 0 24px 64px rgba(0, 0, 0, 0.64);
+  animation: dangerGlowPulse 2s infinite;
+  transform: none !important;
+  margin: 0 auto;
+}
+
