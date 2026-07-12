@@ -733,6 +733,11 @@ p {
   background: linear-gradient(145deg, rgba(102, 231, 255, 0.08), rgba(0, 0, 0, 0.24));
 }
 
+.player-hud.is-ready {
+  border-color: rgba(34, 197, 94, 0.6) !important;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.25) !important;
+}
+
 /* ── Portrait Card for local player (is-you) ── */
 .portrait-container {
   width: 100%;
@@ -4923,32 +4928,42 @@ body.is-game-screen .recent-actions-panel {
 
 /* 3. Compact Player HUD Sheets (Sidebar Left) */
 body.is-game-screen .hero-party-panel .player-hud {
-  grid-template-columns: 60px minmax(0, 1fr) !important;
+  grid-template-columns: 80px minmax(0, 1fr) !important;
   min-height: 0 !important;
-  padding: 6px 8px !important;
-  gap: 8px !important;
+  padding: 10px !important;
+  gap: 12px !important;
   border-radius: 10px !important;
   border: 1px solid rgba(197, 159, 99, 0.35) !important;
 }
 
 body.is-game-screen .hero-party-panel .portrait-container {
-  width: 60px !important;
-  height: 90px !important; /* Forces 2/3 ratio */
-  border-width: 2px !important;
+  width: 80px !important;
+  height: 120px !important; /* Forces 2/3 ratio */
+  border-width: 2.5px !important;
   border-radius: 8px !important;
-  border-color: rgba(197, 159, 99, 0.5) !important;
+  border-color: rgba(197, 159, 99, 0.6) !important;
 }
 
 body.is-game-screen .hero-party-panel .hud-main {
-  gap: 3px !important;
+  gap: 6px !important;
+}
+
+body.is-game-screen .hero-party-panel .hud-title {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
 }
 
 body.is-game-screen .hero-party-panel .hud-title strong {
-  font-size: 0.95rem !important;
+  font-size: 1.15rem !important;
 }
 
 body.is-game-screen .hero-party-panel .hud-title span {
-  font-size: 0.78rem !important;
+  font-size: 0.92rem !important;
+  color: #ffd785 !important;
+  font-weight: 800 !important;
 }
 
 /* Redesigned player statistics block (no bars, clean layout) */

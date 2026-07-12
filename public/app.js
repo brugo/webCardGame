@@ -1384,7 +1384,6 @@ function renderGame() {
             ${renderTurnControls(state, me)}
             <p class="notice">${escapeHtml(local.error)}</p>
           </div>
-          ${renderGameStatusPanel(state, me)}
           ${renderSummaryCard(state)}
           ${renderRoomCard(state)}
           ${state.activeTorment ? renderTormentCard(state.activeTorment) : ""}
@@ -2062,10 +2061,17 @@ function renderTurnControls(state, me) {
   }
 
   if (state.turn === "players") {
+    const completed = state.players.filter((player) => player.turnEnded).length;
+    const total = state.players.length;
     return `
-      <button id="endTurn" class="danger" ${me.turnEnded ? "disabled" : ""}>
+      <button id="endTurn" class="danger" ${me.turnEnded ? "disabled" : ""} style="width: 100%;">
         ${me.turnEnded ? "Turno finalizado" : "Finalizar turno"}
       </button>
+      <div style="margin-top: 8px; display: flex; justify-content: center; width: 100%;">
+        <span class="status-badge" style="background: rgba(13, 22, 28, 0.6); border: 1px solid rgba(197, 159, 99, 0.3); padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 800; color: #eadfc6;">
+          ${completed}/${total} finalizaram
+        </span>
+      </div>
     `;
   }
 
@@ -2399,9 +2405,9 @@ function renderPlayerHud(player) {
   const shieldVal = hasResources ? getVisualShield(player.id, player.shield || 0) : 0;
 
   const extraBadges = hasResources ? [
-    player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana ativa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : "",
+    player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana activa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : "",
     player.sobrecarga_pendente > 0
-      ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga ativa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""
+      ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga activa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""
   ].filter(Boolean).join("") : "";
 
   const isMe = player.id === local.playerId;
@@ -2414,34 +2420,30 @@ function renderPlayerHud(player) {
     const maxEnergy = player.maxEnergy || 1;
 
     statsHtml = `
-      <div class="player-hud-stats">
-        <div class="hud-stat-item life" title="Vida">
-          <span class="hud-stat-icon">❤️</span>
-          <span class="hud-stat-value">${lifeVal}/${maxLife}</span>
+      <div class="player-hud-stats" style="display: grid; gap: 4px; width: 100%;">
+        ${renderPlayerMeter("life", lifeVal, maxLife, "Vida", `hero-${player.id}-life`)}
+        ${renderPlayerMeter("energy", energyVal, maxEnergy, "Energia", `hero-${player.id}-energy`)}
+        
+        <div class="hud-status-row" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 800; color: #ffe3a8; margin-top: 4px;">
+          <div class="hud-stat-item shield" style="display: flex; align-items: center; gap: 4px;">
+            <span class="hud-stat-icon">🛡️</span>
+            <span class="hud-stat-value">Escudo: ${shieldVal > 0 ? shieldVal : "zero"}</span>
+          </div>
+          ${
+            player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null
+              ? `
+                <div class="hud-stat-item charge" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="hud-stat-icon">⚔️</span>
+                  <span class="hud-stat-value">Carga: ${player.carga_de_batalha}</span>
+                </div>
+              `
+              : ""
+          }
         </div>
-        <div class="hud-stat-item energy" title="Energia">
-          <span class="hud-stat-icon">⚡</span>
-          <span class="hud-stat-value">${energyVal}/${maxEnergy}</span>
-        </div>
-        ${
-          player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null
-            ? `
-              <div class="hud-stat-item charge" title="Carga de Batalha">
-                <span class="hud-stat-icon">⚔️</span>
-                <span class="hud-stat-value">Carga: ${player.carga_de_batalha}</span>
-              </div>
-            `
-            : ""
-        }
       </div>
       ${renderStatusEffects(player.statusEffects)}
       <div class="hud-extra-row">
         ${extraBadges ? `<div class="hud-extra-badges">${extraBadges}</div>` : ""}
-        ${shieldVal > 0 ? `
-          <div class="hud-shield-circular" title="Escudo: ${shieldVal}">
-            <span>${shieldVal}</span>
-          </div>
-        ` : ""}
       </div>
     `;
   }
@@ -2454,7 +2456,7 @@ function renderPlayerHud(player) {
       <div class="hud-main">
         <div class="hud-title">
           <strong>${escapeHtml(player.name)}</strong>
-          <span>${escapeHtml(player.heroName || "Sem heroi")} ${player.turnEnded ? "| finalizou" : player.ready ? "| pronto" : ""}</span>
+          <span>${escapeHtml(player.heroName || "Sem heroi")}</span>
         </div>
         ${statsHtml}
       </div>
@@ -2536,10 +2538,11 @@ function renderHeroBuffPips(player) {
 }
 
 function renderPlayerMeter(kind, value, max, label, key) {
+  const icon = kind === "life" ? "❤️" : "⚡";
   return `
     <div class="hero-resource ${kind}">
       <div class="hero-resource-top">
-        <span>${label}</span>
+        <span>${icon} ${label}</span>
         <strong>${value}/${max}</strong>
       </div>
       ${renderMeter(kind, value, max, label, key)}
