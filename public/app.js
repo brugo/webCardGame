@@ -1316,6 +1316,7 @@ function renderGame() {
 
   app.innerHTML = `
     <section class="game-board room-${roomTheme}">
+      ${renderGameTopbar(state, me)}
       <div class="board-grid">
         <aside class="left-rail">
           <div class="glass-panel hero-party-panel">
@@ -1326,16 +1327,19 @@ function renderGame() {
           </div>
         </aside>
 
-        <section class="battlefield">
+        <section class="battlefield" style="position: relative;">
+          ${local.recentActionsOpen ? `
+            <div class="floating-recent-actions glass-panel">
+              <div class="floating-recent-actions-header">
+                <span class="eyebrow">Ações Recentes</span>
+                <button id="closeRecentActions" class="close-btn-x" title="Fechar">&times;</button>
+              </div>
+              <div class="floating-recent-actions-list">
+                ${recentActionsHtml}
+              </div>
+            </div>
+          ` : ""}
           ${bossHudHtml}
-          <div class="recent-actions-panel glass-panel">
-            <div class="recent-actions-header">
-              <span class="eyebrow">Ações Recentes</span>
-            </div>
-            <div class="recent-actions-list">
-              ${recentActionsHtml}
-            </div>
-          </div>
 
           <div class="monster-row">
             ${state.enemies.map(renderMonsterCard).join("")}
@@ -1347,7 +1351,28 @@ function renderGame() {
               <strong>Cartas resolvidas</strong>
             </div>
             <div class="arena-cards">
-              ${state.arena.length ? state.arena.map(renderArenaCard).join("") : renderEmptyArena()}
+              ${(() => {
+                let html = "";
+                // Render actually played cards
+                if (state.arena && state.arena.length) {
+                  state.arena.forEach(card => {
+                    html += renderArenaCard(card);
+                  });
+                }
+                // Pad with empty slots up to 6
+                const emptySlotsNeeded = Math.max(0, 6 - (state.arena ? state.arena.length : 0));
+                for (let i = 0; i < emptySlotsNeeded; i++) {
+                  html += `
+                    <div class="table-card empty-slot" role="presentation">
+                      <svg viewBox="0 0 24 24" class="empty-slot-icon" style="width: 32px; height: 32px; color: rgba(255, 215, 133, 0.25);">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+                        <path d="M12 2v20M2 12h20M12 6l3 3M12 6L9 9M12 18l3-3M12 18l-3-3" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+                      </svg>
+                    </div>
+                  `;
+                }
+                return html;
+              })()}
             </div>
           </div>
         </section>
@@ -1393,6 +1418,26 @@ function renderGame() {
 
   document.querySelector("#endTurn")?.addEventListener("click", () => action({ type: "endTurn" }));
   document.querySelector("#startNextRound")?.addEventListener("click", () => action({ type: "startNextRound" }));
+  document.querySelector("#headerRulesBtn")?.addEventListener("click", () => {
+    local.rulesOpen = !local.rulesOpen;
+    render();
+  });
+  document.querySelector("#headerSettingsBtn")?.addEventListener("click", () => {
+    local.quitConfirmOpen = !local.quitConfirmOpen;
+    render();
+  });
+  document.querySelector("#headerMenuBtn")?.addEventListener("click", () => {
+    local.quitConfirmOpen = !local.quitConfirmOpen;
+    render();
+  });
+  document.querySelector("#recentActionsToggleBtn")?.addEventListener("click", () => {
+    local.recentActionsOpen = !local.recentActionsOpen;
+    render();
+  });
+  document.querySelector("#closeRecentActions")?.addEventListener("click", () => {
+    local.recentActionsOpen = false;
+    render();
+  });
   document.querySelectorAll("[data-hand-card]").forEach((card) => {
     const openCard = () => {
       local.selectedCardUid = card.dataset.handCard;
@@ -2045,6 +2090,54 @@ function renderTopbar() {
   `;
 }
 
+function renderGameTopbar(state, me) {
+  const isPlayersTurn = state.turn === "players";
+  const faseText = isPlayersTurn ? "FASE: AÇÃO" : "FASE: MASMORRA";
+  const round = state.round || 1;
+  const roomNum = state.roomNumber || 1;
+  const defeated = state.total_monstros_derrotados || 0;
+
+  return `
+    <header class="game-board-header">
+      <div class="header-left">
+        <button id="headerMenuBtn" class="header-btn" title="Menu principal">☰</button>
+        <span class="header-crown">👑</span>
+        <div class="phase-badge ${isPlayersTurn ? 'action-phase' : 'dungeon-phase'}">
+          ${faseText}
+        </div>
+        <button id="recentActionsToggleBtn" class="phase-badge action-phase" style="cursor: pointer; margin-left: 8px; user-select: none;">
+          Ações Recentes
+        </button>
+      </div>
+      
+      <div class="header-center">
+        <div class="header-stat-bubble" title="Turno Atual">
+          <span class="bubble-icon">⏳</span>
+          <span class="bubble-label">TURNO</span>
+          <strong class="bubble-value">${round}</strong>
+        </div>
+        
+        <div class="header-stat-bubble" title="Sala Atual">
+          <span class="bubble-icon">🏰</span>
+          <span class="bubble-label">SALA</span>
+          <strong class="bubble-value">${roomNum}</strong>
+        </div>
+        
+        <div class="header-stat-bubble" title="Monstros Derrotados">
+          <span class="bubble-icon">💀</span>
+          <span class="bubble-label">DERROTADOS</span>
+          <strong class="bubble-value">${defeated}</strong>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <button id="headerRulesBtn" class="header-btn-icon" title="Regras">📖</button>
+        <button id="headerSettingsBtn" class="header-btn-icon" title="Sair">🚪</button>
+      </div>
+    </header>
+  `;
+}
+
 function renderRoomCard(state) {
   const room = state.room;
   return `
@@ -2246,9 +2339,7 @@ function renderStatusEffects(statusEffects) {
   if (statusEffects.envenenamento > 0) {
     badges.push(`<span class="status-badge envenenamento" title="Envenenamento: sofre ${statusEffects.envenenamento} de dano (ignora Escudo) no início da Fase da Masmorra.">🧪 Envenenamento ${statusEffects.envenenamento}</span>`);
   }
-  if (statusEffects.renovacao && statusEffects.renovacao.duration > 0) {
-    badges.push(`<span class="status-badge renovacao" style="background: linear-gradient(135deg, #10b981, #059669); color: white;" title="Renovação: cura ${statusEffects.renovacao.value} de Vida no início de cada rodada. Duração: ${statusEffects.renovacao.duration} rodadas.">🌿 Renovação ${statusEffects.renovacao.value} (${statusEffects.renovacao.duration}r)</span>`);
-  }
+  // Renovação is now rendered as pip counter below the hero HUD via renderHeroBuffPips()
   if (badges.length === 0) return "";
   return `<div class="status-effects-list">${badges.join("")}</div>`;
 }
@@ -2304,38 +2395,144 @@ function renderEnemyStatusEffects(enemy) {
 
 function renderPlayerHud(player) {
   const hasResources = (local.state?.status === "playing" || local.animRunning) && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
+
+  const shieldVal = hasResources ? getVisualShield(player.id, player.shield || 0) : 0;
+
+  const extraBadges = hasResources ? [
+    player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana ativa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : "",
+    player.sobrecarga_pendente > 0
+      ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga ativa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""
+  ].filter(Boolean).join("") : "";
+
+  const isMe = player.id === local.playerId;
+
+  let statsHtml = "";
+  if (hasResources) {
+    const lifeVal = getVisualLife(player.id, player.life || 0);
+    const maxLife = player.maxLife || 1;
+    const energyVal = player.energy || 0;
+    const maxEnergy = player.maxEnergy || 1;
+
+    statsHtml = `
+      <div class="player-hud-stats">
+        <div class="hud-stat-item life" title="Vida">
+          <span class="hud-stat-icon">❤️</span>
+          <span class="hud-stat-value">${lifeVal}/${maxLife}</span>
+        </div>
+        <div class="hud-stat-item energy" title="Energia">
+          <span class="hud-stat-icon">⚡</span>
+          <span class="hud-stat-value">${energyVal}/${maxEnergy}</span>
+        </div>
+        ${
+          player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null
+            ? `
+              <div class="hud-stat-item charge" title="Carga de Batalha">
+                <span class="hud-stat-icon">⚔️</span>
+                <span class="hud-stat-value">Carga: ${player.carga_de_batalha}</span>
+              </div>
+            `
+            : ""
+        }
+      </div>
+      ${renderStatusEffects(player.statusEffects)}
+      <div class="hud-extra-row">
+        ${extraBadges ? `<div class="hud-extra-badges">${extraBadges}</div>` : ""}
+        ${shieldVal > 0 ? `
+          <div class="hud-shield-circular" title="Escudo: ${shieldVal}">
+            <span>${shieldVal}</span>
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }
+
   return `
-    <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${player.id === local.playerId ? "is-you" : ""} ${player.turnEnded ? "turn-ended" : ""}">
-      <div class="portrait">
-        <img src="${getHeroCardArt(player.heroId)}" alt="" />
+    <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${isMe ? "is-you" : "is-allie"} ${player.turnEnded ? "turn-ended" : ""}">
+      <div class="portrait-container">
+        <img class="portrait-img" src="${getHeroCardArt(player.heroId)}" alt="" />
       </div>
       <div class="hud-main">
         <div class="hud-title">
           <strong>${escapeHtml(player.name)}</strong>
           <span>${escapeHtml(player.heroName || "Sem heroi")} ${player.turnEnded ? "| finalizou" : player.ready ? "| pronto" : ""}</span>
         </div>
-        ${
-          hasResources
-            ? `
-              ${renderPlayerMeter("life", getVisualLife(player.id, player.life || 0), player.maxLife || 1, "Vida", `hero-${player.id}-life`)}
-              ${renderPlayerMeter("energy", player.energy || 0, player.maxEnergy || 1, "Energia", `hero-${player.id}-energy`)}
-              ${renderStatusEffects(player.statusEffects)}
-              <div class="hud-stats">
-                <span class="hero-shield shield-badge"><i></i>${getVisualShield(player.id, player.shield || 0)}</span>
-                ${player.profecia_tokens && player.profecia_tokens.length > 0 ? `<span class="hero-profecia prophecy-badge" title="Profecia ativa.">${player.profecia_tokens.map(t => `👁️ ${t.type === 'shield' ? '🛡️' : '❤️'}${t.value}(${t.duration}r)`).join(' ')}</span>` : ""}
-                ${player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana ativa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : ""}
-                ${player.heroId === "guardiao" && player.carga_de_batalha !== undefined && player.carga_de_batalha !== null ? `<span class="hero-carga-batalha charge-badge" title="Carga de Batalha: acumula ao provocar/proteger e aumenta o dano de Carga do Guardião.">⚔️ Carga: ${player.carga_de_batalha}</span>` : ""}
-                ${player.sobrecarga_pendente > 0 ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga ativa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""}
-                <span>Deck ${player.deckCount}</span>
-                <span>Mao ${player.handCount}</span>
-                <span>Desc ${player.discardCount}</span>
-              </div>
-            `
-            : ""
-        }
+        ${statsHtml}
       </div>
+      ${hasResources ? renderHeroBuffPips(player) : ""}
     </article>
   `;
+}
+
+function getBuffCardData(buffKind, value, tokenType) {
+  if (buffKind === 'renovacao') {
+    const nameMap = { 4: 'Renovação Contínua', 3: 'Ondas Regenerativas', 2: 'Luz da Esperança' };
+    const textMap = {
+      4: 'Aplica Renovação 4 por 3 rodadas (cura 4 de Vida no início da Fase dos Heróis). Se o alvo já possuir Renovação ativa, cura 4 de Vida imediatamente.',
+      3: 'Cure 5 de Vida de um aliado. Todos os aliados recebem Renovação 3 por 2 rodadas (curam 3 de Vida no início da Fase dos Heróis).',
+      2: 'Cura 2 de Vida no início de cada turno dos heróis.'
+    };
+    const costMap = { 4: 2, 3: 2, 2: 0 };
+    return { id: 'renovacao', name: nameMap[value] || 'Renovação', type: 'heal', cost: costMap[value] ?? 2, text: textMap[value] || `Cura ${value} de Vida por rodada.` };
+  }
+  if (buffKind === 'profecia') {
+    if (tokenType === 'shield') {
+      return { id: 'bencao-protetora', name: 'Bênção Protetora', type: 'heal', cost: 1, text: `Profecia de Escudo ativa (${value}). Ao receber dano de ataque inimigo neste período, recebe ${value} de Escudo imediatamente após o dano resolver.` };
+    }
+    const nameMap = { 8: 'Voz do Oráculo', 6: 'Profecia Menor', 5: 'Profecia Dupla' };
+    const textMap = {
+      8: `Profecia de Cura ativa (${value}). Ao receber dano de ataque inimigo, recupera ${value} de Vida imediatamente após o dano resolver.`,
+      6: `Profecia de Cura ativa (${value}). Ao receber dano de ataque inimigo, recupera ${value} de Vida imediatamente após o dano resolver.`,
+      5: `Profecia de Cura ativa (${value}). Ao receber dano de ataque inimigo, recupera ${value} de Vida imediatamente após o dano resolver.`
+    };
+    const costMap = { 8: 2, 6: 1, 5: 2 };
+    return { id: 'profecia-menor', name: nameMap[value] || 'Profecia', type: 'heal', cost: costMap[value] ?? 1, text: textMap[value] || `Profecia de Cura ativa. Cura ${value} ao receber dano.` };
+  }
+  return null;
+}
+
+function renderHeroBuffPips(player) {
+  const se = player.statusEffects;
+  let html = '';
+
+  // ── RENOVAÇÃO (verde) ──
+  const ren = se?.renovacao;
+  if (ren && ren.duration > 0) {
+    const maxByValue = { 4: 3, 3: 2, 2: 3 };
+    const maxDur = maxByValue[ren.value] ?? 3;
+    const cardData = escapeHtml(JSON.stringify(getBuffCardData('renovacao', ren.value, null)));
+    html += `
+      <div class="hero-buff-pip-row renovacao-buff" data-buff-card="${cardData}">
+        <span class="buff-pip-icon">🌿</span>
+        <div class="buff-pip-bar">
+          ${Array.from({length: maxDur}, (_, i) =>
+            `<div class="buff-pip renovacao-pip ${i < ren.duration ? 'buff-pip-filled' : ''}"></div>`
+          ).join('')}
+        </div>
+        <span class="buff-pip-value renovacao-value">${ren.value}/rod</span>
+      </div>`;
+  }
+
+  // ── PROFECIA TOKENS (azul) ──
+  const tokens = player.profecia_tokens;
+  if (tokens && tokens.length > 0) {
+    tokens.forEach(tok => {
+      const maxDur = 2;
+      const isShield = tok.type === 'shield';
+      const cardData = escapeHtml(JSON.stringify(getBuffCardData('profecia', tok.value, tok.type)));
+      html += `
+        <div class="hero-buff-pip-row profecia-buff ${isShield ? 'profecia-escudo-buff' : 'profecia-cura-buff'}" data-buff-card="${cardData}">
+          <span class="buff-pip-icon">${isShield ? '🛡️' : '👁️'}</span>
+          <div class="buff-pip-bar">
+            ${Array.from({length: maxDur}, (_, i) =>
+              `<div class="buff-pip profecia-pip ${i < tok.duration ? 'buff-pip-filled' : ''}"></div>`
+            ).join('')}
+          </div>
+          <span class="buff-pip-value profecia-value">${tok.value}</span>
+        </div>`;
+    });
+  }
+
+  return html ? `<div class="hero-buff-pips-container">${html}</div>` : '';
 }
 
 function renderPlayerMeter(kind, value, max, label, key) {
@@ -2474,8 +2671,8 @@ function renderHandCard(card, state, index = 0, total = 1) {
   const blocked = isCardBlocked(card, state, me);
   const reactionMode = Boolean(state.pendingReaction);
   const center = (total - 1) / 2;
-  const offset = (index - center) * 92;
-  const rotation = (index - center) * 7;
+  const offset = (index - center) * 115;
+  const rotation = (index - center) * 3.5;
 
   return `
     <article
@@ -4271,35 +4468,54 @@ function positionTooltip(tableCard, tooltip) {
 }
 
 document.addEventListener("mouseover", (event) => {
+  const tooltip = document.getElementById("card-preview-tooltip");
+  if (!tooltip) return;
+
+  // Arena / resolved cards
   const tableCard = event.target.closest(".table-card");
   if (tableCard && tableCard.dataset.cardPreview) {
-    const tooltip = document.getElementById("card-preview-tooltip");
-    if (tooltip) {
-      try {
-        const card = JSON.parse(tableCard.dataset.cardPreview);
-        tooltip.innerHTML = getCardTooltipHtml(card);
-        
-        // Position first
-        positionTooltip(tableCard, tooltip);
-        
-        // Add visible class
-        tooltip.classList.add("visible");
-      } catch (e) {
-        console.error("Error rendering card preview:", e);
-      }
+    try {
+      const card = JSON.parse(tableCard.dataset.cardPreview);
+      tooltip.innerHTML = getCardTooltipHtml(card);
+      positionTooltip(tableCard, tooltip);
+      tooltip.classList.add("visible");
+    } catch (e) {
+      console.error("Error rendering card preview:", e);
+    }
+    return;
+  }
+
+  // Hero buff pip rows (renovação / profecia)
+  const buffRow = event.target.closest(".hero-buff-pip-row[data-buff-card]");
+  if (buffRow && buffRow.dataset.buffCard) {
+    try {
+      const card = JSON.parse(buffRow.dataset.buffCard);
+      tooltip.innerHTML = getCardTooltipHtml(card);
+      positionTooltip(buffRow, tooltip);
+      tooltip.classList.add("visible");
+    } catch (e) {
+      console.error("Error rendering buff card preview:", e);
     }
   }
 });
 
 document.addEventListener("mouseout", (event) => {
+  // Arena / resolved cards
   const tableCard = event.target.closest(".table-card");
   if (tableCard) {
-    // Check if moving to a child of tableCard
     if (!event.relatedTarget || !tableCard.contains(event.relatedTarget)) {
       const tooltip = document.getElementById("card-preview-tooltip");
-      if (tooltip) {
-        tooltip.classList.remove("visible");
-      }
+      if (tooltip) tooltip.classList.remove("visible");
+    }
+    return;
+  }
+
+  // Hero buff pip rows
+  const buffRow = event.target.closest(".hero-buff-pip-row");
+  if (buffRow) {
+    if (!event.relatedTarget || !buffRow.contains(event.relatedTarget)) {
+      const tooltip = document.getElementById("card-preview-tooltip");
+      if (tooltip) tooltip.classList.remove("visible");
     }
   }
 });

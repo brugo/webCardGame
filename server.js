@@ -816,7 +816,7 @@ const cards = {
     type: "control",
     target: "enemy",
     cost: 1,
-    text: "Escolha um inimigo. Todo o dano que ele causar nesta rodada é redirecionado para você e reduzido em 2 vezes a sua Carga de Batalha atual."
+    text: "Escolha um inimigo. Todo o dano que ele causar nesta rodada é redirecionado para você, e o dano de cada ataque dele é reduzido em 2 vezes a sua Carga de Batalha atual."
   },
   "ultima-resistencia": {
     id: "ultima-resistencia",
@@ -894,7 +894,7 @@ const cards = {
     type: "defense",
     target: "enemy",
     cost: 3,
-    text: "Reduz o dano total causado pelo monstro alvo nesta rodada em 2 vezes a sua Carga de Batalha atual."
+    text: "Reduz o dano de cada ataque do monstro alvo nesta rodada em 2 vezes a sua Carga de Batalha atual."
   },
   "destruir-armadilha": {
     id: "destruir-armadilha",
@@ -1650,6 +1650,7 @@ function createSession() {
     createdAt: Date.now(),
     round: 0,
     roomRound: 0,
+    total_monstros_derrotados: 0,
     roomRewardClaimed: false,
     firstEnemyDamageApplied: false,
     players: [],
@@ -2265,7 +2266,9 @@ function addShieldToHero(session, target, amount, sourceCard, properties = {}) {
 }
 
 function applyDamageToHero(session, target, amount, source, sourceEnemy = null, options = {}) {
-  if (!target || target.life <= 0 || amount <= 0) return 0;
+  if (!target || target.life <= 0) return 0;
+  const isChallenged = sourceEnemy && sourceEnemy.challengedByGuardiao && target.heroId === "guardiao";
+  if (!isChallenged && amount <= 0) return 0;
 
   if (target.trapImmunityRounds && target.trapImmunityRounds > 0 && session.activeTrap && source === session.activeTrap.name) {
     session.log.unshift(`[Imunidade] ${target.name} ignorou o dano da armadilha ${source} devido a Antecipação do Perigo.`);
@@ -2335,11 +2338,12 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   if (sourceEnemy && sourceEnemy.challengedByGuardiao && target.heroId === "guardiao") {
     const reductionAmount = 2 * (sourceEnemy.desafio_guardiao_carga_reducao || 0);
     if (reductionAmount > 0) {
-      const reduced = Math.max(0, amount - reductionAmount);
-      session.log.unshift(`Desafio do Guardião: dano recebido de ${sourceEnemy.name} reduzido de ${amount} para ${reduced} (redução de ${reductionAmount} devido a ${sourceEnemy.desafio_guardiao_carga_reducao} de Carga).`);
-      amount = reduced;
+      const original = amount + reductionAmount;
+      session.log.unshift(`Desafio do Guardião: dano recebido de ${sourceEnemy.name} reduzido de ${original} para ${amount} (redução de ${reductionAmount} devido a ${sourceEnemy.desafio_guardiao_carga_reducao} de Carga).`);
     }
   }
+
+  if (amount <= 0) return 0;
 
   const reduction = target.reduceDamage || 0;
   if (reduction > 0) {
@@ -2603,6 +2607,7 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
     
     // Increment general round defeated counter
     session.inimigos_derrotados_esta_rodada = (session.inimigos_derrotados_esta_rodada || 0) + 1;
+    session.total_monstros_derrotados = (session.total_monstros_derrotados || 0) + 1;
     
     // If it's dungeon phase, queue for reaction check
     if (session.turn === "dungeon") {
@@ -3883,7 +3888,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       const reduction = 2 * currentCarga;
       target.protecao_divina_reduction = (target.protecao_divina_reduction || 0) + reduction;
       player.carga_de_batalha = 0; // Consume charges!
-      session.log.unshift(`${player.name} usou Proteção Divina em ${target.name}, reduzindo o dano total do monstro nesta rodada em ${reduction} (Carga consumida: ${currentCarga}).`);
+      session.log.unshift(`${player.name} usou Proteção Divina em ${target.name}, reduzindo o dano de cada ataque do monstro nesta rodada em ${reduction} (Carga consumida: ${currentCarga}).`);
     }
   }
 
@@ -5358,9 +5363,13 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
 
   // Apply Proteção Divina reduction
   if (enemy.protecao_divina_reduction && enemy.protecao_divina_reduction > 0) {
-    const aliveHeroesCount = session.players.filter(p => p.life > 0).length || 1;
-    const reductionPerAttack = Math.floor(enemy.protecao_divina_reduction / aliveHeroesCount);
-    attack = Math.max(0, attack - reductionPerAttack);
+    attack = Math.max(0, attack - enemy.protecao_divina_reduction);
+  }
+
+  // Apply Desafio do Guardião reduction
+  if (enemy.challengedByGuardiao && target.heroId === "guardiao") {
+    const reductionAmount = 2 * (enemy.desafio_guardiao_carga_reducao || 0);
+    attack = Math.max(0, attack - reductionAmount);
   }
 
   // Apply Terreno Montanhoso (-2 damage)
@@ -5556,6 +5565,7 @@ function sanitizeSession(session, viewerId) {
     round: session.round,
     roomRound: session.roomRound,
     roomNumber: session.roomNumber || 1,
+    total_monstros_derrotados: session.total_monstros_derrotados || 0,
     roomComplete: isRoomComplete(session),
     allRewardsClaimed: session.players.every((p) => p.life <= 0 || p.hasClaimedRoomReward),
     heroes: Object.values(heroes).map(({ deck, ...hero }) => hero),
@@ -5596,6 +5606,17 @@ function sanitizeSession(session, viewerId) {
         if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal")) {
           calculatedAttack += 3;
           isAttackBuffed = true;
+        }
+
+        // Apply Proteção Divina reduction
+        if (enemy.protecao_divina_reduction && enemy.protecao_divina_reduction > 0) {
+          calculatedAttack = Math.max(0, calculatedAttack - enemy.protecao_divina_reduction);
+        }
+
+        // Apply Desafio do Guardião reduction
+        if (enemy.challengedByGuardiao && target && target.heroId === "guardiao") {
+          const reductionAmount = 2 * (enemy.desafio_guardiao_carga_reducao || 0);
+          calculatedAttack = Math.max(0, calculatedAttack - reductionAmount);
         }
       }
       return {

@@ -579,13 +579,129 @@ p {
   --hero-accent-soft: rgba(255, 215, 133, 0.2);
   position: relative;
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
+  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 8px;
+  align-items: start;
   border: 1px solid rgba(255, 246, 223, 0.13);
-  border-radius: 8px;
-  padding: 9px;
+  border-radius: 10px;
+  padding: 8px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(0, 0, 0, 0.18));
+}
+
+/* ── Hero Buff Pip System (Renovação + Profecia) ── */
+.hero-buff-pips-container {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: -2px;
+}
+
+.hero-buff-pip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  position: relative;
+}
+
+.hero-buff-pip-row:hover {
+  transform: translateY(-1px);
+}
+
+/* Renovação row – green theme */
+.hero-buff-pip-row.renovacao-buff {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+.hero-buff-pip-row.renovacao-buff:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+/* Profecia cura row – blue theme */
+.hero-buff-pip-row.profecia-cura-buff {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+.hero-buff-pip-row.profecia-cura-buff:hover {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+/* Profecia escudo row – cyan theme */
+.hero-buff-pip-row.profecia-escudo-buff {
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.22);
+}
+.hero-buff-pip-row.profecia-escudo-buff:hover {
+  background: rgba(6, 182, 212, 0.16);
+  border-color: rgba(6, 182, 212, 0.45);
+}
+
+.buff-pip-icon {
+  font-size: 0.78rem;
+  flex-shrink: 0;
+  line-height: 1;
+  width: 16px;
+  text-align: center;
+}
+
+.buff-pip-bar {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+
+.buff-pip {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Filled pip – renovação (green) */
+.renovacao-buff .buff-pip.buff-pip-filled {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
+}
+
+/* Filled pip – profecia cura (blue) */
+.profecia-cura-buff .buff-pip.buff-pip-filled {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.55);
+}
+
+/* Filled pip – profecia escudo (cyan) */
+.profecia-escudo-buff .buff-pip.buff-pip-filled {
+  background: linear-gradient(135deg, #22d3ee, #06b6d4);
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.55);
+}
+
+.buff-pip-value {
+  font-size: 0.68rem;
+  font-weight: 800;
+  min-width: 30px;
+  text-align: right;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.renovacao-value {
+  color: #6ee7b7;
+}
+
+.profecia-value {
+  color: #93c5fd;
+}
+
+.profecia-escudo-buff .profecia-value {
+  color: #67e8f9;
 }
 
 .player-hud.hero-guardiao {
@@ -617,63 +733,122 @@ p {
   background: linear-gradient(145deg, rgba(102, 231, 255, 0.08), rgba(0, 0, 0, 0.24));
 }
 
-.portrait {
-  width: 54px;
-  aspect-ratio: 1;
-  border: 2px solid #b98745;
-  border-radius: 50%;
+/* ── Portrait Card for local player (is-you) ── */
+.portrait-container {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 3.5px solid #b98745;
+  border-radius: 12px;
   overflow: hidden;
-  background: #131313;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.28);
+  background: #111;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(185, 135, 69, 0.15);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.portrait img {
+.portrait-container:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7), 0 0 14px rgba(185, 135, 69, 0.25);
+}
+
+.portrait-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 48% 28%;
+  object-position: 50% 10%;
+}
+
+/* Circular shield badge styled next to other badges */
+.hud-shield-circular {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #66e7ff;
+  background: rgba(10, 24, 38, 0.95);
+  color: #66e7ff;
+  font-size: 0.95rem;
+  font-weight: 950;
+  box-shadow: 0 0 10px rgba(102, 231, 255, 0.7), inset 0 0 5px rgba(102, 231, 255, 0.4);
+  animation: shieldPulse 2s ease-in-out infinite;
+}
+
+.hud-shield-circular i {
+  width: 11px;
+  height: 13px;
+  display: inline-block;
+  background: linear-gradient(180deg, #bfe9ff, #4587b5);
+  clip-path: polygon(50% 0, 90% 14%, 84% 70%, 50% 100%, 16% 70%, 10% 14%);
+}
+
+.hud-extra-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .hero-party-panel .player-list {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
+/* Player cards: horizontal grid layout, glorious aesthetics */
 .hero-party-panel .player-hud {
-  grid-template-columns: 104px minmax(0, 1fr);
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-rows: auto auto;
   gap: 12px;
-  min-height: 168px;
-  border-color: color-mix(in srgb, var(--hero-accent) 50%, transparent);
+  align-items: start;
+  border: 1.5px solid rgba(255, 246, 223, 0.15);
+  border-radius: 14px;
   padding: 12px;
   background:
     radial-gradient(circle at 18% 20%, var(--hero-accent-soft), transparent 8rem),
     linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.28));
   box-shadow: inset 0 0 0 1px rgba(255, 246, 223, 0.05), 0 16px 34px rgba(0, 0, 0, 0.24);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-party-panel .player-hud:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px rgba(255, 246, 223, 0.08), 0 20px 42px rgba(0, 0, 0, 0.32);
 }
 
 .hero-party-panel .player-hud.is-you {
-  border-color: var(--hero-accent);
-  box-shadow: inset 0 0 0 1px rgba(255, 246, 223, 0.12), 0 18px 42px var(--hero-accent-soft);
+  border: 2.5px solid var(--hero-accent);
+  box-shadow: inset 0 0 0 1px rgba(255, 246, 223, 0.08), 0 20px 48px var(--hero-accent-soft);
 }
 
-.hero-party-panel .portrait {
-  width: 104px;
-  border-color: var(--hero-accent);
-  border-radius: 8px;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.24), 0 14px 28px rgba(0, 0, 0, 0.32);
+.hero-party-panel .player-hud .hud-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.hero-party-panel .portrait img {
-  object-position: 50% 21%;
+.hero-party-panel .player-hud .hud-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
 }
 
-.hero-party-panel .hud-main {
-  gap: 10px;
+.hero-party-panel .player-hud .hud-title strong {
+  color: #fff6df;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  font-weight: 950;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.hero-party-panel .hud-title {
-  display: grid;
-  gap: 2px;
+.hero-party-panel .player-hud .hud-title span {
+  color: var(--hero-accent);
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .hero-party-panel .hud-title strong {
@@ -747,6 +922,24 @@ p {
   color: #cfc5aa;
   font-size: 0.76rem;
   font-weight: 800;
+}
+
+/* Compact extra badges row (bênção, carga, sobrecarga) */
+.hud-extra-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hud-extra-badges span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 5px;
+  padding: 2px 6px;
+  background: rgba(255, 215, 133, 0.1);
+  border: 1px solid rgba(255, 215, 133, 0.2);
+  color: #ffd785;
+  white-space: nowrap;
 }
 
 .shield-badge {
@@ -1677,19 +1870,20 @@ body.is-game-screen .battlefield {
 }
 
 body.is-game-screen .monster-row {
+  grid-row: 2;
   height: 100%;
   min-height: 0;
   display: flex;
   justify-content: center;
-  align-items: stretch;
+  align-items: flex-start;
+  padding-top: 15px !important;
   gap: 8px;
   overflow: visible;
 }
 
 body.is-game-screen .monster-card {
   min-height: 0;
-  height: 100%;
-  max-height: 100%;
+  height: 70%;
   aspect-ratio: 2 / 3;
   padding: 0;
   gap: 0;
@@ -1912,13 +2106,14 @@ body.is-game-screen .hero-party-panel {
 }
 
 body.is-game-screen .hero-party-panel .player-hud {
-  grid-template-columns: 82px minmax(0, 1fr);
-  min-height: 132px;
-  padding: 9px;
+  grid-template-columns: 96px minmax(0, 1fr) !important;
+  min-height: auto;
+  padding: 10px;
+  gap: 10px;
 }
 
-body.is-game-screen .hero-party-panel .portrait {
-  width: 82px;
+body.is-game-screen .hero-party-panel .portrait-container {
+  width: 96px;
 }
 
 body.is-game-screen .hero-party-panel .hud-title strong {
@@ -1993,21 +2188,26 @@ body.is-game-screen .hand-dock {
 body.is-game-screen .hand-fan .play-card {
   position: absolute;
   left: 50%;
-  bottom: -262px;
+  bottom: -130px;
   width: clamp(172px, 13vw, 218px);
-  min-height: 330px;
+  height: 260px !important;
+  min-height: 0 !important;
+  overflow: hidden;
   flex: none;
   cursor: pointer;
   scroll-snap-align: none;
   transform: translateX(calc(-50% + var(--hand-offset))) rotate(var(--hand-rotate));
   transform-origin: 50% 100%;
-  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease, height 180ms ease, bottom 180ms ease;
 }
 
 body.is-game-screen .hand-fan .play-card:hover,
 body.is-game-screen .hand-fan .play-card:focus-visible {
-  transform: translateX(calc(-50% + var(--hand-offset))) translateY(-305px) scale(1.25) rotate(0deg);
+  height: 370px !important;
+  overflow: visible !important;
+  transform: translateX(calc(-50% + var(--hand-offset))) translateY(-180px) scale(1.25) rotate(0deg);
   z-index: 24;
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.6), 0 0 38px rgba(255, 215, 133, 0.3) !important;
 }
 
 body.is-game-screen .hand-fan .play-card:focus-visible {
@@ -4678,5 +4878,406 @@ body.is-game-screen .monster-card .monster-target-badge {
     transform: scale(1.15);
     filter: grayscale(0%) drop-shadow(0 0 8px #a855f7);
   }
+}
+
+@keyframes shieldPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(102, 231, 255, 0.5), inset 0 0 4px rgba(102, 231, 255, 0.3);
+    border-color: rgba(102, 231, 255, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(102, 231, 255, 0.9), inset 0 0 8px rgba(102, 231, 255, 0.5);
+    border-color: rgba(102, 231, 255, 1);
+  }
+}
+
+/* ==========================================================================
+   Restruturação do Layout do Jogo - Custom Styles & Overrides
+   ========================================================================== */
+
+/* 1. Battlefield Grid & Background Image Overrides */
+body.is-game-screen .battlefield {
+  grid-template-rows: auto 1fr auto !important;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 16, 0.4) 0%, rgba(8, 12, 16, 0.75) 100%),
+    url("/assets/background.jpg") no-repeat center !important;
+  background-size: cover !important;
+  border: 1px solid rgba(255, 215, 133, 0.25) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+  padding: 16px !important;
+}
+
+/* 2. Stylish Gold Fantasy Borders */
+body.is-game-screen .glass-panel,
+body.is-game-screen .arena-zone,
+body.is-game-screen .boss-hud-bar,
+body.is-game-screen .recent-actions-panel {
+  border: 1px solid rgba(197, 159, 99, 0.4) !important;
+  outline: 1.5px solid rgba(197, 159, 99, 0.12) !important;
+  outline-offset: -4px !important;
+  border-radius: 10px !important;
+  box-shadow: inset 0 0 12px rgba(197, 159, 99, 0.08), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(145deg, rgba(13, 22, 28, 0.92), rgba(9, 13, 17, 0.97)) !important;
+}
+
+/* 3. Compact Player HUD Sheets (Sidebar Left) */
+body.is-game-screen .hero-party-panel .player-hud {
+  grid-template-columns: 60px minmax(0, 1fr) !important;
+  min-height: 0 !important;
+  padding: 6px 8px !important;
+  gap: 8px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(197, 159, 99, 0.35) !important;
+}
+
+body.is-game-screen .hero-party-panel .portrait-container {
+  width: 60px !important;
+  height: 90px !important; /* Forces 2/3 ratio */
+  border-width: 2px !important;
+  border-radius: 8px !important;
+  border-color: rgba(197, 159, 99, 0.5) !important;
+}
+
+body.is-game-screen .hero-party-panel .hud-main {
+  gap: 3px !important;
+}
+
+body.is-game-screen .hero-party-panel .hud-title strong {
+  font-size: 0.95rem !important;
+}
+
+body.is-game-screen .hero-party-panel .hud-title span {
+  font-size: 0.78rem !important;
+}
+
+/* Redesigned player statistics block (no bars, clean layout) */
+.player-hud-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.hud-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-stat-icon {
+  font-size: 0.85rem;
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+}
+
+.hud-stat-value {
+  font-size: 0.82rem;
+  font-weight: 850;
+  color: #ffe3a8;
+}
+
+.hud-stat-item.life .hud-stat-value {
+  color: #ff9b9b;
+}
+
+.hud-stat-item.energy .hud-stat-value {
+  color: #66e7ff;
+}
+
+.hud-stat-item.charge .hud-stat-value {
+  color: #ffd785;
+}
+
+/* 4. Pulsing Glowing Red Border for Active Monsters */
+@keyframes monsterRedPulse {
+  0% {
+    border-color: rgba(220, 38, 38, 0.6);
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.35), 0 16px 42px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 16px 42px rgba(0, 0, 0, 0.4);
+  }
+  100% {
+    border-color: rgba(220, 38, 38, 0.6);
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.35), 0 16px 42px rgba(0, 0, 0, 0.4);
+  }
+}
+
+body.is-game-screen .monster-card:not(.defeated) {
+  border: 2px solid rgba(220, 38, 38, 0.8) !important;
+  animation: monsterRedPulse 2s infinite ease-in-out !important;
+}
+
+/* 5. Mini Arena Cards & Empty Slots */
+body.is-game-screen .arena-zone {
+  grid-row: 3 !important;
+  min-height: 140px !important;
+  max-height: 160px !important;
+  padding: 8px 12px !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(8, 12, 16, 0.45) !important;
+  backdrop-filter: blur(2px) !important;
+  margin-bottom: 145px !important;
+}
+
+body.is-game-screen .arena-label {
+  margin-bottom: 6px !important;
+}
+
+body.is-game-screen .arena-cards {
+  min-height: 110px !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 8px !important;
+  align-items: center;
+}
+
+body.is-game-screen .table-card {
+  min-height: 0 !important;
+  height: 110px !important;
+  aspect-ratio: 2 / 3 !important;
+  margin: 0 auto !important;
+  padding: 4px !important;
+}
+
+body.is-game-screen .table-card-face {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 2px !important;
+  height: 100% !important;
+}
+
+body.is-game-screen .table-card img {
+  height: 60px !important;
+  width: 100% !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+}
+
+body.is-game-screen .table-card strong {
+  font-size: 0.64rem !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+  color: #ffe3a8 !important;
+}
+
+body.is-game-screen .table-card span {
+  font-size: 0.58rem !important;
+  color: #a0a0a0 !important;
+}
+
+body.is-game-screen .table-card.empty-slot {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1.5px dashed rgba(255, 215, 133, 0.15) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+  border-radius: 6px !important;
+}
+
+.empty-slot-icon {
+  animation: none;
+  opacity: 0.35;
+}
+
+/* 6. Game Board Header (Top Stats Bar) Styling */
+.game-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, rgba(16, 20, 24, 0.95), rgba(8, 10, 12, 0.98));
+  border: 1px solid rgba(255, 215, 133, 0.22);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  outline: 1.5px solid rgba(255, 215, 133, 0.08);
+  outline-offset: -4px;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-btn {
+  background: transparent;
+  border: none;
+  color: #ffd785;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: transform 0.2s, color 0.2s;
+  line-height: 1;
+}
+
+.header-btn:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.header-crown {
+  font-size: 1.3rem;
+  color: #ffd785;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 133, 0.5));
+  line-height: 1;
+}
+
+.phase-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1.5px solid currentColor;
+}
+
+.phase-badge.action-phase {
+  color: #ffd785;
+  background: rgba(255, 215, 133, 0.08);
+  border-color: rgba(255, 215, 133, 0.35);
+}
+
+.phase-badge.dungeon-phase {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-stat-bubble {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1.5px solid rgba(255, 215, 133, 0.18);
+  border-radius: 20px;
+  padding: 5px 14px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+}
+
+.bubble-icon {
+  font-size: 1rem;
+}
+
+.bubble-label {
+  color: #b0a080;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.bubble-value {
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.header-btn-icon {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 215, 133, 0.18);
+  color: #ffd785;
+  font-size: 1.1rem;
+  padding: 5px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.header-btn-icon:hover {
+  background: rgba(255, 215, 133, 0.12);
+  border-color: rgba(255, 215, 133, 0.45);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* 7. Floating Recent Actions Panel */
+.floating-recent-actions {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 320px;
+  max-height: 380px;
+  z-index: 50;
+  background: rgba(8, 12, 16, 0.72) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(197, 159, 99, 0.4) !important;
+  border-radius: 10px;
+  padding: 12px !important;
+  box-shadow: inset 0 0 12px rgba(197, 159, 99, 0.08), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.floating-recent-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(197, 159, 99, 0.25);
+  padding-bottom: 6px;
+}
+
+.close-btn-x {
+  background: transparent;
+  border: none;
+  color: #ffd785;
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn-x:hover {
+  color: #fff;
+}
+
+.floating-recent-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.floating-recent-actions-list .recent-action-item {
+  display: flex;
+  align-items: start;
+  gap: 6px;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.floating-recent-actions-list .action-bullet {
+  width: 5px;
+  height: 5px;
+  background: #ffd785;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.floating-recent-actions-list .action-text {
+  color: #eadfc6;
+}
+
+body.is-game-screen .boss-hud-bar {
+  grid-row: 1 !important;
 }
 
