@@ -1327,7 +1327,7 @@ function renderGame() {
           </div>
         </aside>
 
-        <section class="battlefield" style="position: relative;">
+        <section class="battlefield ${state.room?.effect === "bossRoom" && state.enemies.some(e => e.isBoss) ? "has-boss" : ""}" style="position: relative;">
           ${local.recentActionsOpen ? `
             <div class="floating-recent-actions glass-panel">
               <div class="floating-recent-actions-header">
