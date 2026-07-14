@@ -2594,6 +2594,30 @@ body.is-game-screen .hand-fan .play-card.reaction-ready {
   border-radius: 4px;
 }
 
+.card-entry-cost.badge-common {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.card-entry-cost.badge-brutal {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.card-entry-cost.badge-mystic {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.card-entry-cost.badge-boss {
+  background: linear-gradient(135deg, #a8720a, #f5c200);
+  color: #1a1000;
+  border: 1px solid rgba(245, 194, 0, 0.4);
+}
+
 .card-entry-text {
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.7);
@@ -3727,6 +3751,11 @@ body.is-game-screen .right-rail .new-intention-v2 .section-v2 {
   background: rgba(132, 204, 22, 0.15);
   border-color: rgba(132, 204, 22, 0.3);
   color: #a3e635;
+}
+.status-badge.bleed {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
 }
 
 .monster-keywords {

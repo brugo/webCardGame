@@ -126,7 +126,7 @@ const trapCards = [
   { id: "TRAP_001", name: "Bloqueio de Escudos", text: "Enquanto esta armadilha estiver ativa, ninguém pode receber escudos.", effect: "noShield" },
   { id: "TRAP_002", name: "Selo Anticura", text: "Enquanto esta armadilha estiver ativa, impossível receber cura.", effect: "noHealing" },
   { id: "TRAP_003", name: "Portal Místico", text: "Evoque um monstro do baralho de monstros místicos (entra em jogo imediatamente).", effect: "spawnMystic" },
-  { id: "TRAP_004", name: "Reforço Inimigo", text: "Evoque um monstro Comum (entra em jogo imediatamente).", effect: "spawnCommon" },
+  { id: "TRAP_004", name: "Defesas Supremas", text: "Todo o dano causado pelos heróis é reduzido pela metade enquanto esta armadilha estiver activa.", effect: "halfDamage" },
   { id: "TRAP_005", name: "Fome Arcana", text: "Enquanto esta armadilha estiver ativa, ninguém mais compra cartas no início do turno dos heróis.", effect: "noRoundDraw" },
   { id: "TRAP_006", name: "Poucos Recursos", text: "Enquanto esta armadilha estiver ativa, cada herói só pode jogar 1 carta por turno.", effect: "fewResources" },
   { id: "TRAP_007", name: "Reflexão Instável", text: "Enquanto esta armadilha estiver ativa, todo dano causado a um monstro também é causado imediatamente ao herói que atacou.", effect: "unstableReflection" },
@@ -143,7 +143,8 @@ function makeStatusEffects() {
     exposto: false,
     marcado: false,
     envenenamento: 0,
-    renovacao: { value: 0, duration: 0 }
+    renovacao: { value: 0, duration: 0 },
+    bleed: { value: 0, duration: 0 }
   };
 }
 
@@ -154,7 +155,7 @@ const monsterTemplates = {
     category: "common",
     role: "Tanque",
     maxLife: 24,
-    attack: 4,
+    attack: 8,
     shield: 2,
     icon: "blade",
     keywords: []
@@ -165,7 +166,7 @@ const monsterTemplates = {
     category: "common",
     role: "Atacante",
     maxLife: 18,
-    attack: 5,
+    attack: 10,
     shield: 0,
     icon: "fang",
     keywords: []
@@ -176,7 +177,7 @@ const monsterTemplates = {
     category: "common",
     role: "Tanque",
     maxLife: 28,
-    attack: 4,
+    attack: 8,
     shield: 3,
     icon: "stone",
     keywords: []
@@ -187,7 +188,7 @@ const monsterTemplates = {
     category: "brutal",
     role: "Tanque/Bruto",
     maxLife: 48,
-    attack: 7,
+    attack: 14,
     shield: 5,
     icon: "stone",
     keywords: []
@@ -198,7 +199,7 @@ const monsterTemplates = {
     category: "brutal",
     role: "Atacante",
     maxLife: 40,
-    attack: 8,
+    attack: 16,
     shield: 3,
     icon: "blade",
     keywords: []
@@ -209,7 +210,7 @@ const monsterTemplates = {
     category: "brutal",
     role: "Controlador",
     maxLife: 36,
-    attack: 6,
+    attack: 12,
     shield: 7,
     icon: "moon",
     keywords: []
@@ -625,8 +626,7 @@ const heroes = {
     deck: [
       ["escudo-protetor", 1],
       ["golpe-de-escudo", 1],
-      ["provocar", 1],
-      ["desafio-do-guardiao", 1],
+      ["provocar", 3],
       ["corte-do-escudo", 1],
       ["grito-de-guerra", 1],
       ["salvaguarda", 1],
@@ -638,7 +638,6 @@ const heroes = {
       ["muralha-viva", 1],
       ["golpe-pesado", 1],
       ["avalanche-de-ferro", 2],
-      ["provocacao-em-massa", 1],
       ["escudo-refletor", 1],
       ["protecao-divina", 1],
       ["destruir-armadilha", 2],
@@ -663,8 +662,7 @@ const heroes = {
       ["absolvicao", 1],
       ["inspiracao", 1],
       ["profecia-menor", 1],
-      ["pressagio", 1],
-      ["toque-sagrado", 1],
+      ["toque-sagrado", 2],
       ["cura-de-alma", 1],
       ["raio-trovejante", 2],
       ["profecia-dupla", 1],
@@ -684,28 +682,25 @@ const heroes = {
     energy: 4,
     supreme: "tempestade-de-flechas",
     deck: [
-      ["flechada-de-oportunidade", 1],
+      ["flecha-de-cura", 2],
       ["flecha-relampago", 1],
       ["flecha-precisa", 1],
       ["mira-perfeita", 1],
-      ["disparo-rapido", 1],
+      ["disparo-rapido", 2],
       ["flecha-envenenada", 1],
       ["marcar-alvo", 1],
       ["cacada", 1],
       ["flecha-de-abertura", 1],
-      ["chuva-de-flechas", 1],
-      ["flecha-explosiva", 1],
+      ["flecha-roubadora", 1],
+      ["flecha-bleed", 1],
       ["flecha-atordoante", 1],
-      ["companheiro-animal", 1],
       ["tiro-duplo", 1],
       ["concentracao", 1],
-      ["flecha-perfurante", 1],
-      ["rastrear", 1],
+      ["flecha-perfurante", 2],
       ["disparo-poderoso", 1],
       ["tiro-perfurante", 1],
       ["cacada-implacavel", 1],
       ["ultima-flecha", 1],
-      ["saraivada-venenosa", 1],
       ["flecha-letal", 1]
     ]
   },
@@ -739,6 +734,31 @@ const heroes = {
       ["explosao-de-mana", 1],
       ["terreno-chao-de-gelo", 1],
       ["distorcao-temporal", 1]
+    ]
+  },
+  warlock: {
+    id: "warlock",
+    name: "Warlock",
+    life: 26,
+    energy: 5,
+    supreme: "pacto-de-imortalidade",
+    deck: [
+      ["sopro-profano", 2],
+      ["chama-vital", 2],
+      ["conversao-sombria", 2],
+      ["golpe-cruel", 2],
+      ["marca-da-vulnerabilidade", 1],
+      ["marca-da-drenagem", 1],
+      ["sacrificio-final", 1],
+      ["transfusao-livre", 2],
+      ["drenar-vida", 2],
+      ["doar-vida", 2],
+      ["aprisionar-alma", 1],
+      ["debelar-ofensiva", 2],
+      ["romper-armadilha", 1],
+      ["barganha-sombria", 1],
+      ["sugar-essencia", 1],
+      ["ressurreicao-sombria", 1]
     ]
   }
 };
@@ -774,15 +794,15 @@ const cards = {
     name: "Formação Defensiva",
     type: "defense",
     cost: 2,
-    allBlock: 2,
-    text: "Todos os aliados recebem 2 de Escudo."
+    allBlock: 3,
+    text: "Todos os aliados recebem 3 de Escudo."
   },
   "salvaguarda": {
     id: "salvaguarda",
     name: "Salvaguarda",
     type: "defense",
     cost: 3,
-    text: "Nesta rodada, metade de todo o dano que os aliados receberiam de ataques inimigos é redirecionado para você (arredondado para baixo)."
+    text: "Nesta rodada, metade de todo o dano que os aliados receberiam de ataques inimigos é redirecionado para você (arredondado para baixo). ganhe 2 cargas"
   },
   "avanco-implacavel": {
     id: "avanco-implacavel",
@@ -809,14 +829,6 @@ const cards = {
     block: 4,
     draw: 1,
     text: "Você recebe 4 de Escudo e compra 1 carta."
-  },
-  "desafio-do-guardiao": {
-    id: "desafio-do-guardiao",
-    name: "Desafio do Guardião",
-    type: "control",
-    target: "enemy",
-    cost: 1,
-    text: "Escolha um inimigo. Todo o dano que ele causar nesta rodada é redirecionado para você, e o dano de cada ataque dele é reduzido em 2 vezes a sua Carga de Batalha atual."
   },
   "ultima-resistencia": {
     id: "ultima-resistencia",
@@ -871,7 +883,7 @@ const cards = {
     name: "Golpe Pesado",
     type: "attack",
     cost: 2,
-    text: "Cause 6 de dano a um inimigo. Se você possui 4+ de Escudo, cause 9 de dano."
+    text: "Cause 4 de dano a um inimigo. Para cada Carga que voce possuir aumente o dano em +2"
   },
   "avalanche-de-ferro": {
     id: "avalanche-de-ferro",
@@ -880,13 +892,6 @@ const cards = {
     cost: 2,
     target: "enemy",
     text: "Cause 4 de dano a um inimigo. Todos os aliados ganham Escudo igual à Carga de Batalha atual."
-  },
-  "provocacao-em-massa": {
-    id: "provocacao-em-massa",
-    name: "Provocação em Massa",
-    type: "control",
-    cost: 2,
-    text: "Até o início da próxima Fase dos Heróis, todos os inimigos só atacam você. Você recebe 3 de Escudo. Acumule +1 de Carga."
   },
   "protecao-divina": {
     id: "protecao-divina",
@@ -902,7 +907,7 @@ const cards = {
     type: "defense",
     cost: 0,
     lifeCost: 4,
-    text: "Destrói a armadilha ativa da sala. Impede por 1 rodada que novas armadilhas entrem em jogo. Custa 4 de Vida."
+    text: "Destrói a armadilha ativa da sala. Custa 4 de Vida."
   },
   "rugido-feroz": {
     id: "rugido-feroz",
@@ -1038,7 +1043,7 @@ const cards = {
     type: "control",
     target: "ally",
     cost: 1,
-    text: "Escolha um aliado. Pelas próximas 2 rodadas, ele fica imune a danos provenientes de armadilhas."
+    text: "Anule todos os efeitos de armadilhas a um herói a sua escolha."
   },
   "cura-menor": {
     id: "cura-menor",
@@ -1053,7 +1058,7 @@ const cards = {
     name: "Prece da Regeneração",
     type: "heal",
     cost: 2,
-    text: "Todos os aliados recebem Renovação 2 por 3 rodadas (curam 2 de Vida no início da Fase dos Heróis de cada rodada)."
+    text: "Todos os aliados recebem Renovação 5 por 3 rodadas (curam 5 de Vida no início da Fase dos Heróis de cada rodada)."
   },
   "planejamento": {
     id: "planejamento",
@@ -1200,19 +1205,19 @@ const cards = {
     supremeEffects: true,
     text: "Suprema. Todos os aliados recebem: Cura 8, Escudo 6, Energia +2 e compram 1 carta."
   },
-  "flechada-de-oportunidade": {
-    id: "flechada-de-oportunidade",
-    name: "Flechada de Oportunidade",
-    type: "draw",
-    cost: 1,
-    text: "Compre 2 cartas. Se houver apenas 1 inimigo em jogo, esta carta custa 0 de Energia."
+  "flecha-de-cura": {
+    id: "flecha-de-cura",
+    name: "Flecha de Cura",
+    type: "attack",
+    cost: 2,
+    text: "Cause 4 de dano e Cura 4 de vida."
   },
   "flecha-relampago": {
     id: "flecha-relampago",
     name: "Flecha Relâmpago",
     type: "attack",
-    cost: 0,
-    text: "Cause 2 de dano a um inimigo. Compre 1 carta e depois descarte 1."
+    cost: 2,
+    text: "Cause 3 de dano. Se houver armadilha ativa em jogo cause 6."
   },
   "flecha-precisa": {
     id: "flecha-precisa",
@@ -1225,20 +1230,16 @@ const cards = {
   "mira-perfeita": {
     id: "mira-perfeita",
     name: "Mira Perfeita",
-    type: "draw",
+    type: "attack",
     cost: 1,
-    draw: 2,
-    planning: true,
-    text: "Compre 2 cartas e depois descarte 1."
+    text: "Cause 3 de dano. Se o inimigo tiver escudo cause 6."
   },
   "disparo-rapido": {
     id: "disparo-rapido",
     name: "Disparo Rápido",
-    type: "energy",
+    type: "attack",
     cost: 1,
-    energy: 1,
-    draw: 1,
-    text: "Recupere 1 de Energia. Compre 1 carta."
+    text: "Causa 2 de dano. Ganha 2 de escudo."
   },
   "flecha-envenenada": {
     id: "flecha-envenenada",
@@ -1269,33 +1270,26 @@ const cards = {
     cost: 1,
     text: "Cause 3 de dano a um inimigo. Se esta for a primeira carta que você jogou nesta rodada, cause 6 de dano em vez disso."
   },
-  "chuva-de-flechas": {
-    id: "chuva-de-flechas",
-    name: "Chuva de Flechas",
-    type: "attack",
-    cost: 2,
-    text: "Dispare 3 flechas de 3 de dano cada. Você pode distribuir as flechas livremente entre os inimigos."
+  "flecha-roubadora": {
+    id: "flecha-roubadora",
+    name: "Flecha Roubadora",
+    type: "control",
+    cost: 3,
+    text: "Transfira todo o escudo do inimigo para voce."
   },
-  "flecha-explosiva": {
-    id: "flecha-explosiva",
-    name: "Flecha Explosiva",
+  "flecha-bleed": {
+    id: "flecha-bleed",
+    name: "Flecha Bleed",
     type: "attack",
     cost: 2,
-    text: "Cause 4 de dano a um inimigo. Se houver outros inimigos em jogo, cause 2 de dano a cada um deles."
+    text: "Cause 4 de dano a um inimigo por turno, durante 3 turnos (4 inicial + DoT no início do turno da dungeon)."
   },
   "flecha-atordoante": {
     id: "flecha-atordoante",
     name: "Desabilitador",
     type: "control",
-    cost: 2,
-    text: "Remova a armadilha ativa. Você começa a próxima rodada com 2 de Energia a menos."
-  },
-  "companheiro-animal": {
-    id: "companheiro-animal",
-    name: "Companheiro Animal",
-    type: "attack",
-    cost: 2,
-    text: "No início do próximo turno dos heróis, cause 8 de dano a um inimigo."
+    cost: 4,
+    text: "Remova a Armadilha"
   },
   "tiro-duplo": {
     id: "tiro-duplo",
@@ -1320,13 +1314,6 @@ const cards = {
     cost: 2,
     ignoreShield: true,
     text: "Cause 5 de dano a um inimigo. Este dano ignora o Escudo do inimigo."
-  },
-  "rastrear": {
-    id: "rastrear",
-    name: "Rastrear",
-    type: "utility",
-    cost: 2,
-    text: "Todos os aliados recuperam 1 de Energia. Você compra 1 carta."
   },
   "disparo-poderoso": {
     id: "disparo-poderoso",
@@ -1360,13 +1347,6 @@ const cards = {
     damage: 12,
     text: "Cause 12 de dano a um inimigo. Depois, descarte toda a sua mão."
   },
-  "saraivada-venenosa": {
-    id: "saraivada-venenosa",
-    name: "Saraivada Venenosa",
-    type: "attack",
-    cost: 3,
-    text: "Dispare 5 flechas de 2 de dano cada que podem ser distribuídas livremente. Compre 1 carta."
-  },
   "flecha-letal": {
     id: "flecha-letal",
     name: "Flecha Letal",
@@ -1380,7 +1360,7 @@ const cards = {
     name: "Tempestade de Flechas",
     type: "attack",
     cost: 0,
-    text: "Suprema. Cause 14 de dano a um inimigo. Se a Vida dele estiver abaixo de 50%, cause 20 de dano em vez disso. Seus outros ataques nesta rodada não custam Energia."
+    text: "Suprema. Cause 14 de dano a um inimigo. Se a Vida dele estiver abaixo de 50%, cause 20 de dano em vez disso. Suas outras cartas nesta rodada não custam Energia."
   },
   "raio-arcano": {
     id: "raio-arcano",
@@ -1431,7 +1411,7 @@ const cards = {
     name: "Campo Antimagia",
     type: "control",
     cost: 2,
-    text: "Remova a armadilha ativa e previna que novas armadilhas sejam ativadas por 2 rodadas."
+    text: "Remova a armadilha ativa."
   },
   "teleporte-arcano": {
     id: "teleporte-arcano",
@@ -1576,6 +1556,137 @@ const cards = {
     heal: 10,
     isSpecialBonusCard: true,
     text: "Especial. Cure 10 de Vida de um aliado a sua escolha (ou de si mesmo). Não conta para o limite de cartas na mão."
+  },
+  "pacto-de-imortalidade": {
+    id: "pacto-de-imortalidade",
+    name: "Pacto de Imortalidade",
+    type: "defense",
+    cost: 0,
+    text: "Suprema. Você não pode morrer nesta rodada (vida mínima de 1 nesta rodada). Devolva ao monstro todo o dano de ataque causado a você."
+  },
+  "sopro-profano": {
+    id: "sopro-profano",
+    name: "Sopro Profano",
+    type: "attack",
+    cost: 2,
+    text: "Causa 5 de dano. Para cada 1 de Vida sacrificada (selecionada ao jogar), aumente o dano em +1."
+  },
+  "chama-vital": {
+    id: "chama-vital",
+    name: "Chama Vital",
+    type: "attack",
+    cost: 2,
+    target: "enemy",
+    text: "Causa 3 de dano a um inimigo e você cura 3 de Vida."
+  },
+  "conversao-sombria": {
+    id: "conversao-sombria",
+    name: "Conversão Sombria",
+    type: "energy",
+    cost: 0,
+    text: "Sacrifique sua própria vida para recuperar Energia equivalente (selecionada ao jogar, não pode ultrapassar sua Energia máxima)."
+  },
+  "golpe-cruel": {
+    id: "golpe-cruel",
+    name: "Golpe Cruel",
+    type: "attack",
+    cost: 2,
+    target: "enemy",
+    text: "Causa 8 de dano a um inimigo. Depois, você sofre 3 de dano."
+  },
+  "marca-da-vulnerabilidade": {
+    id: "marca-da-vulnerabilidade",
+    name: "Marca da Vulnerabilidade",
+    type: "control",
+    target: "enemy",
+    cost: 1,
+    text: "Perca 4 de vida para marcar um inimigo. Inimigos marcados recebem +3 de dano de qualquer ataque até morrerem (apenas 1 Marca ativa por vez)."
+  },
+  "marca-da-drenagem": {
+    id: "marca-da-drenagem",
+    name: "Marca da Drenagem",
+    type: "control",
+    target: "enemy",
+    cost: 2,
+    text: "Perca 4 de vida para marcar um inimigo. Inimigos com esta marca restauram +2 de Vida ao herói que causar dano a eles (apenas 1 Marca ativa por vez)."
+  },
+  "sacrificio-final": {
+    id: "sacrificio-final",
+    name: "Sacrifício Final",
+    type: "attack",
+    cost: 3,
+    target: "enemy",
+    text: "Causa 12 de dano a um inimigo. Você perde metade da sua Vida atual."
+  },
+  "transfusao-livre": {
+    id: "transfusao-livre",
+    name: "Transfusão de Alma",
+    type: "heal",
+    target: "ally",
+    cost: 2,
+    text: "Transfira qualquer quantidade de vida entre você e outro herói (selecionado ao jogar)."
+  },
+  "drenar-vida": {
+    id: "drenar-vida",
+    name: "Drenar Vida do Aliado",
+    type: "heal",
+    target: "ally",
+    cost: 2,
+    text: "Transfira até 5 de vida de um aliado para você (selecionado ao jogar)."
+  },
+  "doar-vida": {
+    id: "doar-vida",
+    name: "Doar Vida ao Aliado",
+    type: "heal",
+    target: "ally",
+    cost: 2,
+    text: "Transfira até 5 de sua vida para um aliado (selecionado ao jogar)."
+  },
+  "aprisionar-alma": {
+    id: "aprisionar-alma",
+    name: "Aprisionar Alma",
+    type: "control",
+    target: "enemy",
+    cost: 3,
+    text: "Um inimigo não ataca no próximo turno dele."
+  },
+  "debelar-ofensiva": {
+    id: "debelar-ofensiva",
+    name: "Debelar Ofensiva",
+    type: "control",
+    target: "enemy",
+    cost: 4,
+    text: "Reduza o dano do inimigo em 1 para cada 2 de vida sua sacrificada (selecionado ao jogar)."
+  },
+  "romper-armadilha": {
+    id: "romper-armadilha",
+    name: "Quebrar Maldição",
+    type: "defense",
+    cost: 4,
+    text: "Perca 4 de vida e destrua uma armadilha ativa."
+  },
+  "barganha-sombria": {
+    id: "barganha-sombria",
+    name: "Barganha Sombria",
+    type: "draw",
+    cost: 2,
+    text: "Perca 4 de vida. Compre 3 cartas."
+  },
+  "sugar-essencia": {
+    id: "sugar-essencia",
+    name: "Sugar Essência",
+    type: "attack",
+    cost: 2,
+    target: "enemy",
+    text: "Causa 6 de dano a um inimigo. Recupera 3 de vida."
+  },
+  "ressurreicao-sombria": {
+    id: "ressurreicao-sombria",
+    name: "Ressurreição Sombria",
+    type: "heal",
+    revive: true,
+    cost: 4,
+    text: "Ressuscita um aliado morto transferindo sua própria vida para ele (selecionada ao jogar)."
   }
 };
 
@@ -1757,12 +1868,6 @@ function drawAndCreateMonsterFromDeck(session, category) {
 }
 
 function drawTrap(session) {
-  if (session.prevent_new_traps_round && session.round <= session.prevent_new_traps_round) {
-    session.activeTrap = null;
-    session.log.unshift("Nenhuma armadilha foi revelada devido ao efeito de Destruir Armadilha.");
-    return;
-  }
-
   if (session.trapDeck.length === 0) {
     session.trapDeck = shuffle(session.trapDiscard.length ? session.trapDiscard : trapCards);
     session.trapDiscard = [];
@@ -1781,11 +1886,6 @@ function drawTrap(session) {
       session.enemies.push(monster);
       session.log.unshift(`[Portal Místico] ${monster.name} foi invocado pela armadilha.`);
       pushVisualEvent(session, { type: "summon", targetType: "enemy", targetId: monster.uid, source: "Portal Místico" });
-    } else if (session.activeTrap.effect === "spawnCommon") {
-      const monster = drawAndCreateMonsterFromDeck(session, "common");
-      session.enemies.push(monster);
-      session.log.unshift(`[Reforço Inimigo] ${monster.name} foi invocado pela armadilha.`);
-      pushVisualEvent(session, { type: "summon", targetType: "enemy", targetId: monster.uid, source: "Reforço Inimigo" });
     }
   } else {
     session.log.unshift(`[Armadilha] O efeito de entrada de ${session.activeTrap.name} foi anulado porque as armadilhas estão desativadas.`);
@@ -2094,7 +2194,10 @@ function applyStartOfRoundEffects(session) {
   }
 
 
-  // Trigger Curandeira and Guardiã keywords for monsters
+}
+
+function applyDungeonMonsterEffects(session) {
+  // Trigger Curandeira and Guardiã keywords for monsters, and custom mystic monster actions
   for (const enemy of session.enemies) {
     // Custom Bruxa do Breu healing
     if (enemy.life > 0 && enemy.id === "bruxa" && enemy.category === "mystic" && !enemy.bruxa_resolved_this_round) {
@@ -2116,7 +2219,8 @@ function applyStartOfRoundEffects(session) {
                 targetType: "enemy",
                 targetId: target.uid,
                 amount: healed,
-                source: enemy.name
+                source: enemy.name,
+                enemyUid: enemy.uid
               });
               session.log.unshift(`Bruxa do Breu: Curou ${healed} de Vida em ${target.name}.`);
             }
@@ -2136,7 +2240,8 @@ function applyStartOfRoundEffects(session) {
           targetType: "enemy",
           targetId: target.uid,
           amount: 3,
-          source: enemy.name
+          source: enemy.name,
+          enemyUid: enemy.uid
         });
         session.log.unshift(`Místico Penumbra: Concedeu 3 de Escudo para ${target.name}.`);
       });
@@ -2168,15 +2273,16 @@ function applyStartOfRoundEffects(session) {
                 targetType: "enemy",
                 targetId: targetMonster.uid,
                 amount: healed,
-                source: enemy.name
+                source: enemy.name,
+                enemyUid: enemy.uid
               });
               session.log.unshift(`Curandeira: ${enemy.name} curou ${healed} de Vida em ${targetMonster.name}.`);
             }
           }
         }
-        applyStartOfRoundEffects(session);
+        applyDungeonMonsterEffects(session);
       });
-      if (paused) return;
+      if (paused) return true;
     }
 
     // Default Guardiã triggering (for other custom/boss monsters if any)
@@ -2195,16 +2301,23 @@ function applyStartOfRoundEffects(session) {
               targetType: "enemy",
               targetId: targetMonster.uid,
               amount: shieldVal,
-              source: enemy.name
+              source: enemy.name,
+              enemyUid: enemy.uid
             });
             session.log.unshift(`Guardiã: ${enemy.name} concedeu ${shieldVal} de Escudo a ${targetMonster.name}.`);
           }
         }
-        applyStartOfRoundEffects(session);
+        applyDungeonMonsterEffects(session);
       });
-      if (paused) return;
+      if (paused) return true;
     }
   }
+
+  if (session.turn === "dungeon") {
+    session.dungeonMonsterEffectsApplied = true;
+    finishDungeonTurn(session);
+  }
+  return false;
 }
 
 function adjustActiveShields(target) {
@@ -2237,7 +2350,8 @@ function adjustActiveShields(target) {
 
 function addShieldToHero(session, target, amount, sourceCard, properties = {}) {
   const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
-  if (isTrapActive && session.activeTrap.effect === "noShield") {
+  const hasTrapImmunity = target.trapImmunityRounds && target.trapImmunityRounds > 0;
+  if (isTrapActive && session.activeTrap.effect === "noShield" && !hasTrapImmunity) {
     session.log.unshift(`[Armadilha] Ganho de escudo de ${target.name} bloqueado por ${session.activeTrap.name}.`);
     return;
   }
@@ -2269,6 +2383,12 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   if (!target || target.life <= 0) return 0;
   const isChallenged = sourceEnemy && sourceEnemy.challengedByGuardiao && target.heroId === "guardiao";
   if (!isChallenged && amount <= 0) return 0;
+
+  if (target.heroId === "warlock" && target.pactoImortalidadeActive && sourceEnemy) {
+    session.log.unshift(`[Pacto de Imortalidade] ${target.name} devolveu ${amount} de dano para ${sourceEnemy.name}!`);
+    applyDamageToEnemy(session, sourceEnemy, amount, `Reflexo de ${target.name}`, false);
+    return 0;
+  }
 
   if (target.trapImmunityRounds && target.trapImmunityRounds > 0 && session.activeTrap && source === session.activeTrap.name) {
     session.log.unshift(`[Imunidade] ${target.name} ignorou o dano da armadilha ${source} devido a Antecipação do Perigo.`);
@@ -2351,7 +2471,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
     session.log.unshift(`${target.name} reduziu o dano recebido em ${reduction}.`);
   }
 
-  if (target.profecia_tokens && target.profecia_tokens.length > 0) {
+  if (!options.isSelfDamage && target.profecia_tokens && target.profecia_tokens.length > 0) {
     const shieldProphecies = target.profecia_tokens.filter(tok => tok && tok.type === 'shield');
     if (shieldProphecies.length > 0) {
       let addedShield = 0;
@@ -2398,7 +2518,13 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
 
   const damage = amount - blocked;
   const oldLife = target.life;
-  target.life = Math.max(0, target.life - damage);
+  let newLife = target.life - damage;
+  if (target.heroId === "warlock" && target.pactoImortalidadeActive) {
+    newLife = Math.max(1, newLife);
+  } else {
+    newLife = Math.max(0, newLife);
+  }
+  target.life = newLife;
   if (oldLife > 0 && target.life === 0) {
     session.heroDefeatedThisRound = true;
     const allDefeated = session.players.every((p) => p.life <= 0);
@@ -2453,7 +2579,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   if (damage > 0 && totalReflect > 0 && sourceEnemy?.life > 0) {
     applyDamageToEnemy(session, sourceEnemy, totalReflect, `${target.name} refletiu`, false);
   }
-  if (damage > 0 && target.life > 0 && target.profecia_tokens && target.profecia_tokens.length > 0) {
+  if (!options.isSelfDamage && damage > 0 && target.life > 0 && target.profecia_tokens && target.profecia_tokens.length > 0) {
     const healProphecies = target.profecia_tokens.filter(tok => tok && tok.type === 'heal');
     if (healProphecies.length > 0) {
       let totalHeal = 0;
@@ -2530,6 +2656,11 @@ function triggerBossTransition(session, boss) {
 function applyDamageToEnemy(session, target, amount, source, ignoreShield = false, player = null) {
   if (!target || target.life <= 0 || amount <= 0) return 0;
 
+  if (target.warlockMark === "vulnerability") {
+    amount += 3;
+    session.log.unshift(`[Marca da Vulnerabilidade] +3 de dano causado a ${target.name}.`);
+  }
+
   if (player) {
     if (player.heroId === "batedor" && player.foco_em === target.uid) {
       amount += (player.bonus_foco || 0);
@@ -2557,6 +2688,14 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
     amount += 1;
   }
 
+  const playerHasTrapImmunity = player && player.trapImmunityRounds && player.trapImmunityRounds > 0;
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  if (isTrapActive && session.activeTrap.effect === "halfDamage" && player && !playerHasTrapImmunity) {
+    const originalAmount = amount;
+    amount = Math.floor(amount / 2);
+    session.log.unshift(`[Defesas Supremas] Dano de ${player.name} reduzido de ${originalAmount} para ${amount} pela armadilha.`);
+  }
+
   // 1. Pulso Reativo torment trigger (verify before damage resolution)
   const isPulsoReativo = session.activeTorment?.id === "TORMENTO-002";
 
@@ -2565,6 +2704,11 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   const lifeDamage = amount - shieldDamage;
   target.life = Math.max(0, target.life - lifeDamage);
   if (player) player.roundStats.damageDealt += lifeDamage;
+
+  if (target.warlockMark === "drain" && player && player.life > 0 && (shieldDamage + lifeDamage) > 0) {
+    applyHealToHero(session, player, 2, "Marca da Drenagem");
+    session.log.unshift(`[Marca da Drenagem] ${player.name} recuperou 2 de Vida ao causar dano em ${target.name}.`);
+  }
 
   if (shieldDamage + lifeDamage > 0) {
     pushVisualEvent(session, {
@@ -2581,8 +2725,7 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
     `${source}: ${shieldDamage} no escudo e ${lifeDamage} de dano em ${target.name}${ignoreShield ? " (ignorou Escudo)" : ""}.${target.statusEffects?.exposto ? " (+1 por estar Exposto)" : ""}`
   );
 
-  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
-  if (isTrapActive && session.activeTrap.effect === "unstableReflection" && player && (shieldDamage + lifeDamage) > 0) {
+  if (isTrapActive && session.activeTrap.effect === "unstableReflection" && player && (shieldDamage + lifeDamage) > 0 && !playerHasTrapImmunity) {
     const reflectedDamage = shieldDamage + lifeDamage;
     session.log.unshift(`[Reflexão Instável] ${player.name} sofreu ${reflectedDamage} de dano por reflexão ao atacar ${target.name}.`);
     applyDamageToHero(session, player, reflectedDamage, session.activeTrap.name, null, { skipRedirect: true });
@@ -2604,6 +2747,14 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   if (target.life === 0) {
     if (player) player.roundStats.enemiesDefeated += 1;
     session.log.unshift(`${target.name} foi derrotado.`);
+    
+    if (session.turn === "players" && isRoomComplete(session)) {
+      if (session.activeTrap) {
+        session.trapTurnAge += 1;
+        session.trapAgeIncrementedForVictory = true;
+        session.log.unshift(`[Armadilha] A armadilha ${session.activeTrap.name} envelheceu (+1 pip) com a derrota do monstro.`);
+      }
+    }
     
     // Increment general round defeated counter
     session.inimigos_derrotados_esta_rodada = (session.inimigos_derrotados_esta_rodada || 0) + 1;
@@ -3069,6 +3220,7 @@ function startGame(session) {
   session.activeTrapRoundAge = 0;
   session.trapTurnAge = 0;
   session.trapJustChanged = false;
+  session.trapAgeIncrementedForVictory = false;
   session.visualEvents = [];
   session.roomDeck = [];
   session.roomDiscard = [];
@@ -3106,6 +3258,7 @@ function startGame(session) {
     player.ataques_jogados_esta_rodada = 0;
     player.bastiaoSupremoActive = false;
     player.salvaguardaActive = false;
+    player.pactoImortalidadeActive = false;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
     player.deck = makeDeck(player.heroId);
@@ -3217,14 +3370,32 @@ function startNextRound(session) {
       });
       archiveCurrentEnemies(session);
       drawNextRoom(session);
+      if (!session.activeTrap) {
+        drawTrap(session);
+      }
     }
   } else {
     session.roomRound += 1;
   }
 
-  // Increment trap turn age for hero turn (traps only rotate during dungeon turns)
+  // Increment trap turn age for hero turn and rotate if expired
   if (session.activeTrap) {
-    session.trapTurnAge += 1;
+    if (session.trapAgeIncrementedForVictory) {
+      session.trapAgeIncrementedForVictory = false;
+    } else {
+      session.trapTurnAge += 1;
+    }
+    if (session.trapTurnAge > 4) {
+      if (session.activeTrap.effect === "bloodFeast") {
+        session.log.unshift(`[Banquete de Sangue] A armadilha não foi removida a tempo e causou 10 de dano a todos os heróis!`);
+        session.players.forEach(p => {
+          if (p.life > 0) {
+            applyDamageToHero(session, p, 10, session.activeTrap.name, null);
+          }
+        });
+      }
+      drawTrap(session);
+    }
   }
   session.trapJustChanged = false;
   session.arena = [];
@@ -3280,9 +3451,10 @@ function startNextRound(session) {
     player.bonus_foco = 0;
     player.ataques_jogados_esta_rodada = 0;
     player.concentracao_ativa = false;
-    player.ataques_gratuitos_esta_rodada = false;
+    player.cartas_gratuitas_esta_rodada = false;
     player.bastiaoSupremoActive = false;
     player.salvaguardaActive = false;
+    player.pactoImortalidadeActive = false;
     player.proximo_dano_dobrado = false;
     player.activeShields = [];
     player.turnEnded = player.life <= 0;
@@ -3298,6 +3470,7 @@ function startNextRound(session) {
     } else {
       player.profecia_tokens = [];
     }
+    const hadTrapImmunity = player.trapImmunityRounds && player.trapImmunityRounds > 0;
     if (player.trapImmunityRounds && player.trapImmunityRounds > 0) {
       player.trapImmunityRounds -= 1;
       if (player.trapImmunityRounds === 0) {
@@ -3308,7 +3481,7 @@ function startNextRound(session) {
     
     // Draw logic checking Vácuo
     const isVacuo = player.statusEffects?.vacuo;
-    const baseDraw = getRoundDrawCount(session);
+    const baseDraw = (hadTrapImmunity && session.activeTrap && session.activeTrap.effect === "noRoundDraw") ? 1 : getRoundDrawCount(session);
     const cardsToDraw = isVacuo ? 0 : baseDraw;
     const drawn = drawCards(player, cardsToDraw);
     
@@ -3366,16 +3539,8 @@ function playCard(session, player, payload) {
 
   let finalCost = isFreePlay ? 0 : card.cost;
   if (!isFreePlay) {
-    // Flechada de Oportunidade discount
-    if (card.id === "flechada-de-oportunidade") {
-      const enemyCount = session.enemies.filter(e => e.life > 0 && e.category !== "mystic").length;
-      if (enemyCount === 1) {
-        finalCost = 0;
-      }
-    }
-    
-    // Free attacks from ultimate
-    if (player.heroId === "batedor" && player.ataques_gratuitos_esta_rodada && card.type === "attack") {
+    // Free cards from ultimate
+    if (player.heroId === "batedor" && player.cartas_gratuitas_esta_rodada) {
       finalCost = 0;
     } else {
       // Concentração discount for attacks
@@ -3393,6 +3558,29 @@ function playCard(session, player, payload) {
   if (card.lifeCost) {
     if (player.life <= card.lifeCost) {
       throw new Error(`Vida insuficiente para usar esta carta (custo: ${card.lifeCost} PV).`);
+    }
+  }
+
+  if (card.id === "marca-da-vulnerabilidade" || card.id === "marca-da-drenagem" || card.id === "romper-armadilha" || card.id === "barganha-sombria") {
+    if (player.life <= 4) {
+      throw new Error(`Vida insuficiente para usar ${card.name} (requer mais de 4 PV).`);
+    }
+  }
+  if (card.id === "conversao-sombria") {
+    if (player.life <= 1) {
+      throw new Error("Vida insuficiente para usar Conversão Sombria (requer mais de 1 PV).");
+    }
+    if (player.energy >= player.maxEnergy) {
+      throw new Error("Sua energia já está no máximo.");
+    }
+  }
+  if (card.id === "ressurreicao-sombria") {
+    if (player.life <= 1) {
+      throw new Error("Vida insuficiente para usar Ressurreição Sombria (requer mais de 1 PV).");
+    }
+    const hasDefeated = session.players.some(p => p.life <= 0);
+    if (!hasDefeated) {
+      throw new Error("Não há aliados derrotados para ressuscitar.");
     }
   }
 
@@ -3446,19 +3634,28 @@ function playCard(session, player, payload) {
 
   const isNoHealing = (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) ? false : (session.activeTrap?.effect === "noHealing");
   if (card.type === "heal" && isNoHealing) {
-    throw new Error(`Cura bloqueada pela armadilha ${session.activeTrap.name}.`);
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    const targetHasTrapImmunity = target && target.trapImmunityRounds && target.trapImmunityRounds > 0;
+    if (!targetHasTrapImmunity) {
+      throw new Error(`Cura bloqueada pela armadilha ${session.activeTrap.name}.`);
+    }
   }
 
   const isNoShield = (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) ? false : (session.activeTrap?.effect === "noShield");
   if (isNoShield) {
     const actuallyGivesShield = card.block > 0 || card.selfBlock > 0 || card.allBlock > 0 || card.concede_escudo || card.shareShields || card.moveShield;
     if (actuallyGivesShield && card.type === "defense") {
-      throw new Error(`Escudos estão bloqueados pela armadilha ${session.activeTrap.name}.`);
+      const target = getCardPlayerTarget(session, player, payload.targetId, card);
+      const targetHasTrapImmunity = target && target.trapImmunityRounds && target.trapImmunityRounds > 0;
+      if (!targetHasTrapImmunity) {
+        throw new Error(`Escudos estão bloqueados pela armadilha ${session.activeTrap.name}.`);
+      }
     }
   }
 
   const isFewResources = (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) ? false : (session.activeTrap?.effect === "fewResources");
-  if (isFewResources && player.roundStats.cardsPlayed >= 1) {
+  const playerHasTrapImmunity = player.trapImmunityRounds && player.trapImmunityRounds > 0;
+  if (isFewResources && player.roundStats.cardsPlayed >= 1 && !playerHasTrapImmunity) {
     throw new Error(`A armadilha ${session.activeTrap.name} permite que você jogue apenas 1 carta por rodada.`);
   }
 
@@ -3771,18 +3968,11 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "salvaguarda") {
     player.salvaguardaActive = true;
+    if (player.heroId === "guardiao") {
+      player.carga_de_batalha = (player.carga_de_batalha || 0) + 2;
+      session.log.unshift(`${player.name} acumulou +2 de Carga de Batalha.`);
+    }
     session.log.unshift(`${player.name} usou Salvaguarda! Ele redirecionará metade de todo o dano que os aliados receberiam de ataques inimigos para si nesta rodada.`);
-  }
-
-  if (card.id === "desafio-do-guardiao") {
-    const target = getValidEnemyTarget(session, payload.targetId);
-    if (!target) throw new Error("Não há monstros validos vivos para desafiar.");
-    target.forcedTargetId = player.id;
-    target.challengedByGuardiao = true;
-    const currentCarga = player.carga_de_batalha || 0;
-    target.desafio_guardiao_carga_reducao = currentCarga;
-    player.carga_de_batalha = 0; // Consume charges!
-    session.log.unshift(`${target.name} foi desafiado por ${player.name} e só atacará ele. Dano sofrido por Donovan será reduzido em 2x(${currentCarga}) = ${2 * currentCarga} (Carga consumida).`);
   }
 
   if (card.id === "corte-do-escudo") {
@@ -3836,10 +4026,11 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   if (card.id === "golpe-pesado") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
-      const baseDmg = player.shield >= 4 ? 9 : 6;
+      const currentCarga = player.carga_de_batalha || 0;
+      const baseDmg = 4 + 2 * currentCarga;
       const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
-      session.log.unshift(`${player.name} usou Golpe Pesado (base: ${baseDmg}) e causou ${dmg} de dano em ${target.name}.`);
+      session.log.unshift(`${player.name} usou Golpe Pesado (Cargas: ${currentCarga}, base: ${baseDmg}) e causou ${dmg} de dano em ${target.name}.`);
     }
   }
 
@@ -3864,16 +4055,6 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
-  if (card.id === "provocacao-em-massa") {
-    session.todos_inimigos_forcam_guardiao = true;
-    addShieldToHero(session, player, 3, card);
-    if (player.heroId === "guardiao") {
-      player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
-      session.log.unshift(`${player.name} acumulou +1 de Carga de Batalha.`);
-    }
-    session.log.unshift(`${player.name} usou Provocação em Massa! Todos os inimigos focarão Donovan.`);
-  }
-
   if (card.id === "escudo-refletor") {
     if (player.heroId === "guardiao") {
       player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
@@ -3894,11 +4075,13 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "destruir-armadilha") {
     if (session.activeTrap) {
+      const trapName = session.activeTrap.name;
       session.trapDiscard.push(session.activeTrap);
       session.activeTrap = null;
+      session.log.unshift(`${player.name} usou Destruir Armadilha. A armadilha ${trapName} foi destruída.`);
+    } else {
+      session.log.unshift(`${player.name} usou Destruir Armadilha, mas não havia armadilha ativa.`);
     }
-    session.prevent_new_traps_round = session.round + 1;
-    session.log.unshift(`${player.name} usou Destruir Armadilha. A armadilha atual foi destruída e novas armadilhas não poderão entrar até a próxima rodada.`);
   }
 
   if (card.id === "rugido-feroz") {
@@ -3939,8 +4122,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "voz-do-oraculo") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    target.trapImmunityRounds = 2;
-    session.log.unshift(`${player.name} usou Antecipação do Perigo em ${target.name}: imune a danos de armadilhas por 2 rodadas.`);
+    target.trapImmunityRounds = 1;
+    session.log.unshift(`${player.name} usou Antecipação do Perigo em ${target.name}: todos os efeitos de armadilhas anulados até o próximo turno.`);
   }
 
   if (card.id === "cura-menor") {
@@ -3954,8 +4137,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.players.forEach(p => {
       if (p.life > 0) {
         if (!p.statusEffects) p.statusEffects = makeStatusEffects();
-        p.statusEffects.renovacao = { value: 2, duration: 3 };
-        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 2 por 3 rodadas com Prece da Regeneração.`);
+        p.statusEffects.renovacao = { value: 5, duration: 3 };
+        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 5 por 3 rodadas com Prece da Regeneração.`);
       }
     });
   }
@@ -4148,21 +4331,46 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.log.unshift(`${player.name} jogou ${card.name}. Proxima carta de ataque causara +${card.nextAttackBonus} de dano.`);
   }
 
-  if (card.id === "flechada-de-oportunidade") {
-    drawCards(player, 2);
-    session.log.unshift(`${player.name} usou Flechada de Oportunidade e comprou 2 cartas.`);
+  if (card.id === "flecha-de-cura") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      applyHealToHero(session, player, 4, card.name);
+      session.log.unshift(`${player.name} usou Flecha de Cura em ${target.name} causando ${dmg} de dano e curando 4 de sua própria Vida.`);
+    }
   }
 
   if (card.id === "flecha-relampago") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
-      const dmg = getHeroAttackDamage(player, 2, attackBuff, getHeroAttackPenalty(session));
+      const hasTrap = !!session.activeTrap;
+      const baseDmg = hasTrap ? 6 : 3;
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
       session.log.unshift(`${player.name} usou Flecha Relâmpago em ${target.name} causando ${dmg} de dano.`);
     }
-    drawCards(player, 1);
-    player.pendingDiscard = (player.pendingDiscard || 0) + 1;
-    session.log.unshift(`${player.name} comprou 1 carta e deve descartar 1 com Flecha Relâmpago.`);
+  }
+
+  if (card.id === "mira-perfeita") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const hasShield = target.shield > 0;
+      const baseDmg = hasShield ? 6 : 3;
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Mira Perfeita em ${target.name} causando ${dmg} de dano.`);
+    }
+  }
+
+  if (card.id === "disparo-rapido") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 2, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      addShieldToHero(session, player, 2, card);
+      session.log.unshift(`${player.name} usou Disparo Rápido em ${target.name} causando ${dmg} de dano e ganhando 2 de Escudo.`);
+    }
   }
 
   if (card.id === "flecha-envenenada") {
@@ -4206,30 +4414,26 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
-  if (card.id === "chuva-de-flechas") {
+  if (card.id === "flecha-roubadora") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
-      for (let i = 0; i < 3; i++) {
-        let currentTarget = getValidEnemyTarget(session, payload.targetId);
-        if (currentTarget) {
-          const dmg = getHeroAttackDamage(player, 3, i === 0 ? attackBuff : 0, getHeroAttackPenalty(session));
-          applyDamageToEnemy(session, currentTarget, dmg, `${card.name} (Flecha ${i+1})`, false, player);
-        }
+      const shieldAmount = target.shield || 0;
+      target.shield = 0;
+      if (shieldAmount > 0) {
+        addShieldToHero(session, player, shieldAmount, card);
       }
+      session.log.unshift(`${player.name} usou Flecha Roubadora em ${target.name}: transferiu todo o escudo (${shieldAmount}) do inimigo para si.`);
     }
   }
 
-  if (card.id === "flecha-explosiva") {
+  if (card.id === "flecha-bleed") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
-      const dmgTarget = getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, target, dmgTarget, card.name, false, player);
-      const otherEnemies = session.enemies.filter((enemy) => enemy.uid !== target.uid && enemy.life > 0 && enemy.category !== "mystic");
-      otherEnemies.forEach((other) => {
-        const dmgOther = getHeroAttackDamage(player, 2, 0, getHeroAttackPenalty(session));
-        applyDamageToEnemy(session, other, dmgOther, `${card.name} (Explosão)`, false, player);
-      });
-      session.log.unshift(`${player.name} usou Flecha Explosiva em ${target.name} causando ${dmgTarget} de dano, e 2 de dano nos outros inimigos.`);
+      const dmg = getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      if (!target.statusEffects) target.statusEffects = makeStatusEffects();
+      target.statusEffects.bleed = { value: 4, duration: 2 };
+      session.log.unshift(`${player.name} usou Flecha Bleed em ${target.name}: causou ${dmg} de dano e aplicou Sangramento (4 de dano por turno por mais 2 turnos).`);
     }
   }
 
@@ -4241,20 +4445,6 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       session.log.unshift(`${player.name} usou Desabilitador e desarmou a armadilha ${trapName}!`);
     } else {
       session.log.unshift(`${player.name} usou Desabilitador, mas não havia nenhuma armadilha ativa.`);
-    }
-    player.sobrecarga_pendente = (player.sobrecarga_pendente || 0) + 2;
-  }
-
-  if (card.id === "companheiro-animal") {
-    const target = getValidEnemyTarget(session, payload.targetId);
-    if (target) {
-      player.delayed_damages = player.delayed_damages || [];
-      player.delayed_damages.push({
-        targetUid: target.uid,
-        damage: 8,
-        source: "Companheiro Animal (Efeito Atrasado)"
-      });
-      session.log.unshift(`${player.name} chamou o Companheiro Animal! Ele atacará ${target.name} com 8 de dano no início da próxima rodada.`);
     }
   }
 
@@ -4298,14 +4488,6 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
-  if (card.id === "rastrear") {
-    session.players.filter((p) => p.life > 0).forEach((p) => {
-      p.energy = Math.min(p.maxEnergy, p.energy + 1);
-    });
-    drawCards(player, 1);
-    session.log.unshift(`${player.name} usou Rastrear. Todos os aliados recuperaram 1 de Energia e Elerion comprou 1 carta.`);
-  }
-
   if (card.id === "cacada-implacavel") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
@@ -4323,21 +4505,6 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       player.hand = [];
       session.log.unshift(`${player.name} descartou toda a mao (${count} cartas) devido ao efeito de Ultima Flecha.`);
     }
-  }
-
-  if (card.id === "saraivada-venenosa") {
-    const target = getValidEnemyTarget(session, payload.targetId);
-    if (target) {
-      for (let i = 0; i < 5; i++) {
-        let currentTarget = getValidEnemyTarget(session, payload.targetId);
-        if (currentTarget) {
-          const dmg = getHeroAttackDamage(player, 2, i === 0 ? attackBuff : 0, getHeroAttackPenalty(session));
-          applyDamageToEnemy(session, currentTarget, dmg, `${card.name} (Flecha ${i+1})`, false, player);
-        }
-      }
-    }
-    drawCards(player, 1);
-    session.log.unshift(`${player.name} usou Saraivada Venenosa e comprou 1 carta.`);
   }
 
   if (card.id === "flecha-letal") {
@@ -4439,9 +4606,9 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       session.trapDiscard.push(session.activeTrap);
       session.activeTrap = null;
       session.log.unshift(`${player.name} usou Campo Antimagia e desarmou a armadilha ${trapName}!`);
+    } else {
+      session.log.unshift(`${player.name} usou Campo Antimagia, mas não havia armadilha ativa.`);
     }
-    session.activeTrapDisabledRounds = (session.activeTrapDisabledRounds || 0) + 2;
-    session.log.unshift(`${player.name} ativou proteção de armadilhas por 2 rodadas.`);
   }
 
   if (card.id === "teleporte-arcano") {
@@ -4592,10 +4759,216 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.terreno_ativo = "TERRENO_COSMICO";
     session.log.unshift(`${player.name} ativou o Terreno Cósmico! Todos os heróis aumentam o limite de cartas na mão em +1.`);
   }
+
+  // Warlock custom cards
+  if (card.id === "pacto-de-imortalidade") {
+    player.pactoImortalidadeActive = true;
+    session.log.unshift(`${player.name} ativou Pacto de Imortalidade! Não pode morrer nesta rodada e todo dano de monstro contra ele será devolvido.`);
+  }
+
+  if (card.id === "sopro-profano") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const sacrifice = Math.min(10, Math.max(0, Number(payload.sacrificeValue) || 0));
+      const baseDmg = 5 + sacrifice;
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      if (sacrifice > 0) {
+        applyDamageToHero(session, player, sacrifice, "Sopro Profano (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      }
+      session.log.unshift(`${player.name} usou Sopro Profano em ${target.name} (sacrificou ${sacrifice} vida, causando ${dmg} de dano).`);
+    }
+  }
+
+  if (card.id === "chama-vital") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 3, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      applyHealToHero(session, player, 3, card.name);
+      session.log.unshift(`${player.name} usou Chama Vital em ${target.name} causando ${dmg} de dano e curando 3 de Vida.`);
+    }
+  }
+
+  if (card.id === "conversao-sombria") {
+    const neededEnergy = Math.max(0, player.maxEnergy - player.energy);
+    const maxSacrifice = Math.min(neededEnergy, player.life - 1);
+    const sacrifice = Math.min(maxSacrifice, Math.max(0, Number(payload.sacrificeValue) || 0));
+    if (sacrifice > 0) {
+      player.energy += sacrifice;
+      applyDamageToHero(session, player, sacrifice, "Conversão Sombria (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      session.log.unshift(`${player.name} usou Conversão Sombria: sacrificou ${sacrifice} de vida para ganhar ${sacrifice} Energia.`);
+    } else {
+      session.log.unshift(`${player.name} usou Conversão Sombria, mas não converteu nenhuma vida.`);
+    }
+  }
+
+  if (card.id === "golpe-cruel") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 8, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      applyDamageToHero(session, player, 3, "Golpe Cruel (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      session.log.unshift(`${player.name} usou Golpe Cruel em ${target.name} causando ${dmg} de dano e sofrendo 3 de auto-dano.`);
+    }
+  }
+
+  if (card.id === "marca-da-vulnerabilidade") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      session.enemies.forEach(e => { if (e.warlockMark) e.warlockMark = null; });
+      target.warlockMark = "vulnerability";
+      applyDamageToHero(session, player, 4, "Marca da Vulnerabilidade (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      session.log.unshift(`${player.name} usou Marca da Vulnerabilidade em ${target.name}. O inimigo receberá +3 de dano de todos os ataques.`);
+    }
+  }
+
+  if (card.id === "marca-da-drenagem") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      session.enemies.forEach(e => { if (e.warlockMark) e.warlockMark = null; });
+      target.warlockMark = "drain";
+      applyDamageToHero(session, player, 4, "Marca da Drenagem (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      session.log.unshift(`${player.name} usou Marca da Drenagem em ${target.name}. Aliados recuperarão +2 de Vida ao causar dano nele.`);
+    }
+  }
+
+  if (card.id === "sacrificio-final") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 12, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      const selfDmg = Math.floor(player.life / 2);
+      if (selfDmg > 0) {
+        applyDamageToHero(session, player, selfDmg, "Sacrifício Final (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      }
+      session.log.unshift(`${player.name} usou Sacrifício Final em ${target.name} causando ${dmg} de dano e perdendo ${selfDmg} de Vida.`);
+    }
+  }
+
+  if (card.id === "transfusao-livre") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (target && target.id !== player.id) {
+      const val = payload.sacrificeValue;
+      if (val && val.startsWith("give_")) {
+        const amount = Math.min(10, Math.max(0, Number(val.replace("give_", "")) || 0));
+        if (amount > 0) {
+          if (player.life <= amount) throw new Error("Vida insuficiente do Warlock para doar.");
+          applyDamageToHero(session, player, amount, "Transfusão de Alma (Doação)", null, { isSelfDamage: true, ignoreShield: true });
+          applyHealToHero(session, target, amount, "Transfusão de Alma");
+          session.log.unshift(`${player.name} doou ${amount} de Vida para ${target.name}.`);
+        }
+      } else if (val && val.startsWith("take_")) {
+        const amount = Math.min(10, Math.max(0, Number(val.replace("take_", "")) || 0));
+        if (amount > 0) {
+          if (target.life <= amount) throw new Error("Vida do aliado insuficiente para ser drenada (deve restar pelo menos 1 PV).");
+          applyDamageToHero(session, target, amount, "Transfusão de Alma (Drenagem)", null, { isSelfDamage: true, ignoreShield: true });
+          applyHealToHero(session, player, amount, "Transfusão de Alma");
+          session.log.unshift(`${player.name} drenou ${amount} de Vida de ${target.name}.`);
+        }
+      }
+    }
+  }
+
+  if (card.id === "drenar-vida") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (target && target.id !== player.id) {
+      const amount = Math.min(5, Math.max(0, Number(payload.sacrificeValue) || 0));
+      if (amount > 0) {
+        if (target.life <= amount) throw new Error("Vida do aliado insuficiente (deve restar pelo menos 1 PV).");
+        applyDamageToHero(session, target, amount, "Drenar Vida (Drenagem)", null, { isSelfDamage: true, ignoreShield: true });
+        applyHealToHero(session, player, amount, "Drenar Vida");
+        session.log.unshift(`${player.name} drenou ${amount} de Vida de ${target.name}.`);
+      }
+    }
+  }
+
+  if (card.id === "doar-vida") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (target && target.id !== player.id) {
+      const amount = Math.min(5, Math.max(0, Number(payload.sacrificeValue) || 0));
+      if (amount > 0) {
+        if (player.life <= amount) throw new Error("Vida insuficiente do Warlock para doar.");
+        applyDamageToHero(session, player, amount, "Doar Vida (Doação)", null, { isSelfDamage: true, ignoreShield: true });
+        applyHealToHero(session, target, amount, "Doar Vida");
+        session.log.unshift(`${player.name} doou ${amount} de Vida para ${target.name}.`);
+      }
+    }
+  }
+
+  if (card.id === "aprisionar-alma") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      target.atordoado_rodada_atual = true;
+      session.log.unshift(`${player.name} aprisionou a alma de ${target.name}: ele não atacará no próximo turno.`);
+    }
+  }
+
+  if (card.id === "debelar-ofensiva") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const sacrifice = Math.max(0, Number(payload.sacrificeValue) || 0);
+      if (sacrifice > 0) {
+        applyDamageToHero(session, player, sacrifice, "Debelar Ofensiva (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+        const reduction = Math.floor(sacrifice / 2);
+        target.reduzir_ofensiva = (target.reduzir_ofensiva || 0) + reduction;
+        session.log.unshift(`${player.name} sacrificou ${sacrifice} de Vida: reduziu o dano de ${target.name} em ${reduction} nesta rodada.`);
+      }
+    }
+  }
+
+  if (card.id === "romper-armadilha") {
+    if (session.activeTrap) {
+      const trapName = session.activeTrap.name;
+      session.trapDiscard.push(session.activeTrap);
+      session.activeTrap = null;
+      applyDamageToHero(session, player, 4, "Quebrar Maldição (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+      session.log.unshift(`${player.name} usou Quebrar Maldição: desarmou a armadilha ${trapName} pagando 4 de Vida.`);
+    } else {
+      session.log.unshift(`${player.name} usou Quebrar Maldição, mas não havia armadilha ativa.`);
+    }
+  }
+
+  if (card.id === "barganha-sombria") {
+    applyDamageToHero(session, player, 4, "Barganha Sombria (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+    const drawn = drawCards(player, 3);
+    session.log.unshift(`${player.name} usou Barganha Sombria: sacrificou 4 de Vida e comprou ${drawn} cartas.`);
+  }
+
+  if (card.id === "sugar-essencia") {
+    const target = getValidEnemyTarget(session, payload.targetId);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 6, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      applyHealToHero(session, player, 3, card.name);
+      session.log.unshift(`${player.name} usou Sugar Essência em ${target.name} causando ${dmg} de dano e curando 3 de Vida.`);
+    }
+  }
+
+  if (card.id === "ressurreicao-sombria") {
+    const target = session.players.find((p) => p.id === payload.targetId && p.life <= 0);
+    if (!target) throw new Error("Selecione um aliado derrotado para ressuscitar.");
+    const sacrifice = Math.max(1, Number(payload.sacrificeValue) || 1);
+    if (player.life <= sacrifice) throw new Error("Vida do Warlock insuficiente para realizar a transferência (deve restar pelo menos 1 PV).");
+    applyDamageToHero(session, player, sacrifice, "Ressurreição Sombria (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
+    target.life = sacrifice;
+    target.turnEnded = false;
+    if (target.statusEffects) {
+      target.statusEffects.veneno = 0;
+      target.statusEffects.queimadura = { value: 0, duration: 0 };
+      target.statusEffects.vacuo = false;
+      target.statusEffects.enfraquecido = 0;
+      target.statusEffects.exposto = false;
+    }
+    pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: sacrifice, source: card.name });
+    session.log.unshift(`${player.name} ressuscitou ${target.name} transferindo ${sacrifice} de Vida!`);
+  }
 }
 
 function applyHealToHero(session, target, amount, source) {
-  if (session.activeTrap?.effect === "noHealing") return;
+  const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
+  const hasTrapImmunity = target.trapImmunityRounds && target.trapImmunityRounds > 0;
+  if (isTrapActive && session.activeTrap.effect === "noHealing" && !hasTrapImmunity) return;
 
   const before = target.life;
   target.life = Math.min(target.maxLife, target.life + amount);
@@ -4675,6 +5048,20 @@ function resolveEnvenenamentoTick(session) {
   });
 }
 
+function resolveBleedTick(session) {
+  session.enemies.forEach((enemy) => {
+    if (enemy.life > 0 && enemy.statusEffects?.bleed && enemy.statusEffects.bleed.duration > 0) {
+      const damage = enemy.statusEffects.bleed.value;
+      applyDamageToEnemy(session, enemy, damage, "Bleed", false, null);
+      enemy.statusEffects.bleed.duration -= 1;
+      session.log.unshift(`[Bleed] ${enemy.name} sofreu ${damage} de dano por Bleed (${enemy.statusEffects.bleed.duration} turnos restantes).`);
+      if (enemy.statusEffects.bleed.duration === 0) {
+        enemy.statusEffects.bleed.value = 0;
+      }
+    }
+  });
+}
+
 function startDungeonTurn(session) {
   session.turn = "dungeon";
   session.dungeonResolved = false;
@@ -4736,6 +5123,7 @@ function startDungeonTurn(session) {
 
   // Resolve Envenenamento
   resolveEnvenenamentoTick(session);
+  resolveBleedTick(session);
 
   const continueTurn = () => {
     queueEnemyAttacks(session);
@@ -4801,7 +5189,7 @@ function advanceDungeonTurn(session) {
       || (session.todos_inimigos_forcam_guardiao ? session.players.find(p => p.heroId === "guardiao" && p.life > 0) : null);
     const target = forcedTarget
       || (step.targetId ? session.players.find(p => p.id === step.targetId && p.life > 0) : null)
-      || selectTarget(session.players, step.targetCriterion || "minLife");
+      || (step.targetId ? null : selectTarget(session.players, step.targetCriterion || "minLife"));
     if (!target) continue;
 
     const attack = step.overrideAttack ?? computeEnemyAttack(session, enemy, target, true);
@@ -4932,7 +5320,13 @@ function applyQueimaduraTick(session) {
     if (player.life > 0 && player.statusEffects?.queimadura?.duration > 0) {
       const q = player.statusEffects.queimadura;
       const damage = q.value;
-      player.life = Math.max(0, player.life - damage);
+      let newLife = player.life - damage;
+      if (player.heroId === "warlock" && player.pactoImortalidadeActive) {
+        newLife = Math.max(1, newLife);
+      } else {
+        newLife = Math.max(0, newLife);
+      }
+      player.life = newLife;
       q.duration -= 1;
       
       pushVisualEvent(session, {
@@ -4980,6 +5374,11 @@ function finishDungeonTurn(session) {
     if (paused) return; // Keep paused
     session.endDungeonEffectsApplied = true;
   }
+  if (!session.dungeonMonsterEffectsApplied) {
+    const paused = applyDungeonMonsterEffects(session);
+    if (paused) return; // Keep paused
+    session.dungeonMonsterEffectsApplied = true;
+  }
   if (!session.roomRewardApplied) {
     applyRoomReward(session);
     session.roomRewardApplied = true;
@@ -4994,6 +5393,7 @@ function finishDungeonTurn(session) {
   session.endDungeonEffectsApplied = false;
   session.queimaduraTickApplied = false;
   session.roomRewardApplied = false;
+  session.dungeonMonsterEffectsApplied = false;
   
   session.log.unshift("Turno da dungeon resolvido. Os jogadores podem iniciar a proxima rodada.");
 }
@@ -5313,7 +5713,8 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
   }
 
   const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
-  if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal")) {
+  const targetHasTrapImmunity = target && target.trapImmunityRounds && target.trapImmunityRounds > 0;
+  if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal") && !targetHasTrapImmunity) {
     attack += 3;
   }
 
@@ -5523,13 +5924,6 @@ function resolveEnemyAttackStage5(session, enemy, target, damage) {
 }
 
 function resolveEnemyAttackStage6(session, enemy, target, damage) {
-  if (damage > 0 && target.life > 0 && target.profecia_tokens && target.profecia_tokens.length > 0) {
-    const totalHeal = target.profecia_tokens.reduce((a, b) => a + b, 0);
-    applyHealToHero(session, target, totalHeal, "Profecia");
-    session.log.unshift(`[Profecia] ${target.name} curou ${totalHeal} de Vida.`);
-    target.profecia_tokens = [];
-  }
-
   advanceDungeonTurn(session);
 }
 
@@ -5603,7 +5997,8 @@ function sanitizeSession(session, viewerId) {
           isAttackBuffed = true;
         }
         const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
-        if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal")) {
+        const targetHasTrapImmunity = target && target.trapImmunityRounds && target.trapImmunityRounds > 0;
+        if (isTrapActive && session.activeTrap.effect === "bloodyBuff" && (enemy.category === "common" || enemy.category === "brutal") && !targetHasTrapImmunity) {
           calculatedAttack += 3;
           isAttackBuffed = true;
         }
@@ -5786,7 +6181,9 @@ async function handleApi(req, res) {
         trapCards,
         intentionCards,
         heroes: heroesList,
-        heroCards: heroCardsMap
+        heroCards: heroCardsMap,
+        monsterTemplates,
+        bossTemplates
       });
       return;
     }
@@ -6080,45 +6477,21 @@ async function handleApi(req, res) {
             });
             session.log.unshift(`${player.name} usou ${sc.name}! Todos os aliados receberam Cura 8, Escudo 5, remoção de status, Energia +2 e compraram 1 carta.`);
           } else if (sc.id === "tempestade-de-flechas") {
-            const targets = session.enemies.filter((enemy) => enemy.life > 0 && enemy.category !== "mystic");
-            const penalty = getHeroAttackPenalty(session);
-            const dmgAll = getHeroAttackDamage(player, 5, 0, penalty);
-            
-            // 5 area damage
-            targets.forEach((enemy) =>
-              applyDamageToEnemy(session, enemy, dmgAll, sc.name, false, player)
-            );
-            
-            // 10 single target damage (15 if marked/poisoned, consumes marked, applies Poison 3 to others)
             const selectedTargetId = body.targetId;
             const singleTarget = getValidEnemyTarget(session, selectedTargetId);
-            
-            if (singleTarget) {
-              const hasMarcado = Boolean(singleTarget.statusEffects.marcado);
-              const hasEnvenenamento = (singleTarget.statusEffects.envenenamento || 0) > 0;
-              const hasBonus = hasMarcado || hasEnvenenamento;
-              const baseVal = hasBonus ? 15 : 10;
-              const dmgSingle = getHeroAttackDamage(player, baseVal, 0, penalty);
-              
-              applyDamageToEnemy(session, singleTarget, dmgSingle, sc.name, false, player);
-              
-              if (hasBonus) {
-                if (hasMarcado) {
-                  singleTarget.statusEffects.marcado = false;
-                  session.log.unshift(`Tempestade de Flechas consumiu o Marcado de ${singleTarget.name}.`);
-                }
-                const otherEnemies = session.enemies.filter((enemy) => enemy.uid !== singleTarget.uid && enemy.life > 0 && enemy.category !== "mystic");
-                otherEnemies.forEach((other) => {
-                  other.statusEffects.envenenamento = (other.statusEffects.envenenamento || 0) + 3;
-                });
-                if (otherEnemies.length > 0) {
-                  session.log.unshift(`Tempestade de Flechas aplicou Envenenamento 3 em todos os outros ${otherEnemies.length} inimigo(s).`);
-                }
-              }
-              session.log.unshift(`${player.name} usou Tempestade de Flechas! Causou 5 de dano (modificado para ${dmgAll}) em todos os inimigos e ${baseVal} de dano adicional (modificado para ${dmgSingle}) em ${singleTarget.name}.`);
-            } else {
-              session.log.unshift(`${player.name} usou Tempestade de Flechas! Causou 5 de dano (modificado para ${dmgAll}) em todos os inimigos.`);
+            if (!singleTarget) {
+              throw new Error("Alvo inválido para Tempestade de Flechas.");
             }
+            
+            const penalty = getHeroAttackPenalty(session);
+            const baseVal = singleTarget.life <= singleTarget.maxLife / 2 ? 20 : 14;
+            const dmgSingle = getHeroAttackDamage(player, baseVal, 0, penalty);
+            
+            applyDamageToEnemy(session, singleTarget, dmgSingle, sc.name, false, player);
+            
+            player.cartas_gratuitas_esta_rodada = true;
+            
+            session.log.unshift(`${player.name} usou Tempestade de Flechas! Causou ${dmgSingle} de dano (base: ${baseVal}) em ${singleTarget.name}. Suas outras cartas nesta rodada não custam Energia.`);
             
             // Consume Enfraquecido
             if (player.statusEffects && player.statusEffects.enfraquecido > 0) {
@@ -6340,7 +6713,7 @@ async function handleApi(req, res) {
             } else if (rewardId === "crystal") {
               const crystalCount = player.chosenRewards.filter(r => r === "crystal").length;
               if (crystalCount === 3) {
-                player.supremeCharges = (player.supremeCharges || 1) + 1;
+                player.supremeCharges = (player.supremeCharges !== undefined ? player.supremeCharges : 1) + 1;
                 player.supremeUsed = false;
               }
               rewardName = `Cristal Supremo (${crystalCount}/3)`;

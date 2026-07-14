@@ -24,6 +24,8 @@ const local = {
   intentionCards: [],
   heroes: [],
   heroCards: {},
+  monsterTemplates: {},
+  bossTemplates: {},
   // Cinematic animation system
   animQueue: [],
   animRunning: false,
@@ -48,6 +50,7 @@ function getCardArt(card) {
     if (card.heroId === "batedor") return "/assets/batedor-card.jpg";
     if (card.heroId === "mago") return "/assets/mago-card.jpg";
     if (card.heroId === "oraculo") return "/assets/oraculo-card.jpg";
+    if (card.heroId === "warlock") return "/assets/warlock-card.png";
   }
   return cardArt;
 }
@@ -57,6 +60,7 @@ function getHeroCardArt(heroId) {
   if (heroId === "batedor") return "/assets/batedor-card.jpg";
   if (heroId === "mago") return "/assets/mago-card.jpg";
   if (heroId === "oraculo") return "/assets/oraculo-card.jpg";
+  if (heroId === "warlock") return "/assets/warlock-card.png";
   return "/assets/hero-card-example.png";
 }
 
@@ -70,7 +74,7 @@ function getEnemyArt(enemy) {
     if (enemy.id === "arauto") return "/assets/arauto-cinza.jpg";
     if (enemy.id === "colosso") return "/assets/colosso-cinzas.jpg";
     if (enemy.id === "executor") return "/assets/executor-sombrio.jpg";
-    if (enemy.id === "basilisco") return "/assets/basilisco-azul.jpg";
+    if (enemy.id === "basilisco") return "/assets/basilisco-azul.png";
   }
   return enemyArt;
 }
@@ -161,6 +165,8 @@ async function loadCards() {
     local.intentionCards = data.intentionCards || [];
     local.heroes = data.heroes || [];
     local.heroCards = data.heroCards || {};
+    local.monsterTemplates = data.monsterTemplates || {};
+    local.bossTemplates = data.bossTemplates || {};
     render();
   } catch (err) {
     console.error("Erro ao carregar as cartas da biblioteca:", err);
@@ -583,28 +589,55 @@ function setState(nextState) {
 }
 
 function ingestVisualEvents(state) {
-  (state?.visualEvents || []).forEach((event) => {
-    if (!event.id || local.seenVisualEventIds.has(event.id)) return;
-    local.seenVisualEventIds.add(event.id);
+  const newEvents = (state?.visualEvents || []).filter(
+    (ev) => ev.id && !local.seenVisualEventIds.has(ev.id)
+  );
 
+  if (newEvents.length === 0) return;
+
+  // Mark all as seen so they are never ingested again
+  newEvents.forEach((ev) => local.seenVisualEventIds.add(ev.id));
+
+  // Group by (type, targetType, targetId) to sum amounts
+  const grouped = {};
+  newEvents.forEach((ev) => {
+    const key = `${ev.type}_${ev.targetType}_${ev.targetId}`;
+    if (!grouped[key]) {
+      grouped[key] = {
+        ...ev,
+        originalIds: [ev.id]
+      };
+    } else {
+      grouped[key].amount = (grouped[key].amount || 0) + (ev.amount || 0);
+      grouped[key].originalIds.push(ev.id);
+    }
+  });
+
+  // Schedule animations for each merged group
+  Object.values(grouped).forEach((mergedEvent) => {
     // Delay of 1.5 seconds (1500ms) before the animation triggers
     window.setTimeout(() => {
-      // Apply changes to visual state when animation triggers
-      applyEventToVisualState(event, state);
-      local.completedVisualEventIds.add(event.id);
+      // Apply changes to visual state for all original events in this group
+      mergedEvent.originalIds.forEach((origId) => {
+        const origEvent = newEvents.find((x) => x.id === origId);
+        if (origEvent) {
+          applyEventToVisualState(origEvent, state);
+          local.completedVisualEventIds.add(origId);
+        }
+      });
       render();
 
-      if (event.type === "summon") return;
+      if (mergedEvent.type === "summon") return;
 
-      const elId = event.targetType === "enemy" ? `card-enemy-${event.targetId}` : `hud-player-${event.targetId}`;
+      const elId = mergedEvent.targetType === "enemy" ? `card-enemy-${mergedEvent.targetId}` : `hud-player-${mergedEvent.targetId}`;
       const el = document.getElementById(elId);
       if (!el) return;
 
       // Trigger animation class
       let className = "";
-      if (event.type === "damage") className = "effect-hit";
-      else if (event.type === "heal") className = "effect-heal";
-      else if (event.type === "shield") className = "effect-shield";
+      if (mergedEvent.type === "damage") className = "effect-hit";
+      else if (mergedEvent.type === "heal") className = "effect-heal";
+      else if (mergedEvent.type === "shield") className = "effect-shield";
 
       if (className) {
         el.classList.remove("effect-hit", "effect-heal", "effect-shield");
@@ -612,15 +645,15 @@ function ingestVisualEvents(state) {
         el.classList.add(className);
         window.setTimeout(() => {
           el.classList.remove(className);
-        }, event.type === "shield" ? 2500 : 1000);
+        }, mergedEvent.type === "shield" ? 2500 : 1000);
       }
 
       // Spawn floating number
       const span = document.createElement("span");
-      span.className = `impact-number ${event.type} ${event.targetType}`;
-      const sign = event.type === "heal" ? "+" : event.type === "shield" ? "+" : "-";
-      const suffix = event.type === "shield" ? " 🛡️" : "";
-      span.innerText = `${sign}${event.amount}${suffix}`;
+      span.className = `impact-number ${mergedEvent.type} ${mergedEvent.targetType}`;
+      const sign = mergedEvent.type === "heal" ? "+" : mergedEvent.type === "shield" ? "+" : "-";
+      const suffix = mergedEvent.type === "shield" ? " 🛡️" : "";
+      span.innerText = `${sign}${mergedEvent.amount}${suffix}`;
 
       // Calculate position relative to viewport coordinates (fixed position overlay)
       const rect = el.getBoundingClientRect();
@@ -1643,13 +1676,15 @@ function playSelectedCard() {
       });
       local.selectedCardUid = null;
     } else {
+      const sacrificeSelect = document.querySelector("#selectedCardSacrifice");
       action({
         type: "playCard",
         cardUid: card.uid,
         targetId: target?.value,
         targetId2: target2?.value,
         fromId: fromTarget?.value,
-        shieldAmount: amountInput ? Number(amountInput.value) : undefined
+        shieldAmount: amountInput ? Number(amountInput.value) : undefined,
+        sacrificeValue: sacrificeSelect ? sacrificeSelect.value : undefined
       });
     }
   }, 120);
@@ -1675,9 +1710,11 @@ function renderReactionPrompt(state, me) {
     ? `O status ${escapeHtml(pending.statusType)} vai ser aplicado em ${escapeHtml(pending.targetName)}`
     : pending.type === "cura_emergencia"
     ? `Cura de Emergência: Heróis com pouca Vida!`
+    : pending.type === "keyword_activation"
+    ? `Ativação de Keyword de ${escapeHtml(pending.enemyName)}`
     : `${escapeHtml(pending.enemyName)} vai atacar ${escapeHtml(pending.targetName)}`;
 
-  const reactionText = pending.type === "trap" || pending.type === "status_apply" || pending.type === "cura_emergencia"
+  const reactionText = pending.type === "trap" || pending.type === "status_apply" || pending.type === "cura_emergencia" || pending.type === "keyword_activation"
     ? escapeHtml(pending.ruleText)
     : `${escapeHtml(pending.ruleText)} Dano previsto: ${pending.attack}.`;
 
@@ -1997,20 +2034,132 @@ function renderSelectedCardModal(state, me) {
 
   const blocked = isCardBlocked(card, state, me) || card.type === "reaction";
 
-  return `
-    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="selectedCardName">
-      <article class="tcg-card selected-card-detail ${card.type}">
-        <button id="closeCardDetail" class="card-close secondary" aria-label="Fechar carta">Fechar</button>
-        <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
-        <img src="${getCardArt(card)}" alt="" />
-        <div class="card-body">
-          <strong id="selectedCardName">${escapeHtml(card.name)}</strong>
-          <p>${escapeHtml(card.text)}</p>
-          ${renderCardTags(card)}
-        </div>
-        ${targetSelect}
-        ${moveShieldControls}
-        <button id="playSelectedCard" ${blocked ? "disabled" : ""}>Jogar</button>
+        let warlockSelect = "";
+        if (me && me.heroId === "warlock") {
+          if (card.id === "sopro-profano") {
+            const maxSacrifice = Math.min(10, me.life - 1);
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Vida a sacrificar:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não sacrificar (Dano base: 5)</option>
+                  ${Array.from({ length: maxSacrifice }, (_, i) => {
+                    const val = i + 1;
+                    return `<option value="${val}">Sacrificar ${val} de Vida (Dano: ${5 + val})</option>`;
+                  }).join("")}
+                </select>
+              </label>
+            `;
+          } else if (card.id === "conversao-sombria") {
+            const neededEnergy = Math.max(0, me.maxEnergy - me.energy);
+            const maxSacrifice = Math.min(neededEnergy, me.life - 1);
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Vida a converter em Energia:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não converter</option>
+                  ${Array.from({ length: maxSacrifice }, (_, i) => {
+                    const val = i + 1;
+                    return `<option value="${val}">Sacrificar ${val} de Vida (+${val} Energia)</option>`;
+                  }).join("")}
+                </select>
+              </label>
+            `;
+          } else if (card.id === "transfusao-livre") {
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Transferência de Vida:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não transferir</option>
+                  <option value="give_1">Doar 1 de Vida</option>
+                  <option value="give_2">Doar 2 de Vida</option>
+                  <option value="give_3">Doar 3 de Vida</option>
+                  <option value="give_4">Doar 4 de Vida</option>
+                  <option value="give_5">Doar 5 de Vida</option>
+                  <option value="give_6">Doar 6 de Vida</option>
+                  <option value="give_7">Doar 7 de Vida</option>
+                  <option value="give_8">Doar 8 de Vida</option>
+                  <option value="give_9">Doar 9 de Vida</option>
+                  <option value="give_10">Doar 10 de Vida</option>
+                  <option value="take_1">Drenar 1 de Vida do aliado</option>
+                  <option value="take_2">Drenar 2 de Vida do aliado</option>
+                  <option value="take_3">Drenar 3 de Vida do aliado</option>
+                  <option value="take_4">Drenar 4 de Vida do aliado</option>
+                  <option value="take_5">Drenar 5 de Vida do aliado</option>
+                  <option value="take_6">Drenar 6 de Vida do aliado</option>
+                  <option value="take_7">Drenar 7 de Vida do aliado</option>
+                  <option value="take_8">Drenar 8 de Vida do aliado</option>
+                  <option value="take_9">Drenar 9 de Vida do aliado</option>
+                  <option value="take_10">Drenar 10 de Vida do aliado</option>
+                </select>
+              </label>
+            `;
+          } else if (card.id === "drenar-vida") {
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Vida a drenar do aliado:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não transferir</option>
+                  <option value="1">Drenar 1 de Vida</option>
+                  <option value="2">Drenar 2 de Vida</option>
+                  <option value="3">Drenar 3 de Vida</option>
+                  <option value="4">Drenar 4 de Vida</option>
+                  <option value="5">Drenar 5 de Vida</option>
+                </select>
+              </label>
+            `;
+          } else if (card.id === "doar-vida") {
+            const maxSacrifice = Math.min(5, me.life - 1);
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Vida a doar para o aliado:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não transferir</option>
+                  ${Array.from({ length: maxSacrifice }, (_, i) => {
+                    const val = i + 1;
+                    return `<option value="${val}">Doar ${val} de Vida</option>`;
+                  }).join("")}
+                </select>
+              </label>
+            `;
+          } else if (card.id === "debelar-ofensiva") {
+            const maxSacrificePairs = Math.floor((me.life - 1) / 2);
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Vida a sacrificar:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não sacrificar</option>
+                  ${Array.from({ length: maxSacrificePairs }, (_, i) => {
+                    const val = (i + 1) * 2;
+                    return `<option value="${val}">Sacrificar ${val} de Vida (-${val / 2} de dano do inimigo)</option>`;
+                  }).join("")}
+                </select>
+              </label>
+            `;
+          } else if (card.id === "ressurreicao-sombria") {
+            const maxSacrifice = me.life - 1;
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Vida a doar para ressuscitar:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  ${Array.from({ length: maxSacrifice }, (_, i) => {
+                    const val = i + 1;
+                    return `<option value="${val}" ${val === 5 ? "selected" : ""}>Doar ${val} de Vida</option>`;
+                  }).join("")}
+                </select>
+              </label>
+            `;
+          }
+        }
+
+        return `
+          <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="selectedCardName">
+            <article class="tcg-card selected-card-detail ${card.type}">
+              <button id="closeCardDetail" class="card-close secondary" aria-label="Fechar carta">Fechar</button>
+              <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
+              <img src="${getCardArt(card)}" alt="" />
+              <div class="card-body">
+                <strong id="selectedCardName">${escapeHtml(card.name)}</strong>
+                <p>${escapeHtml(card.text)}</p>
+                ${renderCardTags(card)}
+              </div>
+              ${targetSelect}
+              ${moveShieldControls}
+              ${warlockSelect}
+              <button id="playSelectedCard" ${blocked ? "disabled" : ""}>Jogar</button>
         ${(!me.supremeCard || me.supremeCard.uid !== card.uid) ? `
           <button id="discardSelectedCard" class="secondary" style="margin-top: 8px; width: 100%;">Descartar</button>
         ` : ""}
@@ -2261,7 +2410,7 @@ function getTrapArt(trap, isDisabled = false) {
     "TRAP_001": "/assets/traps/bloqueio de escudos.png",
     "TRAP_002": "/assets/traps/selo anticura.png",
     "TRAP_003": "/assets/traps/portal mistico.png",
-    "TRAP_004": "/assets/traps/reforço inimigo.png",
+    "TRAP_004": "/assets/traps/defesas supremas.png",
     "TRAP_005": "/assets/traps/fome arcana.png",
     "TRAP_006": "/assets/traps/poucos recursos.png",
     "TRAP_007": "/assets/traps/reflexao instavel.png",
@@ -2372,6 +2521,9 @@ function renderEnemyStatusEffects(enemy) {
     if (se.envenenamento > 0) {
       badges.push(`<span class="status-badge envenenamento" title="Envenenamento: sofre ${se.envenenamento} de dano (ignora Escudo) no início da Fase da Masmorra.">🧪 Envenenamento ${se.envenenamento}</span>`);
     }
+    if (se.bleed && se.bleed.duration > 0) {
+      badges.push(`<span class="status-badge bleed" title="Bleed: sofre ${se.bleed.value} de dano no início da Fase da Masmorra. Duração: ${se.bleed.duration} turnos.">🩸 Bleed ${se.bleed.value} (${se.bleed.duration}t)</span>`);
+    }
   }
 
   if (enemy.marcas_arcanas > 0) {
@@ -2467,13 +2619,14 @@ function renderPlayerHud(player) {
 
 function getBuffCardData(buffKind, value, tokenType) {
   if (buffKind === 'renovacao') {
-    const nameMap = { 4: 'Renovação Contínua', 3: 'Ondas Regenerativas', 2: 'Luz da Esperança' };
+    const nameMap = { 5: 'Prece da Regeneração', 4: 'Renovação Contínua', 3: 'Ondas Regenerativas', 2: 'Luz da Esperança' };
     const textMap = {
+      5: 'Todos os aliados recebem Renovação 5 por 3 rodadas (curam 5 de Vida no início da Fase dos Heróis de cada rodada).',
       4: 'Aplica Renovação 4 por 3 rodadas (cura 4 de Vida no início da Fase dos Heróis). Se o alvo já possuir Renovação ativa, cura 4 de Vida imediatamente.',
       3: 'Cure 5 de Vida de um aliado. Todos os aliados recebem Renovação 3 por 2 rodadas (curam 3 de Vida no início da Fase dos Heróis).',
       2: 'Cura 2 de Vida no início de cada turno dos heróis.'
     };
-    const costMap = { 4: 2, 3: 2, 2: 0 };
+    const costMap = { 5: 2, 4: 2, 3: 2, 2: 0 };
     return { id: 'renovacao', name: nameMap[value] || 'Renovação', type: 'heal', cost: costMap[value] ?? 2, text: textMap[value] || `Cura ${value} de Vida por rodada.` };
   }
   if (buffKind === 'profecia') {
@@ -2650,6 +2803,18 @@ function isCardBlocked(card, state, me) {
   if (!me) return true;
   if (state.turn !== "players" || me.turnEnded || me.energy < card.cost) return true;
   if (card.lifeCost && me.life <= card.lifeCost) return true;
+
+  if (card.id === "marca-da-vulnerabilidade" || card.id === "marca-da-drenagem" || card.id === "romper-armadilha" || card.id === "barganha-sombria") {
+    if (me.life <= 4) return true;
+  }
+  if (card.id === "conversao-sombria") {
+    if (me.life <= 1 || me.energy >= me.maxEnergy) return true;
+  }
+  if (card.id === "ressurreicao-sombria") {
+    if (me.life <= 1) return true;
+    const hasDefeated = state.players.some(p => p.life <= 0);
+    if (!hasDefeated) return true;
+  }
 
   const alivePlayers = state.players.filter((p) => p.life > 0);
   if (card.id === "manipular-energia" || card.id === "redistribuir-escudos" || card.id === "escudo-compartilhado") {
@@ -3303,6 +3468,7 @@ function exportToPDF() {
       <li><strong>Niely (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, aplicar efeitos de cura contínua (Renovação), prever danos (Profecias) e trocar escudos.</li>
       <li><strong>Elerion (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
       <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
+      <li><strong>Warlock (26 Vida, 5 Energia):</strong> Usa sua própria vida para fortalecer ataques, converter vida em energia, transferir vida com aliados e debilitar inimigos.</li>
     </ul>
     <p><strong>Cartas Supremas:</strong> Cada herói possui uma carta Suprema especial. Ela fica fora do seu deck e pode ser conjurada diretamente da mesa a qualquer momento no seu turno. Pode ser usada apenas uma única vez por partida.</p>
 
@@ -3372,56 +3538,63 @@ function exportToPDF() {
     heroesHtml += `</div>`;
   });
 
-  // 4. Build Rooms HTML
-  let roomsHtml = "<h2>4. Cartas de Sala</h2><div class=\"card-grid\">";
-  const roomCards = local.state?.roomCards || local.roomCards || [];
-  roomCards.forEach(room => {
-    roomsHtml += `
+  // 4. Build Monsters HTML
+  let monstersHtml = "<h2>4. Monstros do Jogo</h2><div class=\"card-grid\">";
+  const monsterTemplates = local.state?.monsterTemplates || local.monsterTemplates || {};
+  const bossTemplates = local.state?.bossTemplates || local.bossTemplates || {};
+  
+  const allMonsters = [];
+  Object.values(monsterTemplates).forEach(m => {
+    allMonsters.push(m);
+  });
+  Object.values(bossTemplates).forEach(b => {
+    allMonsters.push({
+      ...b,
+      category: "boss",
+      role: b.role || "Chefe"
+    });
+  });
+
+  allMonsters.forEach(monster => {
+    const categoryLabel = monster.category === "common" ? "Comum" : 
+                          monster.category === "brutal" ? "Brutal" :
+                          monster.category === "mystic" ? "Místico" : "Chefe";
+                          
+    let kwList = [];
+    if (monster.keywords && monster.keywords.length > 0) {
+      monster.keywords.forEach(kw => {
+        let text = kw;
+        if (kw === "Curandeira") text = `Curandeira ${monster.curandeiraValue || ""}`;
+        if (kw === "Guardiã") text = `Guardiã ${monster.guardiaValue || ""}`;
+        kwList.push(text);
+      });
+    }
+    const kwHtml = kwList.length ? `<p>🌟 <strong>Habilidades:</strong> ${kwList.map(escapeHtml).join(", ")}</p>` : "";
+    
+    const isBoss = monster.category === "boss";
+    const atkText = isBoss ? `${monster.attack} ⚔️ (Fase 1) / ${monster.attackPhase2} ⚔️ (Fase 2)` : `${monster.attack} ⚔️`;
+    const descHtml = monster.description ? `<p><em>${escapeHtml(monster.description)}</em></p>` : "";
+    
+    monstersHtml += `
       <div class="print-card">
         <div class="card-header">
-          <strong>${escapeHtml(room.name)}</strong>
-          <span class="card-type">${escapeHtml(room.theme)}</span>
+          <strong>${escapeHtml(monster.name)}</strong>
+          <span class="card-type">${categoryLabel} - ${escapeHtml(monster.role || "")}</span>
         </div>
-        <p><em>${escapeHtml(room.subtitle || "")}</em></p>
-        <p>🎯 <strong>Objetivo:</strong> ${escapeHtml(room.objective)}</p>
-        <p>⚠️ <strong>Regra Especial:</strong> ${escapeHtml(room.rule)}</p>
-        <p>👾 <strong>Setup:</strong> ${room.setup?.common || 0} Comuns, ${room.setup?.brutal || 0} Brutais</p>
-      </div>
-    `;
-  });
-  roomsHtml += "</div>";
-
-  // 5. Build Intentions HTML
-  let intentionsHtml = "<h2>5. Cartas de Intenção</h2><div class=\"card-grid\">";
-  const intentionCards = local.state?.intentionCards || local.intentionCards || [];
-  intentionCards.forEach(intention => {
-    intentionsHtml += `
-      <div class="print-card new-intention-v2" style="background: rgba(13, 24, 30, 0.82); border: 1px solid rgba(255, 246, 223, 0.16); padding: 14px; border-radius: 8px; color: #f0ebe3;">
-        <div class="intention-header" style="border-bottom: 2px solid #C9922A; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <strong style="color: #F5E6C4; font-size: 1.1rem;">${escapeHtml(intention.name)}</strong>
-          <span class="card-cost" style="color: #C9922A; font-weight: bold;">${escapeHtml(intention.id)}</span>
-        </div>
-        <div class="intention-rules-v2" style="display: grid; gap: 6px; font-size: 0.85rem;">
-          <div class="section-v2 presagio-v2" style="background: rgba(217, 119, 6, 0.1); border-left: 3px solid #d97706; padding: 6px 10px; border-radius: 4px; color: #ffe3b3;">
-            <strong>⚡ Presságio</strong>: ${escapeHtml(intention.presagioText)}
-          </div>
-          <div class="section-v2 comum-v2" style="background: rgba(37, 99, 235, 0.1); border-left: 3px solid #2563eb; padding: 6px 10px; border-radius: 4px; color: #dbeafe;">
-            <strong>👤 Comuns</strong> <code>(${escapeHtml(intention.commonTarget)})</code>: ${escapeHtml(intention.commonText)}
-          </div>
-          <div class="section-v2 brutal-v2" style="background: rgba(220, 38, 38, 0.1); border-left: 3px solid #dc2626; padding: 6px 10px; border-radius: 4px; color: #fee2e2;">
-            <strong>👹 Brutais</strong> <code>(${escapeHtml(intention.brutalTarget)})</code>: ${escapeHtml(intention.brutalText)}
-          </div>
-          <div class="section-v2 represalia-v2" style="background: rgba(124, 58, 237, 0.1); border-left: 3px solid #7c3aed; padding: 6px 10px; border-radius: 4px; color: #f3e8ff;">
-            <strong>💀 Represália</strong>: ${escapeHtml(intention.represaliaText)}
-          </div>
+        ${descHtml}
+        <div style="margin-top: 6px; display: grid; gap: 2px;">
+          <p>❤️ <strong>Vida Máxima:</strong> ${monster.maxLife}</p>
+          <p>⚔️ <strong>Ataque Base:</strong> ${atkText}</p>
+          <p>🛡️ <strong>Escudo Inicial:</strong> ${monster.shield || 0}</p>
+          ${kwHtml}
         </div>
       </div>
     `;
   });
-  intentionsHtml += "</div>";
+  monstersHtml += "</div>";
 
-  // 6. Build Traps HTML
-  let trapsHtml = "<h2>6. Armadilhas</h2><div class=\"card-grid\">";
+  // 5. Build Traps HTML
+  let trapsHtml = "<h2>5. Armadilhas</h2><div class=\"card-grid\">";
   const trapCards = local.state?.trapCards || local.trapCards || [];
   trapCards.forEach(trap => {
     trapsHtml += `
@@ -3585,8 +3758,7 @@ function exportToPDF() {
       ${manualHtml}
       ${glossaryHtml}
       ${heroesHtml}
-      ${roomsHtml}
-      ${intentionsHtml}
+      ${monstersHtml}
       ${trapsHtml}
     </body>
     </html>
@@ -3632,8 +3804,7 @@ function renderRulesModal() {
   const isManual = local.rulesTab === "manual";
   const isGlossary = local.rulesTab === "glossary";
   const isCards = local.rulesTab === "cards";
-  const isRooms = local.rulesTab === "rooms";
-  const isIntentions = local.rulesTab === "intentions";
+  const isMonsters = local.rulesTab === "monsters";
   const isTraps = local.rulesTab === "traps";
   
   const query = normalizeSearch(local.rulesQuery);
@@ -3658,6 +3829,7 @@ function renderRulesModal() {
             <li><strong>Niely (24 Vida, 5 Energia):</strong> Especialista em curar o grupo, redistribuir escudos e conceder energia/cartas adicionais.</li>
             <li><strong>Elerion (28 Vida, 4 Energia):</strong> Focado em causar dano físico de precisão, tiros rápidos e perfurar escudos.</li>
             <li><strong>Arcanista Vince (26 Vida, 6 Energia):</strong> Alto dano mágico em área, feitiços de controle de grupo e aceleração/manipulação de recursos.</li>
+            <li><strong>Warlock (26 Vida, 5 Energia):</strong> Usa sua própria vida para fortalecer ataques, converter vida em energia, transferir vida com aliados e debilitar inimigos.</li>
           </ul>
           <p>🌟 <strong>Cartas Supremas:</strong> Cada herói possui uma carta Suprema especial (ex: <em>Bastião Supremo</em>, <em>Luz da Esperança</em>, etc.). Ela fica fora do seu deck e pode ser conjurada diretamente da mesa a qualquer momento no seu turno. **Ela pode ser usada apenas uma única vez por partida**.</p>
         </section>
@@ -3761,44 +3933,61 @@ function renderRulesModal() {
         }).join("") : `<p class="muted">Nenhum dado de carta de herói disponível.</p>`}
       </div>
     `;
-  } else if (isRooms) {
-    const roomCards = local.state?.roomCards || local.roomCards || [];
+  } else if (isMonsters) {
+    const monsterTemplates = local.state?.monsterTemplates || local.monsterTemplates || {};
+    const bossTemplates = local.state?.bossTemplates || local.bossTemplates || {};
+    
+    const allMonsters = [];
+    Object.values(monsterTemplates).forEach(m => {
+      allMonsters.push(m);
+    });
+    Object.values(bossTemplates).forEach(b => {
+      allMonsters.push({
+        ...b,
+        category: "boss",
+        role: b.role || "Chefe"
+      });
+    });
+    
     tabContent = `
       <div class="rules-results cards-list-rules">
-        ${roomCards.length ? roomCards.map(room => `
-          <div class="rules-card-entry room-entry-card">
-            <div class="card-entry-header">
-              <span class="card-entry-cost">${escapeHtml(room.id)}</span>
-              <strong class="card-entry-name">${escapeHtml(room.name)}</strong>
-              <span class="card-entry-type theme-${room.theme}">${escapeHtml(room.theme)}</span>
+        ${allMonsters.length ? allMonsters.map(monster => {
+          const categoryLabel = monster.category === "common" ? "Comum" : 
+                                monster.category === "brutal" ? "Brutal" :
+                                monster.category === "mystic" ? "Místico" : "Chefe";
+          
+          let kwList = [];
+          if (monster.keywords && monster.keywords.length > 0) {
+            monster.keywords.forEach(kw => {
+              let text = kw;
+              if (kw === "Curandeira") text = `Curandeira ${monster.curandeiraValue || ""}`;
+              if (kw === "Guardiã") text = `Guardiã ${monster.guardiaValue || ""}`;
+              kwList.push(text);
+            });
+          }
+          const kwHtml = kwList.length ? `<p class="card-entry-text" style="margin-top: 4px;">🌟 <strong>Habilidades:</strong> ${kwList.map(escapeHtml).join(", ")}</p>` : "";
+          
+          const isBoss = monster.category === "boss";
+          const atkText = isBoss ? `${monster.attack} ⚔️ (Fase 1) / ${monster.attackPhase2} ⚔️ (Fase 2)` : `${monster.attack} ⚔️`;
+          const descHtml = monster.description ? `<p class="card-entry-subtitle"><em>${escapeHtml(monster.description)}</em></p>` : "";
+          
+          return `
+            <div class="rules-card-entry monster-entry-card ${monster.category}">
+              <div class="card-entry-header">
+                <span class="card-entry-cost badge-${monster.category}">${categoryLabel}</span>
+                <strong class="card-entry-name">${escapeHtml(monster.name)}</strong>
+                <span class="card-entry-type">${escapeHtml(monster.role || "")}</span>
+              </div>
+              ${descHtml}
+              <div style="margin-top: 8px; display: grid; gap: 4px;">
+                <p class="card-entry-text">❤️ <strong>Vida Máxima:</strong> ${monster.maxLife}</p>
+                <p class="card-entry-text">⚔️ <strong>Ataque Base:</strong> ${atkText}</p>
+                <p class="card-entry-text">🛡️ <strong>Escudo Inicial:</strong> ${monster.shield || 0}</p>
+                ${kwHtml}
+              </div>
             </div>
-            <p class="card-entry-subtitle"><em>${escapeHtml(room.subtitle || "")}</em></p>
-            <div style="margin-top: 8px; display: grid; gap: 4px;">
-              <p class="card-entry-text">🎯 <strong>Objetivo:</strong> ${escapeHtml(room.objective)}</p>
-              <p class="card-entry-text">⚠️ <strong>Regra Especial:</strong> ${escapeHtml(room.rule)}</p>
-              <p class="card-entry-text">👾 <strong>Setup Inicial:</strong> ${room.setup?.common || 0} Comuns, ${room.setup?.brutal || 0} Brutais</p>
-            </div>
-          </div>
-        `).join("") : `<p class="muted">Nenhuma sala disponível no momento.</p>`}
-      </div>
-    `;
-  } else if (isIntentions) {
-    const intentionCards = local.state?.intentionCards || local.intentionCards || [];
-    tabContent = `
-      <div class="rules-results cards-list-rules">
-        ${intentionCards.length ? intentionCards.map(intention => `
-          <div class="rules-card-entry intention-entry-card">
-            <div class="card-entry-header">
-              <span class="card-entry-cost">${escapeHtml(intention.id)}</span>
-              <strong class="card-entry-name">${escapeHtml(intention.name)}</strong>
-            </div>
-            <div style="margin-top: 8px; display: grid; gap: 6px;">
-              <p class="card-entry-text">👤 <strong>Comuns:</strong> ${escapeHtml(intention.commonText)} <code class="target-code">(${escapeHtml(intention.commonTarget)})</code></p>
-              <p class="card-entry-text">👹 <strong>Brutais:</strong> ${escapeHtml(intention.brutalText)} <code class="target-code">(${escapeHtml(intention.brutalTarget)})</code></p>
-            </div>
-            <p class="card-entry-subtitle" style="margin-top: 10px;"><em>🧠 Estratégia: ${escapeHtml(intention.design || "")}</em></p>
-          </div>
-        `).join("") : `<p class="muted">Nenhuma intenção disponível no momento.</p>`}
+          `;
+        }).join("") : `<p class="muted">Nenhum monstro disponível no momento.</p>`}
       </div>
     `;
   } else if (isTraps) {
@@ -3808,7 +3997,7 @@ function renderRulesModal() {
         ${trapCards.length ? trapCards.map(trap => `
           <div class="rules-card-entry trap-entry-card">
             <div class="card-entry-header">
-              <span class="card-entry-cost">${escapeHtml(trap.id)}</span>
+              <span class="card-cost">${escapeHtml(trap.id)}</span>
               <strong class="card-entry-name">${escapeHtml(trap.name)}</strong>
               <span class="card-entry-type badge-danger">Armadilha</span>
             </div>
@@ -3837,8 +4026,7 @@ function renderRulesModal() {
           <button id="tabManual" class="tab-nav ${isManual ? "active" : ""}">Manual</button>
           <button id="tabGlossary" class="tab-nav ${isGlossary ? "active" : ""}">Glossário</button>
           <button id="tabCards" class="tab-nav ${isCards ? "active" : ""}">Cartas dos Heróis</button>
-          <button id="tabRooms" class="tab-nav ${isRooms ? "active" : ""}">Cartas de Sala</button>
-          <button id="tabIntentions" class="tab-nav ${isIntentions ? "active" : ""}">Cartas de Intenção</button>
+          <button id="tabMonsters" class="tab-nav ${isMonsters ? "active" : ""}">Monstros</button>
           <button id="tabTraps" class="tab-nav ${isTraps ? "active" : ""}">Armadilhas</button>
         </div>
         
@@ -3913,12 +4101,8 @@ function bindGlobalControls() {
     local.rulesTab = "cards";
     render();
   });
-  document.querySelector("#tabRooms")?.addEventListener("click", () => {
-    local.rulesTab = "rooms";
-    render();
-  });
-  document.querySelector("#tabIntentions")?.addEventListener("click", () => {
-    local.rulesTab = "intentions";
+  document.querySelector("#tabMonsters")?.addEventListener("click", () => {
+    local.rulesTab = "monsters";
     render();
   });
   document.querySelector("#tabTraps")?.addEventListener("click", () => {
