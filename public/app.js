@@ -1963,7 +1963,7 @@ function renderSelectedCardModal(state, me) {
   }
   if (!card) return "";
 
-  const canTargetMonster = ((card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge) && card.id !== "companheiro-animal" && !card.twoTargets;
+  const canTargetMonster = ((card.type === "attack" && !card.areaDamage) || card.target === "enemy" || card.enemyChallenge) && card.id !== "companheiro-animal" && card.id !== "golpe-cruel" && !card.twoTargets;
   const needsReviveTarget = Boolean(card.revive);
   const canTargetDefeated = needsReviveTarget;
   const canTargetPlayer = ((card.type === "heal" && !card.allHeal && !card.revive) || card.target === "ally" || card.provoke || (card.planning && card.target === "ally")) && !card.twoTargets;
@@ -1972,7 +1972,20 @@ function renderSelectedCardModal(state, me) {
   const needsTwoAllies = card.twoTargets === "allies";
 
   let targetSelect = "";
-  if (canTargetMonster) {
+  if (card.id === "golpe-cruel") {
+    targetSelect = `
+      <label>Alvo Inimigo
+        <select id="selectedCardTarget">
+          ${state.enemies.filter((e) => e.life > 0 && e.category !== "mystic").map((e) => `<option value="${e.uid}">${escapeHtml(e.name)}</option>`).join("")}
+        </select>
+      </label>
+      <label style="margin-top: 8px; display: block;">Aliado para sofrer o dano
+        <select id="selectedCardTarget2">
+          ${state.players.filter((p) => p.life > 0 && p.id !== me.id).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+        </select>
+      </label>
+    `;
+  } else if (canTargetMonster) {
     targetSelect = `<label>Alvo
       <select id="selectedCardTarget">
         ${state.enemies.filter((e) => e.life > 0 && e.category !== "mystic").map((e) => `<option value="${e.uid}">${escapeHtml(e.name)}</option>`).join("")}
@@ -1983,9 +1996,13 @@ function renderSelectedCardModal(state, me) {
         ${state.players.filter((p) => p.life <= 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
       </select></label>`;
   } else if (canTargetPlayer) {
+    const isFluxoArcano = card.id === "fluxo-arcano";
+    const filteredPlayers = isFluxoArcano
+      ? state.players.filter((p) => p.life > 0 && p.id !== me.id)
+      : state.players.filter((p) => p.life > 0);
     targetSelect = `<label>Alvo
       <select id="selectedCardTarget">
-        ${state.players.filter((p) => p.life > 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
+        ${filteredPlayers.map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
       </select></label>`;
   } else if (needsTwoEnemies) {
     targetSelect = `
@@ -2035,8 +2052,21 @@ function renderSelectedCardModal(state, me) {
   const blocked = isCardBlocked(card, state, me) || card.type === "reaction";
 
         let warlockSelect = "";
-        if (me && me.heroId === "warlock") {
-          if (card.id === "sopro-profano") {
+        if (me && (me.heroId === "warlock" || card.id === "explosao-de-mana")) {
+          if (card.id === "explosao-de-mana") {
+            const maxMarks = me.marcas_arcanas || 0;
+            warlockSelect = `
+              <label style="margin-top: 8px; display: block;">Marcas a consumir:
+                <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
+                  <option value="0">Não consumir (0 cartas)</option>
+                  ${Array.from({ length: maxMarks }, (_, i) => {
+                    const val = i + 1;
+                    return `<option value="${val}">Consumir ${val} Marca(s) (+${val} carta(s) para todos)</option>`;
+                  }).join("")}
+                </select>
+              </label>
+            `;
+          } else if (card.id === "sopro-profano") {
             const maxSacrifice = Math.min(10, me.life - 1);
             warlockSelect = `
               <label style="margin-top: 8px; display: block;">Vida a sacrificar:
@@ -2118,14 +2148,14 @@ function renderSelectedCardModal(state, me) {
               </label>
             `;
           } else if (card.id === "debelar-ofensiva") {
-            const maxSacrificePairs = Math.floor((me.life - 1) / 2);
+            const maxSacrifice = Math.min(10, me.life - 1);
             warlockSelect = `
               <label style="margin-top: 8px; display: block;">Vida a sacrificar:
                 <select id="selectedCardSacrifice" style="width: 100%; padding: 6px; margin-top: 4px; border-radius: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);">
                   <option value="0">Não sacrificar</option>
-                  ${Array.from({ length: maxSacrificePairs }, (_, i) => {
-                    const val = (i + 1) * 2;
-                    return `<option value="${val}">Sacrificar ${val} de Vida (-${val / 2} de dano do inimigo)</option>`;
+                  ${Array.from({ length: maxSacrifice }, (_, i) => {
+                    const val = i + 1;
+                    return `<option value="${val}">Sacrificar ${val} de Vida (-${val} de dano do inimigo)</option>`;
                   }).join("")}
                 </select>
               </label>
@@ -2145,11 +2175,16 @@ function renderSelectedCardModal(state, me) {
           }
         }
 
-        return `
-          <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="selectedCardName">
-            <article class="tcg-card selected-card-detail ${card.type}">
-              <button id="closeCardDetail" class="card-close secondary" aria-label="Fechar carta">Fechar</button>
-              <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
+  let displayCost = card.cost;
+  if (state && state.terreno_ativo === "TERRENO_ARCANO") {
+    displayCost = Math.floor(card.cost / 2);
+  }
+
+  return `
+    <div class="card-lightbox" role="dialog" aria-modal="true" aria-labelledby="selectedCardName">
+      <article class="tcg-card selected-card-detail ${card.type}">
+        <button id="closeCardDetail" class="card-close secondary" aria-label="Fechar carta">Fechar</button>
+        <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : displayCost}</div>
               <img src="${getCardArt(card)}" alt="" />
               <div class="card-body">
                 <strong id="selectedCardName">${escapeHtml(card.name)}</strong>
@@ -2381,15 +2416,15 @@ function renderTerrainCard(terrain) {
     color = "#a855f7";
   } else if (terrain === "TERRENO_ARCANO") {
     name = "Terreno Arcano";
-    text = "🌀 Enquanto este terreno estiver ativo, todos os aliados ganham +1 de Energia máxima.";
+    text = "🌀 Todas as cartas de todos os heróis custam metade do custo de energia neste turno. Dura 1 turno.";
     color = "#d946ef";
   } else if (terrain === "TERRENO_MONTANHOSO") {
     name = "Terreno Montanhoso";
-    text = "⛰️ Enquanto este terreno estiver ativo, todos os inimigos causam 2 a menos de dano.";
+    text = "⛰️ Reduz o dano dos monstros em 1 para cada Marca Arcana que possuir. Dura 2 turnos.";
     color = "#eab308";
   } else if (terrain === "TERRENO_COSMICO") {
     name = "Terreno Cósmico";
-    text = "🌌 Enquanto ativo, todos os heróis aumentam o limite máximo de cartas na mão em +1.";
+    text = "🌌 Enquanto este terreno estiver ativo, metade de todo dano causado é retornado como cura aos jogadores. Dura 2 turnos.";
     color = "#06b6d4";
   }
   
@@ -2547,12 +2582,83 @@ function renderEnemyStatusEffects(enemy) {
     badges.push(`<span class="status-badge keyword-suprimida" style="background: #4b5563; color: white;" title="Keywords Suprimidas: as habilidades especiais deste monstro estão anuladas esta rodada.">🚫 Suprimido</span>`);
   }
 
+  if (enemy.warlockMark === "vulnerability") {
+    badges.push(`<span class="status-badge warlock-mark vulnerability" style="background: linear-gradient(135deg, #7c3aed, #5b21b6); border-color: rgba(168, 85, 247, 0.3); color: white;" title="Marca da Vulnerabilidade: Recebe +3 de dano de todos os ataques.">🔮 M. Vulnerabilidade</span>`);
+  }
+  if (enemy.warlockMark === "drain") {
+    badges.push(`<span class="status-badge warlock-mark drain" style="background: linear-gradient(135deg, #ef4444, #991b1b); border-color: rgba(239, 68, 68, 0.3); color: white;" title="Marca da Drenagem: Qualquer dano sofrido por este inimigo cura o Warlock em 2 de Vida.">🩸 M. Drenagem</span>`);
+  }
+
   if (badges.length === 0) return "";
   return `<div class="status-effects-list">${badges.join("")}</div>`;
 }
 
 function renderPlayerHud(player) {
   const hasResources = (local.state?.status === "playing" || local.animRunning) && Number.isFinite(player.maxLife) && Number.isFinite(player.maxEnergy);
+
+  // Provoke and protection visual states detection
+  const protector = local.state?.players?.find(p => p.life > 0 && p.protectingId === player.id);
+  const bastiaoProtector = local.state?.players?.find(p => p.life > 0 && p.bastiaoSupremoActive && p.id !== player.id);
+  const salvaguardaProtector = local.state?.players?.find(p => p.life > 0 && p.salvaguardaActive && p.id !== player.id);
+
+  let provokeBadgeHtml = "";
+  let provokeClass = "";
+
+  if (protector) {
+    provokeClass = "is-protected";
+    provokeBadgeHtml = `
+      <div class="provoke-badge protected" title="Protegido por Provocar: Todo dano sofrido será redirecionado para ${escapeHtml(protector.name)} nesta rodada">
+        <span class="provoke-icon">🛡️</span>
+        <span class="provoke-text">PROTEGIDO</span>
+      </div>
+    `;
+  } else if (bastiaoProtector) {
+    provokeClass = "is-protected";
+    provokeBadgeHtml = `
+      <div class="provoke-badge protected" title="Bastião Supremo: Todo dano sofrido será redirecionado para ${escapeHtml(bastiaoProtector.name)} nesta rodada">
+        <span class="provoke-icon">🛡️</span>
+        <span class="provoke-text">PROTEGIDO</span>
+      </div>
+    `;
+  } else if (salvaguardaProtector) {
+    provokeClass = "is-half-protected";
+    provokeBadgeHtml = `
+      <div class="provoke-badge half-protected" title="Salvaguarda: Metade do dano sofrido será redirecionado para ${escapeHtml(salvaguardaProtector.name)} nesta rodada">
+        <span class="provoke-icon">🛡️</span>
+        <span class="provoke-text">SALVAGUARDADO</span>
+      </div>
+    `;
+  }
+
+  const protectedAlly = local.state?.players?.find(p => p.id === player.protectingId);
+  const isBastiaoActive = player.bastiaoSupremoActive;
+  const isSalvaguardaActive = player.salvaguardaActive;
+
+  if (protectedAlly) {
+    provokeClass = "is-protecting";
+    provokeBadgeHtml = `
+      <div class="provoke-badge protecting" title="Provocando: Redirecionando todo dano sofrido por ${escapeHtml(protectedAlly.name)} para si nesta rodada">
+        <span class="provoke-icon">⚔️</span>
+        <span class="provoke-text">PROVOCANDO</span>
+      </div>
+    `;
+  } else if (isBastiaoActive) {
+    provokeClass = "is-protecting bastiao";
+    provokeBadgeHtml = `
+      <div class="provoke-badge protecting bastiao" title="Bastião Supremo: Redirecionando todo dano sofrido por aliados para si nesta rodada">
+        <span class="provoke-icon">👑</span>
+        <span class="provoke-text">BASTIÃO</span>
+      </div>
+    `;
+  } else if (isSalvaguardaActive) {
+    provokeClass = "is-protecting salvaguarda";
+    provokeBadgeHtml = `
+      <div class="provoke-badge protecting salvaguarda" title="Salvaguarda: Redirecionando metade de todo dano sofrido por aliados para si nesta rodada">
+        <span class="provoke-icon">🛡️</span>
+        <span class="provoke-text">SALVAGUARDA</span>
+      </div>
+    `;
+  }
 
   const shieldVal = hasResources ? getVisualShield(player.id, player.shield || 0) : 0;
 
@@ -2591,6 +2697,16 @@ function renderPlayerHud(player) {
               `
               : ""
           }
+          ${
+            player.heroId === "mago" && player.marcas_arcanas !== undefined && player.marcas_arcanas !== null
+              ? `
+                <div class="hud-stat-item arcanas" style="display: flex; align-items: center; gap: 4px;">
+                  <span class="hud-stat-icon">✨</span>
+                  <span class="hud-stat-value">Marcas: ${player.marcas_arcanas}</span>
+                </div>
+              `
+              : ""
+          }
         </div>
       </div>
       ${renderStatusEffects(player.statusEffects)}
@@ -2601,9 +2717,10 @@ function renderPlayerHud(player) {
   }
 
   return `
-    <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${isMe ? "is-you" : "is-allie"} ${player.turnEnded ? "turn-ended" : ""}">
+    <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${isMe ? "is-you" : "is-allie"} ${player.turnEnded ? "turn-ended" : ""} ${provokeClass}">
       <div class="portrait-container">
         <img class="portrait-img" src="${getHeroCardArt(player.heroId)}" alt="" />
+        ${provokeBadgeHtml}
       </div>
       <div class="hud-main">
         <div class="hud-title">
@@ -2749,11 +2866,17 @@ function renderMonsterCard(enemy) {
   const healthPct = Math.max(0, Math.min(100, Math.round((visualLife / enemy.maxLife) * 100)));
 
   return `
-    <article id="card-enemy-${enemy.uid}" class="monster-card ${enemy.category} ${defeated ? "defeated" : ""}" style="${isHidden ? "opacity: 0; pointer-events: none; transition: opacity 0.5s;" : ""}">
+    <article id="card-enemy-${enemy.uid}" class="monster-card ${enemy.category} ${defeated ? "defeated" : ""} ${enemy.warlockMark ? `has-warlock-mark warlock-mark-${enemy.warlockMark}` : ''}" style="${isHidden ? "opacity: 0; pointer-events: none; transition: opacity 0.5s;" : ""}">
       ${targetBadgeHtml}
       
       <div class="monster-art">
         <img src="${getEnemyArt(enemy)}" alt="" />
+        ${enemy.warlockMark ? `
+          <div class="warlock-mark-overlay ${enemy.warlockMark}" title="${enemy.warlockMark === 'vulnerability' ? 'Marca da Vulnerabilidade: Recebe +3 de dano de todos os ataques' : 'Marca da Drenagem: Qualquer dano a este inimigo cura o Warlock em 2 de Vida'}">
+            <div class="warlock-mark-rune">${enemy.warlockMark === 'vulnerability' ? '🔮' : '🩸'}</div>
+            <div class="warlock-mark-label">${enemy.warlockMark === 'vulnerability' ? 'Vulnerável' : 'Drenando'}</div>
+          </div>
+        ` : ''}
       </div>
 
       <!-- Nome Vertical (Borda Esquerda) -->
@@ -2801,7 +2924,14 @@ function renderMonsterCard(enemy) {
 
 function isCardBlocked(card, state, me) {
   if (!me) return true;
-  if (state.turn !== "players" || me.turnEnded || me.energy < card.cost) return true;
+  const isFreePlay = state.pendingDistorcaoTemporal && state.pendingDistorcaoTemporal.targetId === me.id;
+  let finalCost = isFreePlay ? 0 : card.cost;
+  if (!isFreePlay) {
+    if (state.terreno_ativo === "TERRENO_ARCANO") {
+      finalCost = Math.floor(finalCost / 2);
+    }
+  }
+  if (state.turn !== "players" || me.turnEnded || me.energy < finalCost) return true;
   if (card.lifeCost && me.life <= card.lifeCost) return true;
 
   if (card.id === "marca-da-vulnerabilidade" || card.id === "marca-da-drenagem" || card.id === "romper-armadilha" || card.id === "barganha-sombria") {
@@ -2817,6 +2947,10 @@ function isCardBlocked(card, state, me) {
   }
 
   const alivePlayers = state.players.filter((p) => p.life > 0);
+  if (card.id === "golpe-cruel") {
+    const aliveAllies = state.players.filter((p) => p.life > 0 && p.id !== me.id);
+    if (aliveAllies.length === 0) return true;
+  }
   if (card.id === "manipular-energia" || card.id === "redistribuir-escudos" || card.id === "escudo-compartilhado") {
     if (alivePlayers.length < 2) return true;
   }
@@ -2842,6 +2976,11 @@ function renderHandCard(card, state, index = 0, total = 1) {
   const offset = (index - center) * 115;
   const rotation = (index - center) * 3.5;
 
+  let displayCost = card.cost;
+  if (state && state.terreno_ativo === "TERRENO_ARCANO") {
+    displayCost = Math.floor(card.cost / 2);
+  }
+
   return `
     <article
       class="tcg-card play-card ${card.type} ${blocked ? "unplayable" : ""} ${reactionMode && card.type !== "reaction" ? "reaction-muted" : ""} ${reactionMode && card.type === "reaction" ? "reaction-ready" : ""}"
@@ -2850,7 +2989,7 @@ function renderHandCard(card, state, index = 0, total = 1) {
       tabindex="0"
       style="--hand-offset: ${offset}px; --hand-rotate: ${rotation}deg;"
     >
-      <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : card.cost}</div>
+      <div class="card-cost" ${card.lifeCost ? 'style="background: #ef4444; border-color: #ef4444; color: white;"' : ''}>${card.lifeCost ? `${card.lifeCost}❤️` : displayCost}</div>
       <img src="${getCardArt(card)}" alt="" />
       <div class="card-body">
         <strong>${escapeHtml(card.name)}</strong>
@@ -4172,7 +4311,19 @@ function bindGlobalControls() {
         const needsEnemy = cardTarget === "enemy" || (cardType === "attack" && cardId !== "bola-de-fogo" && cardId !== "chuva-de-flechas" && cardId !== "explosao-divina" && cardId !== "raio-congelante" && cardId !== "tempestade-eletrica");
         const needsAlly = cardTarget === "ally";
         
-        if (needsTwoEnemies) {
+        if (cardId === "golpe-cruel") {
+          const me = getMe();
+          targetContainer.innerHTML = `
+            <strong>Alvo Inimigo:</strong>
+            <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+            <strong>Aliado para sofrer o dano:</strong>
+            <select id="ecoTargetSelect2" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.players.filter(p => p.life > 0 && p.id !== (me ? me.id : "")).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+          `;
+        } else if (needsTwoEnemies) {
           targetContainer.innerHTML = `
             <strong>Alvo 1:</strong>
             <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
@@ -4248,7 +4399,18 @@ function bindGlobalControls() {
         const needsEnemy = card.target === "enemy" || (card.type === "attack" && !card.areaDamage && card.id !== "bola-de-fogo" && card.id !== "chuva-de-flechas" && card.id !== "explosao-divina" && card.id !== "raio-congelante" && card.id !== "tempestade-eletrica");
         const needsAlly = card.target === "ally";
         
-        if (needsTwoEnemies) {
+        if (card.id === "golpe-cruel") {
+          targetContainer.innerHTML = `
+            <strong>Alvo Inimigo:</strong>
+            <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">
+              ${local.state.enemies.filter(e => e.life > 0 && e.category !== "mystic").map(e => `<option value="${e.uid}">Inimigo: ${escapeHtml(e.name)}</option>`).join("")}
+            </select>
+            <strong>Aliado para sofrer o dano:</strong>
+            <select id="distorcaoTargetSelect2" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
+              ${local.state.players.filter(p => p.life > 0 && p.id !== (me ? me.id : "")).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+            </select>
+          `;
+        } else if (needsTwoEnemies) {
           targetContainer.innerHTML = `
             <strong>Alvo 1:</strong>
             <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 8px;">

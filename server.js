@@ -713,18 +713,17 @@ const heroes = {
     deck: [
       ["absorcao-arcana", 1],
       ["contra-feitico", 1],
-      ["raio-arcano", 1],
+      ["raio-arcano", 2],
       ["fluxo-arcano", 1],
       ["teleporte-arcano", 1],
       ["chama-menor", 1],
       ["toque-glacial", 1],
-      ["marca-arcana", 1],
+      ["marca-arcana", 2],
       ["bola-de-fogo", 1],
       ["espelho-arcano", 1],
       ["amplificar", 1],
       ["manipular-energia", 1],
-      ["detonacao-arcana", 1],
-      ["campo-antimagia", 1],
+      ["detonacao-arcana", 2],
       ["escudo-etereo", 1],
       ["no-temporal", 1],
       ["tempestade-eletrica", 1],
@@ -732,8 +731,7 @@ const heroes = {
       ["eco-arcano", 1],
       ["sobrecarga-ignea", 1],
       ["explosao-de-mana", 1],
-      ["terreno-chao-de-gelo", 1],
-      ["distorcao-temporal", 1]
+      ["terreno-chao-de-gelo", 1]
     ]
   },
   warlock: {
@@ -1367,21 +1365,21 @@ const cards = {
     name: "Raio Arcano",
     type: "attack",
     cost: 1,
-    text: "Cause 4 de dano a um inimigo. Se o inimigo possuir alguma Marca Arcana, cause +2 de dano. Se o inimigo não possuir nenhuma Marca Arcana, coloque 2 marcas arcanas no inimigo."
+    text: "Cause 4 de dano a um inimigo. Para cada Marca Arcana que possuir, aumente em +2 de dano. Se não possuir nenhuma Marca Arcana, ganhe 2."
   },
   "bola-de-fogo": {
     id: "bola-de-fogo",
     name: "Bola de Fogo",
     type: "attack",
     cost: 2,
-    text: "Cause 6 de dano a um inimigo. Se houver outros inimigos em jogo, cause 2 de dano a cada um deles. Aplique 2 Marcas Arcanas a todos os inimigos."
+    text: "Cause 6 de dano a um inimigo. Se possuir pelo menos 4 marcas arcanas, cause 12 de dano. Consome 4 marcas arcanas."
   },
   "raio-congelante": {
     id: "raio-congelante",
     name: "Raio Congelante",
     type: "attack",
     cost: 2,
-    text: "Cause 6 de dano a um inimigo. Se ele tiver Marca Arcana, reduza o dano dele à metade nesta rodada."
+    text: "Cause 6 de dano a um inimigo. Se possuir pelo menos 4 Marcas Arcanas, reduza o dano dele à metade nesta rodada."
   },
   "tempestade-eletrica": {
     id: "tempestade-eletrica",
@@ -1397,7 +1395,7 @@ const cards = {
     type: "energy",
     target: "ally",
     cost: 1,
-    text: "Outro herói aliado recupera 2 de Energia. Você compra 1 carta."
+    text: "Um aliado recupera 3 de energia. Ganhe 2 Marcas Arcanas."
   },
   "manipular-energia": {
     id: "manipular-energia",
@@ -1406,27 +1404,19 @@ const cards = {
     cost: 1,
     text: "Troque a energia livremente entre 2 heróis."
   },
-  "campo-antimagia": {
-    id: "campo-antimagia",
-    name: "Campo Antimagia",
-    type: "control",
-    cost: 2,
-    text: "Remova a armadilha ativa."
-  },
   "teleporte-arcano": {
     id: "teleporte-arcano",
     name: "Teleporte Arcano",
-    type: "control",
-    target: "ally",
+    type: "defense",
     cost: 2,
-    text: "Um herói aliado recupera 2 de Energia e você compra 1 carta."
+    text: "Ganhe 2 de escudo e Ganhe 2 Marcas Arcanas."
   },
   "explosao-de-mana": {
     id: "explosao-de-mana",
     name: "Explosão de Mana",
-    type: "attack",
+    type: "draw",
     cost: 3,
-    text: "Cause 10 de dano a um inimigo, ignorando Escudo. Se você tiver 3 ou mais cartas na mão, esta carta custa 1 de Energia a menos."
+    text: "Para cada Marca Arcana que consumir, todos os aliados compram 1 carta."
   },
   "eco-arcano": {
     id: "eco-arcano",
@@ -1434,14 +1424,6 @@ const cards = {
     type: "control",
     cost: 3,
     text: "Escolha qualquer carta jogada nesta rodada por qualquer herói. Resolva novamente seus efeitos."
-  },
-  "distorcao-temporal": {
-    id: "distorcao-temporal",
-    name: "Distorção Temporal",
-    type: "control",
-    target: "ally",
-    cost: 3,
-    text: "Escolha um herói aliado. Ele pode jogar imediatamente uma carta de sua mão sem pagar o custo de Energia."
   },
   "cataclismo-arcano": {
     id: "cataclismo-arcano",
@@ -1454,7 +1436,7 @@ const cards = {
     id: "absorcao-arcana",
     name: "Absorção Arcana",
     type: "control",
-    cost: 1,
+    cost: 4,
     text: "Desative a armadilha ativa."
   },
   "contra-feitico": {
@@ -1462,29 +1444,28 @@ const cards = {
     name: "Terreno Arcano",
     type: "terrain",
     cost: 3,
-    text: "Terreno: Enquanto o terreno estiver ativo, todos os aliados ganham +1 de Energia máxima. Persiste até o fim da sala."
+    text: "Terreno: Todas as cartas de todos os heróis custam metade do custo de energia neste turno. Dura 1 turno."
   },
   "chama-menor": {
     id: "chama-menor",
     name: "Terreno Montanhoso",
     type: "terrain",
     cost: 3,
-    text: "Terreno: Enquanto este terreno estiver ativo, todos os inimigos causam 2 a menos de dano. Persiste até o fim da sala."
+    text: "Terreno: Reduza o dano dos monstros em 1 para cada Marca Arcana que possuir. Dura 2 turnos."
   },
   "toque-glacial": {
     id: "toque-glacial",
     name: "Toque Glacial",
     type: "attack",
     cost: 1,
-    text: "Cause 4 de dano a um inimigo. Aplique 2 Marcas Arcanas nele."
+    text: "Cause 3 de dano ao inimigo para cada Marca Arcana que possuir. Se não tiver marcas arcanas, ganhe 2."
   },
   "marca-arcana": {
     id: "marca-arcana",
     name: "Marca Arcana",
     type: "control",
-    target: "enemy",
     cost: 1,
-    text: "Aplique 3 Marcas Arcanas a um inimigo. Compre 1 carta."
+    text: "Ganhe 3 Marcas Arcanas."
   },
   "espelho-arcano": {
     id: "espelho-arcano",
@@ -1498,15 +1479,15 @@ const cards = {
     id: "amplificar",
     name: "Detonação Arcana",
     type: "attack",
-    cost: 2,
-    text: "Consuma todas as Marcas Arcanas de um inimigo. Cause 4 de dano para cada Marca consumida (ignora Escudo)."
+    cost: 3,
+    text: "Consuma todas as Marcas Arcanas. Cause 4 de dano para cada Marca consumida."
   },
   "detonacao-arcana": {
     id: "detonacao-arcana",
     name: "Detonação Arcana",
     type: "attack",
-    cost: 2,
-    text: "Consuma todas as Marcas Arcanas de um inimigo. Cause 4 de dano para cada Marca consumida (ignora Escudo)."
+    cost: 3,
+    text: "Consuma todas as Marcas Arcanas. Cause 4 de dano para cada Marca consumida."
   },
   "escudo-etereo": {
     id: "escudo-etereo",
@@ -1514,15 +1495,14 @@ const cards = {
     type: "defense",
     target: "ally",
     cost: 2,
-    text: "Escolha um aliado. Conceda 6 de Escudo a ele. Se o inimigo atacar este aliado nesta rodada, ele sofre 3 de dano de reflexo."
+    text: "Coloque em um aliado 1 de escudo para cada Marca Arcana que possuir."
   },
   "no-temporal": {
     id: "no-temporal",
     name: "Nó Temporal",
-    type: "control",
-    target: "enemy",
+    type: "defense",
     cost: 1,
-    text: "O inimigo alvo é atrasado: ele atacará por último nesta rodada, e seus ataques causam -2 de dano."
+    text: "Transforme sua energia em escudo para si mesmo."
   },
   "sobrecarga-ignea": {
     id: "sobrecarga-ignea",
@@ -1536,7 +1516,7 @@ const cards = {
     name: "Terreno Cósmico",
     type: "terrain",
     cost: 3,
-    text: "Terreno: Enquanto ativo, todos os heróis aumentam o limite máximo de cartas na mão em +1. Persiste até o fim da sala."
+    text: "Terreno: Enquanto este terreno estiver ativo, metade de todo dano causado é retornado como cura aos jogadores. Dura 2 turnos."
   },
   "carta-especial-dano": {
     id: "carta-especial-dano",
@@ -1562,7 +1542,7 @@ const cards = {
     name: "Pacto de Imortalidade",
     type: "defense",
     cost: 0,
-    text: "Suprema. Você não pode morrer nesta rodada (vida mínima de 1 nesta rodada). Devolva ao monstro todo o dano de ataque causado a você."
+    text: "Suprema. Você não pode morrer por 2 turnos (vida mínima de 1). Devolva ao monstro todo o dano de ataque causado a você."
   },
   "sopro-profano": {
     id: "sopro-profano",
@@ -1592,7 +1572,7 @@ const cards = {
     type: "attack",
     cost: 2,
     target: "enemy",
-    text: "Causa 8 de dano a um inimigo. Depois, você sofre 3 de dano."
+    text: "Causa 8 de dano a um inimigo. Escolha um aliado para sofrer 3 de dano."
   },
   "marca-da-vulnerabilidade": {
     id: "marca-da-vulnerabilidade",
@@ -1608,7 +1588,7 @@ const cards = {
     type: "control",
     target: "enemy",
     cost: 2,
-    text: "Perca 4 de vida para marcar um inimigo. Inimigos com esta marca restauram +2 de Vida ao herói que causar dano a eles (apenas 1 Marca ativa por vez)."
+    text: "Perca 4 de vida para marcar um inimigo. Qualquer herói que causar dano a este inimigo fará com que o Warlock recupere +2 de Vida (apenas 1 Marca ativa por vez)."
   },
   "sacrificio-final": {
     id: "sacrificio-final",
@@ -1656,7 +1636,7 @@ const cards = {
     type: "control",
     target: "enemy",
     cost: 4,
-    text: "Reduza o dano do inimigo em 1 para cada 2 de vida sua sacrificada (selecionado ao jogar)."
+    text: "Reduza o dano do inimigo em 1 para cada 1 de vida sua sacrificada (selecionado ao jogar)."
   },
   "romper-armadilha": {
     id: "romper-armadilha",
@@ -2705,9 +2685,20 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   target.life = Math.max(0, target.life - lifeDamage);
   if (player) player.roundStats.damageDealt += lifeDamage;
 
-  if (target.warlockMark === "drain" && player && player.life > 0 && (shieldDamage + lifeDamage) > 0) {
-    applyHealToHero(session, player, 2, "Marca da Drenagem");
-    session.log.unshift(`[Marca da Drenagem] ${player.name} recuperou 2 de Vida ao causar dano em ${target.name}.`);
+  if (target.warlockMark === "drain" && (shieldDamage + lifeDamage) > 0) {
+    const warlock = session.players.find(p => p.heroId === "warlock" && p.life > 0);
+    if (warlock) {
+      applyHealToHero(session, warlock, 2, "Marca da Drenagem");
+      session.log.unshift(`[Marca da Drenagem] Warlock ${warlock.name} recuperou 2 de Vida porque ${player ? player.name : "alguém"} causou dano em ${target.name}.`);
+    }
+  }
+
+  if (session.terreno_ativo === "TERRENO_COSMICO" && player && player.life > 0 && (shieldDamage + lifeDamage) > 0) {
+    const healAmt = Math.floor((shieldDamage + lifeDamage) / 2);
+    if (healAmt > 0) {
+      applyHealToHero(session, player, healAmt, "Terreno Cósmico");
+      session.log.unshift(`[Terreno Cósmico] ${player.name} curou ${healAmt} de Vida ao causar ${shieldDamage + lifeDamage} de dano em ${target.name}.`);
+    }
   }
 
   if (shieldDamage + lifeDamage > 0) {
@@ -3244,6 +3235,7 @@ function startGame(session) {
     player.shield = 0;
     player.activeShields = [];
     player.carga_de_batalha = 0;
+    player.marcas_arcanas = 0;
     player.protectingId = null;
     player.redirectTargetId = null;
     player.interceptReady = false;
@@ -3258,6 +3250,7 @@ function startGame(session) {
     player.ataques_jogados_esta_rodada = 0;
     player.bastiaoSupremoActive = false;
     player.salvaguardaActive = false;
+    player.pactoImortalidadeDuration = 0;
     player.pactoImortalidadeActive = false;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
@@ -3290,6 +3283,15 @@ function startNextRound(session) {
   if (session.status !== "playing") throw new Error("A partida ainda nao comecou.");
   if (!isRoomComplete(session) && (session.turn !== "dungeon" || !session.dungeonResolved)) {
     throw new Error("A proxima rodada so comeca depois do turno da dungeon.");
+  }
+
+  if (session.terreno_ativo && session.terreno_duracao !== undefined) {
+    session.terreno_duracao -= 1;
+    if (session.terreno_duracao <= 0) {
+      session.log.unshift(`[Terreno] O terreno ${session.terreno_ativo} terminou.`);
+      session.terreno_ativo = null;
+      session.terreno_duracao = 0;
+    }
   }
 
   if (session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0) {
@@ -3454,7 +3456,12 @@ function startNextRound(session) {
     player.cartas_gratuitas_esta_rodada = false;
     player.bastiaoSupremoActive = false;
     player.salvaguardaActive = false;
-    player.pactoImortalidadeActive = false;
+    if (player.pactoImortalidadeDuration > 0) {
+      player.pactoImortalidadeDuration -= 1;
+      player.pactoImortalidadeActive = player.pactoImortalidadeDuration > 0;
+    } else {
+      player.pactoImortalidadeActive = false;
+    }
     player.proximo_dano_dobrado = false;
     player.activeShields = [];
     player.turnEnded = player.life <= 0;
@@ -3550,6 +3557,9 @@ function playCard(session, player, payload) {
       // Oraculo's Bênção Arcana discount
       if (player.proxima_carta_desconto_1) {
         finalCost = Math.max(0, finalCost - 1);
+      }
+      if (session.terreno_ativo === "TERRENO_ARCANO") {
+        finalCost = Math.floor(finalCost / 2);
       }
     }
   }
@@ -3737,7 +3747,7 @@ function playCard(session, player, payload) {
     player.nextAttackBonus = 0;
   }
 
-  executeCardEffects(session, player, card, payload, attackBuff);
+  executeCardEffects(session, player, card, payload, attackBuff, false, finalCost);
 
   if (isAttackCard && player.statusEffects && player.statusEffects.enfraquecido > 0) {
     session.log.unshift(`${player.name} consumiu o status Enfraquecido (redução de ${player.statusEffects.enfraquecido} no dano).`);
@@ -3745,7 +3755,7 @@ function playCard(session, player, payload) {
   }
 }
 
-function executeCardEffects(session, player, card, payload, attackBuff, isCopied = false) {
+function executeCardEffects(session, player, card, payload, attackBuff, isCopied = false, energyPaid = 0) {
   if (!isCopied) {
     if (!session.cartas_jogadas_esta_rodada) {
       session.cartas_jogadas_esta_rodada = [];
@@ -3753,7 +3763,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.cartas_jogadas_esta_rodada.push({
       cardId: card.id,
       casterId: player.id,
-      targetId: payload.targetId
+      targetId: payload.targetId,
+      energyPaid: energyPaid
     });
 
     if (card.sobrecarga) {
@@ -4507,47 +4518,34 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
-  if (card.id === "flecha-letal") {
-    const target = getValidEnemyTarget(session, payload.targetId);
-    if (target) {
-      const baseVal = target.life <= target.maxLife / 2 ? 16 : 8;
-      const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, target, dmg, card.name, true, player);
-      session.log.unshift(`${player.name} usou Flecha Letal em ${target.name} e causou ${dmg} de dano (base: ${baseVal}) ignorando Escudo.`);
-    }
-  }
-
-  // Vince (Mage) custom cards
   if (card.id === "raio-arcano") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
-      const marks = target.marcas_arcanas || 0;
-      const baseVal = marks > 0 ? 6 : 4;
+      const marks = player.marcas_arcanas || 0;
+      const baseVal = 4 + (marks * 2);
       const dmg = getHeroAttackDamage(player, baseVal, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
       if (marks === 0) {
-        target.marcas_arcanas = 2;
-        session.log.unshift(`${player.name} colocou 2 Marcas Arcanas em ${target.name}.`);
+        player.marcas_arcanas = (player.marcas_arcanas || 0) + 2;
+        session.log.unshift(`${player.name} usou Raio Arcano: não tinha Marcas Arcanas, ganhou 2 marcas.`);
+      } else {
+        session.log.unshift(`${player.name} usou Raio Arcano: causou ${dmg} de dano (base: ${baseVal}) usando ${marks} marcas.`);
       }
-      session.log.unshift(`${player.name} usou Raio Arcano em ${target.name} causando ${dmg} de dano (base: ${baseVal}).`);
     }
   }
 
   if (card.id === "bola-de-fogo") {
     const target = getValidEnemyTarget(session, payload.targetId);
     if (target) {
-      const dmgTarget = getHeroAttackDamage(player, 6, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, target, dmgTarget, card.name, false, player);
-      const otherEnemies = session.enemies.filter((enemy) => enemy.uid !== target.uid && enemy.life > 0 && enemy.category !== "mystic");
-      otherEnemies.forEach((other) => {
-        const dmgOther = getHeroAttackDamage(player, 2, 0, getHeroAttackPenalty(session));
-        applyDamageToEnemy(session, other, dmgOther, `${card.name} (Explosão)`, false, player);
-      });
-      // Apply 2 Arcana Marks to all enemies
-      session.enemies.filter(e => e.life > 0 && e.category !== "mystic").forEach(e => {
-        e.marcas_arcanas = Math.min(5, (e.marcas_arcanas || 0) + 2);
-      });
-      session.log.unshift(`${player.name} usou Bola de Fogo em ${target.name} causando ${dmgTarget} de dano (e 2 de dano em área). Aplicou 2 Marcas Arcanas a todos os inimigos.`);
+      const marks = player.marcas_arcanas || 0;
+      let baseDmg = 6;
+      if (marks >= 4) {
+        baseDmg = 12;
+        player.marcas_arcanas -= 4;
+      }
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.log.unshift(`${player.name} usou Bola de Fogo em ${target.name}: causou ${dmg} de dano${baseDmg === 12 ? " (consumiu 4 Marcas Arcanas)" : ""}.`);
     }
   }
 
@@ -4556,7 +4554,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     if (target) {
       const dmg = getHeroAttackDamage(player, 6, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
-      if (target.marcas_arcanas && target.marcas_arcanas > 0) {
+      const marks = player.marcas_arcanas || 0;
+      if (marks >= 4) {
         target.dano_reduzido_metade_esta_rodada = true;
         session.log.unshift(`${player.name} reduziu o dano de ${target.name} pela metade nesta rodada com Raio Congelante.`);
       }
@@ -4589,10 +4588,12 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   if (card.id === "fluxo-arcano") {
     const target = session.players.find((candidate) => candidate.id === payload.targetId && candidate.id !== player.id && candidate.life > 0) || session.players.find((candidate) => candidate.id !== player.id && candidate.life > 0);
     if (target) {
-      target.energy = Math.min(getPlayerMaxEnergy(session, target) + 2, target.energy + 2);
-      session.log.unshift(`${player.name} usou Fluxo Arcano e concedeu 2 de Energia para ${target.name}.`);
+      target.energy = Math.min(getPlayerMaxEnergy(session, target) + 3, target.energy + 3);
+      player.marcas_arcanas = (player.marcas_arcanas || 0) + 2;
+      session.log.unshift(`${player.name} usou Fluxo Arcano: concedeu 3 de Energia para ${target.name} e ganhou 2 Marcas Arcanas.`);
+    } else {
+      throw new Error("Nenhum aliado válido para Fluxo Arcano.");
     }
-    drawCards(player, 1);
   }
 
   if (card.id === "manipular-energia") {
@@ -4600,30 +4601,23 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.log.unshift(`${player.name} jogou Transmutar Energia. Escolhendo jogadores para transferir energia.`);
   }
 
-  if (card.id === "campo-antimagia") {
-    if (session.activeTrap) {
-      const trapName = session.activeTrap.name;
-      session.trapDiscard.push(session.activeTrap);
-      session.activeTrap = null;
-      session.log.unshift(`${player.name} usou Campo Antimagia e desarmou a armadilha ${trapName}!`);
-    } else {
-      session.log.unshift(`${player.name} usou Campo Antimagia, mas não havia armadilha ativa.`);
-    }
-  }
-
   if (card.id === "teleporte-arcano") {
-    const target = session.players.find((candidate) => candidate.id === payload.targetId && candidate.life > 0) || player;
-    target.energy = Math.min(getPlayerMaxEnergy(session, target) + 2, target.energy + 2);
-    drawCards(player, 1);
-    session.log.unshift(`${player.name} usou Teleporte Arcano: ${target.name} recuperou 2 de Energia e o Arcanista comprou 1 carta.`);
+    addShieldToHero(session, player, 2, card);
+    player.marcas_arcanas = (player.marcas_arcanas || 0) + 2;
+    session.log.unshift(`${player.name} usou Teleporte Arcano: ganhou 2 de Escudo e 2 Marcas Arcanas.`);
   }
 
   if (card.id === "explosao-de-mana") {
-    const target = getValidEnemyTarget(session, payload.targetId);
-    if (target) {
-      const dmg = getHeroAttackDamage(player, 10, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, target, dmg, card.name, true, player);
-      session.log.unshift(`${player.name} usou Explosão de Mana em ${target.name} causando ${dmg} de dano ignorando Escudo.`);
+    const consumeCount = Math.min(player.marcas_arcanas || 0, parseInt(payload.sacrificeValue) || 0);
+    if (consumeCount > 0) {
+      player.marcas_arcanas -= consumeCount;
+      session.players.filter(p => p.life > 0).forEach(p => {
+        const drawnCount = drawCards(p, consumeCount);
+        session.log.unshift(`${p.name} comprou ${drawnCount} carta(s) por causa de Explosão de Mana.`);
+      });
+      session.log.unshift(`${player.name} consumiu ${consumeCount} Marca(s) Arcana(s) com Explosão de Mana.`);
+    } else {
+      session.log.unshift(`${player.name} usou Explosão de Mana, mas não consumiu nenhuma Marca Arcana.`);
     }
   }
 
@@ -4634,12 +4628,6 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
     session.pendingEcoArcano = { cardUid: card.uid, casterId: player.id };
     session.log.unshift(`${player.name} jogou Eco Arcano. Escolhendo qual carta copiar.`);
-  }
-
-  if (card.id === "distorcao-temporal") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    session.pendingDistorcaoTemporal = { casterId: player.id, targetId: target.id };
-    session.log.unshift(`${player.name} jogou Distorção Temporal em ${target.name}. Aguardando escolha de carta gratuita.`);
   }
 
   if (card.id === "cataclismo-arcano") {
@@ -4666,32 +4654,47 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "contra-feitico") {
     session.terreno_ativo = "TERRENO_ARCANO";
-    session.log.unshift(`${player.name} ativou o Terreno Arcano! Todos os aliados ganham +1 de Energia máxima.`);
+    session.terreno_duracao = 1;
+    
+    session.cartas_jogadas_esta_rodada.forEach(played => {
+      const caster = session.players.find(p => p.id === played.casterId);
+      if (caster && caster.life > 0) {
+        const refund = Math.floor((played.energyPaid || 0) / 2);
+        if (refund > 0) {
+          caster.energy = Math.min(caster.maxEnergy, caster.energy + refund);
+          played.energyPaid -= refund;
+          session.log.unshift(`[Terreno Arcano] Restituiu ${refund} de Energia para ${caster.name} pela carta jogada.`);
+        }
+      }
+    });
+    session.log.unshift(`${player.name} ativou o Terreno Arcano! Todas as cartas jogadas neste turno custam metade do custo de energia.`);
   }
 
   if (card.id === "chama-menor") {
     session.terreno_ativo = "TERRENO_MONTANHOSO";
-    session.log.unshift(`${player.name} ativou o Terreno Montanhoso! Todos os inimigos causam 2 a menos de dano.`);
+    session.terreno_duracao = 2;
+    session.log.unshift(`${player.name} ativou o Terreno Montanhoso! Reduz o dano dos monstros em 1 para cada Marca Arcana que possuir.`);
   }
 
   if (card.id === "toque-glacial") {
     const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
     if (enemy) {
-      const dmg = getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session));
-      applyDamageToEnemy(session, enemy, dmg, card.name, false, player);
-      enemy.marcas_arcanas = Math.min(5, (enemy.marcas_arcanas || 0) + 2);
-      session.log.unshift(`${player.name} usou Toque Glacial: causou ${dmg} de dano e aplicou 2 Marcas Arcanas em ${enemy.name}.`);
+      const marks = player.marcas_arcanas || 0;
+      if (marks === 0) {
+        player.marcas_arcanas = (player.marcas_arcanas || 0) + 2;
+        session.log.unshift(`${player.name} usou Toque Glacial em ${enemy.name}: não tinha Marcas Arcanas, ganhou 2 marcas.`);
+      } else {
+        const baseDmg = marks * 3;
+        const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+        applyDamageToEnemy(session, enemy, dmg, card.name, false, player);
+        session.log.unshift(`${player.name} usou Toque Glacial em ${enemy.name}: causou ${dmg} de dano (base: ${baseDmg}) usando ${marks} Marcas.`);
+      }
     }
   }
 
   if (card.id === "marca-arcana") {
-    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
-    if (enemy) {
-      enemy.marcas_arcanas = Math.min(5, (enemy.marcas_arcanas || 0) + 3);
-      session.log.unshift(`${player.name} aplicou 3 Marcas Arcanas em ${enemy.name} (Total: ${enemy.marcas_arcanas}/5).`);
-    }
-    const drawn = drawCards(player, 1);
-    session.log.unshift(`${player.name} comprou ${drawn} carta(s) com Marca Arcana.`);
+    player.marcas_arcanas = (player.marcas_arcanas || 0) + 3;
+    session.log.unshift(`${player.name} usou Marca Arcana e ganhou 3 Marcas Arcanas (Total: ${player.marcas_arcanas}).`);
   }
 
   if (card.id === "espelho-arcano") {
@@ -4701,28 +4704,15 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     session.log.unshift(`${player.name} usou Foco de Poder em ${target.name}. O próximo dano dele será dobrado, e o Arcanista começará a próxima rodada com apenas 1 de Energia.`);
   }
 
-  if (card.id === "amplificar") {
-    // Detonação Arcana 2nd copy
+  if (card.id === "detonacao-arcana" || card.id === "amplificar") {
     const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
     if (enemy) {
-      const marks = enemy.marcas_arcanas || 0;
-      enemy.marcas_arcanas = 0;
-      const dmg = marks * 4;
-      applyDamageToEnemy(session, enemy, dmg, "Detonação Arcana", true, player);
-      session.log.unshift(`${player.name} consumiu ${marks} Marcas Arcanas de ${enemy.name} e causou ${dmg} de dano com Detonação Arcana (ignora Escudo).`);
-    } else {
-      throw new Error("Alvo inválido para Detonação Arcana.");
-    }
-  }
-
-  if (card.id === "detonacao-arcana") {
-    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
-    if (enemy) {
-      const marks = enemy.marcas_arcanas || 0;
-      enemy.marcas_arcanas = 0;
-      const dmg = marks * 4;
-      applyDamageToEnemy(session, enemy, dmg, "Detonação Arcana", true, player);
-      session.log.unshift(`${player.name} consumiu ${marks} Marcas Arcanas de ${enemy.name} e causou ${dmg} de dano (ignora Escudo).`);
+      const marks = player.marcas_arcanas || 0;
+      player.marcas_arcanas = 0;
+      const baseDmg = marks * 4;
+      const dmg = getHeroAttackDamage(player, baseDmg, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, enemy, dmg, "Detonação Arcana", false, player);
+      session.log.unshift(`${player.name} consumiu todas as ${marks} Marcas Arcanas e causou ${dmg} de dano a ${enemy.name} com Detonação Arcana.`);
     } else {
       throw new Error("Alvo inválido para Detonação Arcana.");
     }
@@ -4730,19 +4720,18 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "escudo-etereo") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    addShieldToHero(session, target, 6, card, { reflect: 3 });
-    session.log.unshift(`${player.name} usou Escudo Etéreo: concedeu 6 de Escudo com Refletir 3 para ${target.name}.`);
+    const marks = player.marcas_arcanas || 0;
+    addShieldToHero(session, target, marks, card);
+    session.log.unshift(`${player.name} usou Escudo Etéreo: concedeu ${marks} de Escudo para ${target.name} (baseado em ${marks} Marcas Arcanas).`);
   }
 
   if (card.id === "no-temporal") {
-    const enemy = session.enemies.find(e => e.uid === payload.targetId && e.life > 0);
-    if (enemy) {
-      enemy.atacar_por_ultimo_esta_rodada = true;
-      enemy.reduzir_ofensiva = (enemy.reduzir_ofensiva || 0) + 2;
-      session.log.unshift(`${player.name} usou Nó Temporal em ${enemy.name}: ele atacará por último e causará -2 de dano.`);
-    } else {
-      throw new Error("Alvo inválido para Nó Temporal.");
+    const energyLeft = player.energy;
+    player.energy = 0;
+    if (energyLeft > 0) {
+      addShieldToHero(session, player, energyLeft, card);
     }
+    session.log.unshift(`${player.name} usou Nó Temporal e converteu toda a sua energia restante (${energyLeft}) em Escudo.`);
   }
 
   if (card.id === "sobrecarga-ignea") {
@@ -4757,13 +4746,15 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "terreno-chao-de-gelo") {
     session.terreno_ativo = "TERRENO_COSMICO";
-    session.log.unshift(`${player.name} ativou o Terreno Cósmico! Todos os heróis aumentam o limite de cartas na mão em +1.`);
+    session.terreno_duracao = 2;
+    session.log.unshift(`${player.name} ativou o Terreno Cósmico! Metade de todo dano causado retorna como cura para o atacante.`);
   }
 
   // Warlock custom cards
   if (card.id === "pacto-de-imortalidade") {
+    player.pactoImortalidadeDuration = 2;
     player.pactoImortalidadeActive = true;
-    session.log.unshift(`${player.name} ativou Pacto de Imortalidade! Não pode morrer nesta rodada e todo dano de monstro contra ele será devolvido.`);
+    session.log.unshift(`${player.name} ativou Pacto de Imortalidade! Não pode morrer por 2 turnos e todo dano de monstro contra ele será devolvido.`);
   }
 
   if (card.id === "sopro-profano") {
@@ -4805,11 +4796,15 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "golpe-cruel") {
     const target = getValidEnemyTarget(session, payload.targetId);
+    const ally = session.players.find(p => p.id === payload.targetId2 && p.life > 0);
+    if (!ally || ally.id === player.id) {
+      throw new Error("Você precisa escolher um aliado válido diferente de si mesmo para sofrer o dano.");
+    }
     if (target) {
       const dmg = getHeroAttackDamage(player, 8, attackBuff, getHeroAttackPenalty(session));
       applyDamageToEnemy(session, target, dmg, card.name, false, player);
-      applyDamageToHero(session, player, 3, "Golpe Cruel (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
-      session.log.unshift(`${player.name} usou Golpe Cruel em ${target.name} causando ${dmg} de dano e sofrendo 3 de auto-dano.`);
+      applyDamageToHero(session, ally, 3, "Golpe Cruel (Dano Compartilhado)", null, { isSelfDamage: true, ignoreShield: true });
+      session.log.unshift(`${player.name} usou Golpe Cruel em ${target.name} causando ${dmg} de dano. ${ally.name} sofreu 3 de dano.`);
     }
   }
 
@@ -4829,7 +4824,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       session.enemies.forEach(e => { if (e.warlockMark) e.warlockMark = null; });
       target.warlockMark = "drain";
       applyDamageToHero(session, player, 4, "Marca da Drenagem (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
-      session.log.unshift(`${player.name} usou Marca da Drenagem em ${target.name}. Aliados recuperarão +2 de Vida ao causar dano nele.`);
+      session.log.unshift(`${player.name} usou Marca da Drenagem em ${target.name}. Qualquer herói que causar dano nele curará o Warlock em 2.`);
     }
   }
 
@@ -4910,7 +4905,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       const sacrifice = Math.max(0, Number(payload.sacrificeValue) || 0);
       if (sacrifice > 0) {
         applyDamageToHero(session, player, sacrifice, "Debelar Ofensiva (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
-        const reduction = Math.floor(sacrifice / 2);
+        const reduction = sacrifice;
         target.reduzir_ofensiva = (target.reduzir_ofensiva || 0) + reduction;
         session.log.unshift(`${player.name} sacrificou ${sacrifice} de Vida: reduziu o dano de ${target.name} em ${reduction} nesta rodada.`);
       }
@@ -5074,6 +5069,15 @@ function startDungeonTurn(session) {
     e.currentTargetId = null;
   });
 
+  if (session.terreno_ativo && session.terreno_duracao !== undefined) {
+    session.terreno_duracao -= 1;
+    if (session.terreno_duracao <= 0) {
+      session.log.unshift(`[Terreno] O terreno ${session.terreno_ativo} terminou.`);
+      session.terreno_ativo = null;
+      session.terreno_duracao = 0;
+    }
+  }
+
   // Trap rotation: traps only enter/change during dungeon turns
   if (!session.activeTrap) {
     // No active trap — draw the first one
@@ -5124,6 +5128,13 @@ function startDungeonTurn(session) {
   // Resolve Envenenamento
   resolveEnvenenamentoTick(session);
   resolveBleedTick(session);
+
+  session.players.forEach(p => {
+    if (p.pactoImortalidadeDuration > 0) {
+      p.pactoImortalidadeDuration -= 1;
+      p.pactoImortalidadeActive = p.pactoImortalidadeDuration > 0;
+    }
+  });
 
   const continueTurn = () => {
     queueEnemyAttacks(session);
@@ -5773,9 +5784,11 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
     attack = Math.max(0, attack - reductionAmount);
   }
 
-  // Apply Terreno Montanhoso (-2 damage)
+  // Apply Terreno Montanhoso (reduces monster damage by 1 per Vince's Marca Arcana)
   if (session.terreno_ativo === "TERRENO_MONTANHOSO") {
-    attack = Math.max(0, attack - 2);
+    const vince = session.players.find(p => p.heroId === "mago" && p.life > 0);
+    const reductionAmount = vince ? (vince.marcas_arcanas || 0) : 0;
+    attack = Math.max(0, attack - reductionAmount);
   }
 
   // Apply Raio Congelante half-damage effect
@@ -6066,10 +6079,14 @@ function sanitizeSession(session, viewerId) {
       energy: player.energy,
       shield: player.shield,
       carga_de_batalha: player.carga_de_batalha !== undefined ? player.carga_de_batalha : null,
+      marcas_arcanas: player.marcas_arcanas !== undefined ? player.marcas_arcanas : null,
       statusEffects: player.statusEffects,
       sobrecarga_pendente: player.sobrecarga_pendente || 0,
       profecia_tokens: player.profecia_tokens || [],
       proxima_carta_desconto_1: player.proxima_carta_desconto_1 || false,
+      protectingId: player.protectingId || null,
+      bastiaoSupremoActive: player.bastiaoSupremoActive || false,
+      salvaguardaActive: player.salvaguardaActive || false,
       roundStats: player.roundStats,
       deckCount: player.deck.length,
       handCount: player.hand.length,

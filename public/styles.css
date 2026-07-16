@@ -5348,3 +5348,204 @@ body.is-game-screen .monster-card.boss {
     linear-gradient(145deg, rgba(31, 22, 15, 0.95), rgba(12, 10, 9, 0.98)) !important;
 }
 
+/* ── Efeitos visuais do Provocar e Redirecionamento ── */
+.player-hud.is-protected {
+  border-color: rgba(102, 231, 255, 0.45) !important;
+  box-shadow: 0 0 14px rgba(102, 231, 255, 0.25) !important;
+}
+
+.player-hud.is-half-protected {
+  border-color: rgba(167, 139, 250, 0.45) !important;
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.25) !important;
+}
+
+.player-hud.is-protecting {
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.25) !important;
+}
+
+.player-hud.is-protecting.bastiao {
+  border-color: rgba(168, 85, 247, 0.45) !important;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.25) !important;
+}
+
+.provoke-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 4px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  text-align: center;
+  font-family: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(3px);
+  z-index: 5;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.provoke-badge.protected {
+  background: linear-gradient(0deg, rgba(8, 28, 44, 0.96) 0%, rgba(8, 28, 44, 0.8) 100%);
+  border-top: 1px solid rgba(102, 231, 255, 0.4);
+  color: #66e7ff;
+  animation: pulse-protected-border 2s infinite ease-in-out;
+}
+
+.provoke-badge.half-protected {
+  background: linear-gradient(0deg, rgba(28, 12, 44, 0.96) 0%, rgba(28, 12, 44, 0.8) 100%);
+  border-top: 1px solid rgba(167, 139, 250, 0.4);
+  color: #c084fc;
+  animation: pulse-half-protected-border 2s infinite ease-in-out;
+}
+
+.provoke-badge.protecting {
+  background: linear-gradient(0deg, rgba(38, 20, 4, 0.96) 0%, rgba(38, 20, 4, 0.8) 100%);
+  border-top: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  animation: pulse-protecting-border 2s infinite ease-in-out;
+}
+
+.provoke-badge.protecting.bastiao {
+  background: linear-gradient(0deg, rgba(35, 8, 44, 0.96) 0%, rgba(35, 8, 44, 0.8) 100%);
+  border-top: 1px solid rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+  animation: pulse-bastiao-border 2s infinite ease-in-out;
+}
+
+.provoke-badge .provoke-icon {
+  font-size: 0.95rem;
+}
+
+.provoke-badge.protected .provoke-icon {
+  filter: drop-shadow(0 0 4px rgba(102, 231, 255, 0.6));
+}
+
+.provoke-badge.half-protected .provoke-icon {
+  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.6));
+}
+
+.provoke-badge.protecting .provoke-icon {
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.provoke-badge.protecting.bastiao .provoke-icon {
+  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.6));
+}
+
+.provoke-badge .provoke-text {
+  font-size: 0.58rem;
+  font-weight: 900;
+}
+
+@keyframes pulse-protected-border {
+  0%, 100% { border-top-color: rgba(102, 231, 255, 0.3); }
+  50% { border-top-color: rgba(102, 231, 255, 0.95); }
+}
+
+@keyframes pulse-half-protected-border {
+  0%, 100% { border-top-color: rgba(167, 139, 250, 0.3); }
+  50% { border-top-color: rgba(167, 139, 250, 0.95); }
+}
+
+@keyframes pulse-protecting-border {
+  0%, 100% { border-top-color: rgba(245, 158, 11, 0.3); }
+  50% { border-top-color: rgba(245, 158, 11, 0.95); }
+}
+
+@keyframes pulse-bastiao-border {
+  0%, 100% { border-top-color: rgba(168, 85, 247, 0.3); }
+  50% { border-top-color: rgba(168, 85, 247, 0.95); }
+}
+
+/* ── Efeitos visuais das Marcas do Warlock ── */
+.monster-card.has-warlock-mark {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.monster-card.warlock-mark-vulnerability {
+  border-color: rgba(168, 85, 247, 0.6) !important;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.35), inset 0 0 12px rgba(168, 85, 247, 0.15) !important;
+}
+
+.monster-card.warlock-mark-drain {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.35), inset 0 0 12px rgba(239, 68, 68, 0.15) !important;
+}
+
+.warlock-mark-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(12, 5, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+  animation: warlock-mark-pulse 2s infinite ease-in-out;
+}
+
+.warlock-mark-overlay.vulnerability {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25), 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.warlock-mark-overlay.drain {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25), 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.warlock-mark-rune {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.warlock-mark-overlay.vulnerability .warlock-mark-rune {
+  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.8));
+}
+
+.warlock-mark-overlay.drain .warlock-mark-rune {
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.8));
+}
+
+.warlock-mark-label {
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.warlock-mark-overlay.vulnerability .warlock-mark-label {
+  color: #e9d5ff;
+  text-shadow: 0 0 4px rgba(168, 85, 247, 0.5);
+}
+
+.warlock-mark-overlay.drain .warlock-mark-label {
+  color: #fee2e2;
+  text-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes warlock-mark-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
