@@ -144,7 +144,8 @@ function makeStatusEffects() {
     marcado: false,
     envenenamento: 0,
     renovacao: { value: 0, duration: 0 },
-    bleed: { value: 0, duration: 0 }
+    bleed: { value: 0, duration: 0 },
+    barreiraDeMana: false
   };
 }
 
@@ -407,61 +408,16 @@ const intentionCards = [
 ];
 
 const bossTemplates = {
-  inquisidor: {
-    id: "inquisidor",
-    name: "O Inquisidor Esquecido",
-    description: "Um servo da ordem que viu demais no abismo. Cada Escudo é uma heresia, cada cura uma fraqueza.",
-    maxLife: 90,
-    life: 90,
-    shield: 4,
-    maxShield: 4,
-    attack: 10,
-    attackPhase2: 13,
-    category: "boss",
-    role: "Chefe",
-    keywords: [],
-    statusEffects: makeStatusEffects()
-  },
-  bruxa: {
-    id: "bruxa",
-    name: "A Bruxa da Última Hora",
-    description: "Ela não te derrota pela força. Ela espera. O relógio dela nunca para.",
-    maxLife: 75,
-    life: 75,
-    shield: 2,
-    maxShield: 2,
-    attack: 8,
-    attackPhase2: 11,
-    category: "boss",
-    role: "Chefe",
-    keywords: [],
-    statusEffects: makeStatusEffects()
-  },
-  colosso: {
-    id: "colosso",
-    name: "O Colosso Sanguinário",
-    description: "Não há estratégia. Não há fraqueza. Apenas peso, ferro e a certeza de que ele continuará de pé.",
-    maxLife: 115,
-    life: 115,
-    shield: 8,
-    maxShield: 8,
-    attack: 12,
+  acougueiro_de_ossos: {
+    id: "acougueiro_de_ossos",
+    name: "Açougueiro de Ossos",
+    description: "Um carrasco implacável que marca suas vítimas para o abate. Causa 15 de dano em área, mas marca heróis para receberem 20 de dano.",
+    maxLife: 120,
+    life: 120,
+    shield: 0,
+    maxShield: 0,
+    attack: 15,
     attackPhase2: 15,
-    category: "boss",
-    role: "Chefe",
-    keywords: [],
-    statusEffects: makeStatusEffects()
-  },
-  oraculo: {
-    id: "oraculo",
-    name: "O Oráculo Corrompido",
-    description: "Ele era um curandeiro. Agora drena o seu sangue para alimentar sua própria eternidade.",
-    maxLife: 80,
-    life: 80,
-    shield: 3,
-    maxShield: 3,
-    attack: 8,
-    attackPhase2: 11,
     category: "boss",
     role: "Chefe",
     keywords: [],
@@ -470,140 +426,38 @@ const bossTemplates = {
 };
 
 const bossIntentionCards = {
-  inquisidor: [
+  acougueiro_de_ossos: [
     {
-      id: "BOSSINQ-001",
-      name: "Julgamento dos Escudos",
-      presagioText: "O herói com mais Escudo atual perde todo o seu Escudo imediatamente.",
-      commonText: "Inimigos atacam o herói com mais Vida.",
-      represaliaText: "Se algum herói recebeu Escudo esta rodada, Inquisidor causa 4 de dano fixo no herói que recebeu mais Escudo.",
-      commonTarget: "maxLife"
+      id: "BOSSACO-001",
+      name: "Corte do Carrasco",
+      presagioText: "O Açougueiro de Ossos afia suas lâminas e escolhe novas vítimas.",
+      commonText: "Açougueiro causa dano em área (15 aos normais, 20 aos marcados).",
+      represaliaText: "Se algum herói estiver sem Escudo ao fim da rodada, ele sofre 3 de dano adicional.",
+      commonTarget: "all"
     },
     {
-      id: "BOSSINQ-002",
-      name: "Sentença de Morte",
-      presagioText: "O Inquisidor não pode ser alvo de Reações nesta rodada.",
-      commonText: "Inimigos atacam o herói com menos Vida.",
-      represaliaText: "Se o herói com menos Vida terminar a rodada abaixo de 8 de Vida, sofre 3 de dano adicional (ignora Escudo).",
-      commonTarget: "minLife"
+      id: "BOSSACO-002",
+      name: "Festa de Carne",
+      presagioText: "O Açougueiro se alimenta do pavor dos heróis, ganhando 2 de Escudo.",
+      commonText: "Açougueiro causa dano em área (15 aos normais, 20 aos marcados).",
+      represaliaText: "Se o Açougueiro causou dano a pelo menos 2 heróis esta rodada, recupera 4 de Vida.",
+      commonTarget: "all"
     },
     {
-      id: "BOSSINQ-003",
-      name: "Absolvição Perversa",
-      presagioText: "O Inquisidor recupera 6 de Vida (10 se estiver na Fase 2).",
-      commonText: "Inimigos atacam o herói com menos Escudo.",
-      represaliaText: "Se o grupo causou menos de 12 de dano total ao Inquisidor nesta rodada, todos os heróis sofrem 2 de dano.",
-      commonTarget: "minShield"
+      id: "BOSSACO-003",
+      name: "Martelo de Ossos",
+      presagioText: "Todos os heróis marcados perdem 1 de Energia nesta rodada (mínimo 1).",
+      commonText: "Açougueiro causa dano em área (15 aos normais, 20 aos marcados).",
+      represaliaText: "Se o Açougueiro está na Fase 2, causa 2 de dano adicional a todos os heróis.",
+      commonTarget: "all"
     },
     {
-      id: "BOSSINQ-004",
-      name: "Veredicto Final",
-      presagioText: "Todos os heróis que possuem Escudo sofrem 2 de dano (ignora Escudo).",
-      commonText: "Inimigos atacam o herói que jogou mais cartas DEFENSE (ou com mais Vida).",
-      represaliaText: "Se o Inquisidor está na Fase 2, seu próximo ataque causa +4 de dano fixo.",
-      commonTarget: "maxCardsDefensePlayed"
-    }
-  ],
-  bruxa: [
-    {
-      id: "BOSSBRT-001",
-      name: "Maldição Acelerada",
-      presagioText: "O contador da Maldição perde 1 ponto adicional (2 na Fase 2).",
-      commonText: "Inimigos atacam o herói com mais cartas na mão.",
-      represaliaText: "Se o contador atingiu 0 nesta rodada, a Bruxa recupera 8 de Vida imediatamente.",
-      commonTarget: "maxHand"
-    },
-    {
-      id: "BOSSBRT-002",
-      name: "Distorção",
-      presagioText: "O herói com mais cartas na mão deve descartar 2 cartas imediatamente.",
-      commonText: "Inimigos atacam o herói com menos cartas na mão.",
-      represaliaText: "Se algum herói terminou com 0 cartas na mão, ele recebe Vácuo.",
-      commonTarget: "minHand"
-    },
-    {
-      id: "BOSSBRT-003",
-      name: "Inversão da Maré",
-      presagioText: "Todos os heróis perdem 1 de Energia imediatamente (2 na Fase 2, mínimo 1).",
-      commonText: "Inimigos atacam o herói com menos Energia atual.",
-      represaliaText: "Se algum herói não gastou Energia nesta rodada, sofre 3 de dano.",
-      commonTarget: "minEnergy"
-    },
-    {
-      id: "BOSSBRT-004",
-      name: "Ecos do Amanhã",
-      presagioText: "Revela as próximas 2 intenções da Bruxa.",
-      commonText: "Inimigos atacam o herói com mais Energia atual.",
-      represaliaText: "Se a Bruxa está na Fase 2 e o grupo causou menos de 10 de dano, ela recupera 5 de Vida.",
-      commonTarget: "maxEnergy"
-    }
-  ],
-  colosso: [
-    {
-      id: "BOSSCOL-001",
-      name: "Esmagamento",
-      presagioText: "O Colosso ganha 3 de Escudo imediatamente.",
-      commonText: "Inimigos atacam o herói com mais Escudo.",
-      represaliaText: "Se o Colosso possui 8 ou mais de Escudo, ele ataca o herói com menos Vida por 4 de dano (interceptável).",
-      commonTarget: "maxShield"
-    },
-    {
-      id: "BOSSCOL-002",
-      name: "Fúria Inabalável",
-      presagioText: "Colosso fica imune a atordoamento e reações de redirecionamento ou anulação.",
-      commonText: "Inimigos atacam o herói com mais Vida.",
-      represaliaText: "Se causou dano ao alvo, ele fica Exposto (+1 de dano de todas as fontes) até seu próximo turno.",
-      commonTarget: "maxLife"
-    },
-    {
-      id: "BOSSCOL-003",
-      name: "Pisoteio",
-      presagioText: "Realiza um pré-ataque de metade do ATK contra todos os heróis (pode ser interceptado).",
-      commonText: "Inimigos atacam o herói com menos Escudo.",
-      represaliaText: "Se nenhum herói foi derrotado nesta sala até agora, recupera 5 de Vida.",
-      commonTarget: "minShield"
-    },
-    {
-      id: "BOSSCOL-004",
-      name: "Muralha Eterna",
-      presagioText: "Todos os Carcereiros Ferrugem vivos recuperam 6 de Vida.",
-      commonText: "Inimigos atacam o herói que causou mais dano nesta rodada.",
-      represaliaText: "Se está na Fase 2 e tem Escudo, o dano da Dupla Devastação aumenta para 8 (mais 3 fixo).",
-      commonTarget: "maxDamageDealt"
-    }
-  ],
-  oraculo: [
-    {
-      id: "BOSSORC-001",
-      name: "Drenagem Vital",
-      presagioText: "O herói com mais Vida sofre 3 de dano (ignora Escudo). Oráculo cura 3.",
-      commonText: "Inimigos atacam o herói com menos Vida.",
-      represaliaText: "Se algum herói foi curado esta rodada e o Oráculo está na Fase 2, cura 5.",
-      commonTarget: "minLife"
-    },
-    {
-      id: "BOSSORC-002",
-      name: "Contaminação Sombria",
-      presagioText: "Aplica Veneno 2 a um herói aleatório.",
-      commonText: "Inimigos atacam o herói com mais cartas na mão.",
-      represaliaText: "Para cada herói envenenado, Oráculo cura 2 de Vida.",
-      commonTarget: "maxHand"
-    },
-    {
-      id: "BOSSORC-003",
-      name: "Espelho Sombrio",
-      presagioText: "Reflete de forma invertida a última carta jogada nesta rodada.",
-      commonText: "Inimigos atacam o herói com menos Escudo.",
-      represaliaText: "Se curou via Espelho Sombrio esta rodada, o alvo sofre 2 de dano adicional.",
-      commonTarget: "minShield"
-    },
-    {
-      id: "BOSSORC-004",
-      name: "Absorção Total",
-      presagioText: "Todos perdem 1 de Energia. Oráculo cura 2 por herói afetado.",
-      commonText: "Inimigos atacam o herói que mais recebeu cura na partida.",
-      represaliaText: "Se na Fase 2 com 25+ HP, todos os heróis recebem Enfraquecido 1.",
-      commonTarget: "maxCuraTotalRecebida"
+      id: "BOSSACO-004",
+      name: "Dança Macabra",
+      presagioText: "O herói com menos Vida é forçado a ser um dos alvos marcados nesta rodada.",
+      commonText: "Açougueiro causa dano em área (15 aos normais, 20 aos marcados).",
+      represaliaText: "Se nenhum herói foi derrotado esta rodada, o Açougueiro ganha +1 de dano permanente.",
+      commonTarget: "all"
     }
   ]
 };
@@ -652,24 +506,18 @@ const heroes = {
     energy: 5,
     supreme: "luz-da-esperanca",
     deck: [
-      ["cura-de-emergencia", 1],
-      ["bencao-protetora", 1],
+      ["cura-de-emergencia", 3],
       ["voz-do-oraculo", 1],
       ["cura-menor", 1],
-      ["cura-em-ondas", 1],
-      ["planejamento", 1],
+      ["cura-em-ondas", 2],
+      ["planejamento", 2],
       ["redistribuir-escudos", 1],
-      ["absolvicao", 1],
-      ["inspiracao", 1],
-      ["profecia-menor", 1],
-      ["toque-sagrado", 2],
-      ["cura-de-alma", 1],
-      ["raio-trovejante", 2],
-      ["profecia-dupla", 1],
-      ["bencao-arcana", 1],
+      ["barreira-de-mana", 2],
+      ["renovando-plus", 1],
+      ["toque-sagrado", 3],
+      ["raio-trovejante", 3],
       ["purificar", 1],
       ["luz-purificadora", 1],
-      ["descanso-breve", 1],
       ["renovacao", 1],
       ["reanimar", 1],
       ["julgamento-divino", 1]
@@ -1025,7 +873,7 @@ const cards = {
     type: "heal",
     target: "ally",
     cost: 1,
-    text: "Coloque uma Profecia Vital (valor: 8) em um aliado por até 2 rodadas. Se ele sofrer dano de um ataque inimigo nesse período, ele cura 8 de Vida imediatamente após o dano resolver."
+    text: "Coloque uma Profecia Vital em um aliado por até 2 rodadas. Reduza o dano que ele receber em 5. Ao receber dano consome a profecia. Se não receber dano neste periodo, cure 5."
   },
   "bencao-protetora": {
     id: "bencao-protetora",
@@ -1056,15 +904,14 @@ const cards = {
     name: "Prece da Regeneração",
     type: "heal",
     cost: 2,
-    text: "Todos os aliados recebem Renovação 5 por 3 rodadas (curam 5 de Vida no início da Fase dos Heróis de cada rodada)."
+    text: "Todos os aliados curam 5 de vida imediatamente e recebem Renovação 5 por 3 rodadas (curam 5 de Vida no início da Fase dos Heróis de cada rodada)."
   },
   "planejamento": {
     id: "planejamento",
     name: "Planejamento",
-    type: "draw",
-    target: "ally",
-    cost: 1,
-    text: "Um aliado compra 2 cartas (se ultrapassar o limite de cartas na mão, ele deve descartar as cartas excedentes)."
+    type: "energy",
+    cost: 0,
+    text: "Todos os aliados ganham 2 de energia."
   },
   "redistribuir-escudos": {
     id: "redistribuir-escudos",
@@ -1099,6 +946,21 @@ const cards = {
     cost: 1,
     text: "Coloque uma Profecia (valor: 6) em um aliado por até 2 rodadas. Se ele sofrer dano de um ataque inimigo nesse período, ele cura 6 de Vida imediatamente após o dano resolver."
   },
+  "barreira-de-mana": {
+    id: "barreira-de-mana",
+    name: "Barreira de Mana",
+    type: "defense",
+    target: "ally",
+    cost: 2,
+    text: "Escolha um aliado. Todo dano que ele receber primeiro reduzirá sua energia, e o excedente vai reduzir a vida."
+  },
+  "renovando-plus": {
+    id: "renovando-plus",
+    name: "Renovando Plus",
+    type: "heal",
+    cost: 2,
+    text: "Cure 6 de vida de todos os aliados que possuam \"renovação\" ativa. Cure 3 dos aliados que nao possuam renovação ativa."
+  },
   "pressagio": {
     id: "pressagio",
     name: "Presságio",
@@ -1127,7 +989,7 @@ const cards = {
     name: "Raio Trovejante",
     type: "attack",
     cost: 2,
-    text: "Causa 5 de dano a um inimigo. Se existir alguma profecia ou renovação ativa em qualquer herói, cause 8 ao invés de 5."
+    text: "Causa 5 de dano a um inimigo. Se existiga alguma profecia ou renovação ativa em qualquer herói, cause 8 ao invés de 5."
   },
   "profecia-dupla": {
     id: "profecia-dupla",
@@ -1150,18 +1012,17 @@ const cards = {
     id: "purificar",
     name: "Purificar",
     type: "control",
-    cost: 2,
-    removeTrap: true,
-    text: "Remova a Armadilha ativa da sala. Todos os aliados compram 1 carta."
+    cost: 4,
+    text: "Remova a Armadilha Ativa. Descarte todas as suas cartas da mão."
   },
   "luz-purificadora": {
     id: "luz-purificadora",
     name: "Ondas Regenerativas",
     type: "heal",
     target: "ally",
-    cost: 2,
-    heal: 5,
-    text: "Cure 5 de Vida de um aliado. Todos os aliados recebem Renovação 3 por 2 rodadas (curam 3 de Vida no início da Fase dos Heróis)."
+    cost: 3,
+    heal: 8,
+    text: "Cure 8 de vida de um heroi aliado."
   },
   "descanso-breve": {
     id: "descanso-breve",
@@ -1177,7 +1038,7 @@ const cards = {
     type: "heal",
     target: "ally",
     cost: 2,
-    text: "Escolha um aliado. Aplique Renovação 4 por 3 rodadas (cura 4 de Vida no início da Fase dos Heróis). Se o alvo já possuir Renovação ativa, cura 4 de Vida imediatamente."
+    text: "Aplique Renovação 6 por 3 turnos em um unico aliado."
   },
   "reanimar": {
     id: "reanimar",
@@ -1192,8 +1053,9 @@ const cards = {
     id: "julgamento-divino",
     name: "Julgamento Divino",
     type: "attack",
-    cost: 3,
-    text: "Cause 4 de dano a todos os inimigos. Todos os aliados ganham 3 de Escudo."
+    target: "enemy",
+    cost: 2,
+    text: "Cause 3 de dano a um inimigo. Todos os aliados curam 2 de vida."
   },
   "luz-da-esperanca": {
     id: "luz-da-esperanca",
@@ -1201,7 +1063,7 @@ const cards = {
     type: "heal",
     cost: 0,
     supremeEffects: true,
-    text: "Suprema. Todos os aliados recebem: Cura 8, Escudo 6, Energia +2 e compram 1 carta."
+    text: "Suprema. Cura 10 de vida de todos os aliados. Coloque Renovação 5 em todos os aliados por 3 turnos."
   },
   "flecha-de-cura": {
     id: "flecha-de-cura",
@@ -1980,9 +1842,21 @@ function drawNextRoom(session) {
 
   if (session.roomNumber === 9) {
     session.status = "boss_selection";
-    const keys = ["inquisidor", "bruxa", "colosso", "oraculo"];
-    const chosen = shuffle(keys).slice(0, 2);
-    session.bossSelectOptions = chosen.map(key => bossTemplates[key]);
+    session.bossSelectOptions = [
+      bossTemplates["acougueiro_de_ossos"],
+      {
+        id: "em_breve",
+        name: "Em Breve",
+        title: "Novo Desafio",
+        maxLife: "???",
+        shield: "???",
+        attack: "???",
+        description: "Este novo Chefe estará disponível em futuras atualizações.",
+        category: "boss",
+        role: "Chefe",
+        disabled: true
+      }
+    ];
     session.log.unshift("[Sala 9] A masmorra treme... Escolham o Chefe que irão enfrentar.");
     session.room = {
       id: "SALA_BOSS",
@@ -2080,22 +1954,45 @@ function checkContraFeitico(session, enemy, keywordType, executeFn) {
   return false;
 }
 
+function updateAcougueiroTargets(session) {
+  if (session.room?.effect !== "bossRoom" || session.boss?.id !== "acougueiro_de_ossos" || session.boss?.life <= 0) {
+    return;
+  }
+  const activePlayers = session.players.filter(p => p.life > 0);
+  if (activePlayers.length === 0) return;
+
+  const numTargets = session.boss.fase_atual === 2 ? Math.min(2, activePlayers.length) : 1;
+
+  let chosenIds = [];
+  if (session.activeIntention?.id === "BOSSACO-004") {
+    const minLifePlayer = selectTarget(session.players, "minLife");
+    if (minLifePlayer) chosenIds.push(minLifePlayer.id);
+  }
+
+  const remaining = activePlayers.filter(p => !chosenIds.includes(p.id));
+  const needed = numTargets - chosenIds.length;
+  if (needed > 0 && remaining.length > 0) {
+    const picked = shuffle(remaining).slice(0, needed);
+    chosenIds.push(...picked.map(p => p.id));
+  }
+
+  session.acougueiro_target_ids = chosenIds;
+  session.players.forEach(p => {
+    if (!p.statusEffects) p.statusEffects = makeStatusEffects();
+    p.statusEffects.marcado_acougueiro = chosenIds.includes(p.id);
+  });
+
+  const names = session.players.filter(p => chosenIds.includes(p.id)).map(p => p.name).join(", ");
+  session.log.unshift(`🥩 [Açougueiro de Ossos] Alvos marcados para 20 de dano: ${names} (Fase ${session.boss.fase_atual}).`);
+}
+
 function applyStartOfRoundEffects(session) {
   session.firstEnemyDamageApplied = false;
   session.maldicao_triggered_this_round = false;
 
-  // 1. Maldição do Relógio (A Bruxa da Última Hora)
-  if (session.room?.effect === "bossRoom" && session.boss?.id === "bruxa") {
-    session.maldicao_contador = (session.maldicao_contador || 5) - 1;
-    session.log.unshift(`Maldicao do Relogio decrementa para ${session.maldicao_contador}.`);
-    if (session.maldicao_contador === 0) {
-      session.maldicao_triggered_this_round = true;
-      session.log.unshift("⌛ A Maldicao do Relogio atingiu 0! Todos os herois sofrem 7 de dano.");
-      session.players.forEach((p) => {
-        if (p.life > 0) applyDamageToHero(session, p, 7, "Maldicao do Relogio", session.boss, { ignoreShield: true });
-      });
-      session.maldicao_contador = session.boss.fase_atual === 2 ? 3 : 5;
-    }
+  // 1. Açougueiro de Ossos Target Selection
+  if (session.room?.effect === "bossRoom" && session.boss?.id === "acougueiro_de_ossos" && session.boss?.life > 0) {
+    updateAcougueiroTargets(session);
   }
 
   // 2. Active Torment Effects
@@ -2130,39 +2027,6 @@ function applyStartOfRoundEffects(session) {
     }
   }
 
-  // 3. Boss Invocations
-  if (session.room?.effect === "bossRoom" && session.boss?.life > 0) {
-    const bossId = session.boss.id;
-    if (bossId === "inquisidor") {
-      if (!session.nextInquisidorSummonRound) session.nextInquisidorSummonRound = 3;
-      if (session.roomRound === session.nextInquisidorSummonRound) {
-        spawnMinion(session, "sentinela");
-        session.nextInquisidorSummonRound = session.roomRound + 3;
-      }
-    } else if (bossId === "bruxa" && session.boss.fase_atual === 2) {
-      session.witchPhase2Rounds = (session.witchPhase2Rounds || 0) + 1;
-      if (session.witchPhase2Rounds % 2 === 1) {
-        const misticoAlive = session.enemies.some(e => e.id === "mistico" && e.life > 0);
-        if (!misticoAlive) {
-          spawnMinion(session, "mistico");
-        }
-      }
-    } else if (bossId === "colosso") {
-      if (session.roomRound === 2 || session.roomRound === 4 || session.roomRound === 6) {
-        const carcereirosCount = session.enemies.filter(e => e.id === "carcereiro" && e.life > 0).length;
-        if (carcereirosCount < 2) {
-          spawnMinion(session, "carcereiro");
-        }
-      }
-    } else if (bossId === "oraculo") {
-      if (session.roomRound === 3 || session.roomRound === 5) {
-        const misticosCount = session.enemies.filter(e => e.id === "mistico" && e.life > 0).length;
-        if (misticosCount < 2) {
-          spawnMinion(session, "mistico");
-        }
-      }
-    }
-  }
   if (session.room.effect === "firstRoomRoundEnergyPenalty" && session.roomRound === 1) {
     session.players.forEach((player) => {
       player.energy = Math.max(0, player.energy - 1);
@@ -2172,8 +2036,6 @@ function applyStartOfRoundEffects(session) {
   if (session.room.effect === "ritualStartDamage") {
     session.players.forEach((player) => applyDamageToHero(session, player, 1, "Camara do Ritual"));
   }
-
-
 }
 
 function applyDungeonMonsterEffects(session) {
@@ -2364,10 +2226,9 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   const isChallenged = sourceEnemy && sourceEnemy.challengedByGuardiao && target.heroId === "guardiao";
   if (!isChallenged && amount <= 0) return 0;
 
-  if (target.heroId === "warlock" && target.pactoImortalidadeActive && sourceEnemy) {
+  if (target.heroId === "warlock" && target.pactoImortalidadeActive && sourceEnemy && amount > 0) {
     session.log.unshift(`[Pacto de Imortalidade] ${target.name} devolveu ${amount} de dano para ${sourceEnemy.name}!`);
     applyDamageToEnemy(session, sourceEnemy, amount, `Reflexo de ${target.name}`, false);
-    return 0;
   }
 
   if (target.trapImmunityRounds && target.trapImmunityRounds > 0 && session.activeTrap && source === session.activeTrap.name) {
@@ -2445,6 +2306,26 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
 
   if (amount <= 0) return 0;
 
+  if (!options.isSelfDamage && amount > 0 && target.statusEffects?.barreiraDeMana && target.energy > 0) {
+    const energyConsumed = Math.min(target.energy, amount);
+    target.energy -= energyConsumed;
+    amount -= energyConsumed;
+    session.log.unshift(`[Barreira de Mana] ${target.name} consumiu ${energyConsumed} de Energia para mitigar o dano. Energia restante: ${target.energy}.`);
+  }
+
+  if (!options.isSelfDamage && amount > 0 && target.profecia_tokens && target.profecia_tokens.length > 0) {
+    const profeciaVitalToks = target.profecia_tokens.filter(tok => tok && tok.type === 'profecia_vital');
+    if (profeciaVitalToks.length > 0) {
+      let totalReduction = 0;
+      profeciaVitalToks.forEach(tok => {
+        totalReduction += 5;
+      });
+      amount = Math.max(0, amount - totalReduction);
+      target.profecia_tokens = target.profecia_tokens.filter(tok => tok && tok.type !== 'profecia_vital');
+      session.log.unshift(`[Profecia Vital] ${target.name} reduziu o dano sofrido em ${totalReduction} e consumiu a profecia.`);
+    }
+  }
+
   const reduction = target.reduceDamage || 0;
   if (reduction > 0) {
     amount = Math.max(1, amount - reduction);
@@ -2465,10 +2346,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
     }
   }
 
-  adjustActiveShields(target);
-
-  const isInquisidorPhase2 = sourceEnemy?.isBoss && sourceEnemy.id === "inquisidor" && sourceEnemy.fase_atual === 2;
-  const shouldIgnoreShield = options.ignoreShield || isInquisidorPhase2;
+  const shouldIgnoreShield = options.ignoreShield;
 
   let blocked = 0;
   const zeradoEspinhosos = [];
@@ -2501,6 +2379,9 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   let newLife = target.life - damage;
   if (target.heroId === "warlock" && target.pactoImortalidadeActive) {
     newLife = Math.max(1, newLife);
+    if (oldLife > 1 && newLife === 1) {
+      session.log.unshift(`[Pacto de Imortalidade] A vida de ${target.name} foi mantida em 1 PV (Imortalidade ativa)!`);
+    }
   } else {
     newLife = Math.max(0, newLife);
   }
@@ -2578,58 +2459,9 @@ function triggerBossTransition(session, boss) {
   session.log.unshift(`💥 [Transição] ${boss.name} cruzou 50% de Vida! Entrando na Fase 2!`);
   boss.fase_atual = 2;
   
-  if (boss.id === "inquisidor") {
-    // 1. Remove all shields from heroes
-    session.players.forEach(p => { p.shield = 0; });
-    session.log.unshift("[Transição] Inquisidor removeu todo o Escudo de todos os heróis!");
-    // 2. All heroes suffer 4 damage ignoring shield
-    session.players.forEach(p => {
-      if (p.life > 0) applyDamageToHero(session, p, 4, "Veredicto de Transição", boss, { ignoreShield: true });
-    });
-    // 3. ATK goes to Phase 2 (13)
-    boss.attack = 13;
-    boss.isEnfurecido = true; // gains Enfurecido
-  } else if (boss.id === "bruxa") {
-    // 1. Clock counter immediately falls to 1
-    session.maldicao_contador = 1;
-    // 2. Summons 1 Bruxa do Breu + 1 Místico Penumbra
-    spawnMinion(session, "bruxa");
-    spawnMinion(session, "mistico");
-    // 3. All heroes receive Vácuo
-    session.players.forEach(p => {
-      if (p.life > 0) p.statusEffects.vacuo = true;
-    });
-    session.log.unshift("[Transição] A Bruxa amaldiçoa todos com Vácuo e invoca seus servos!");
-    // 4. ATK goes to Phase 2 (11)
-    boss.attack = 11;
-  } else if (boss.id === "colosso") {
-    // 1. Attacks all heroes simultaneously for 8 damage (ignoring shield, cannot be intercepted)
-    session.players.forEach(p => {
-      if (p.life > 0) applyDamageToHero(session, p, 8, "Pisoteio Devastador (Transição)", boss, { ignoreShield: true, skipRedirect: true });
-    });
-    // 2. Shield goes to 0
-    boss.shield = 0;
-    session.log.unshift("[Transição] Colosso descarrega energia: 8 de dano a todos, zerando sua blindagem.");
-    // 3. ATK goes to Phase 2 (15)
-    boss.attack = 15;
-  } else if (boss.id === "oraculo") {
-    // 1. Oracle heals 20
-    const before = boss.life;
-    boss.life = Math.min(boss.maxLife, boss.life + 20);
-    session.log.unshift(`[Transição] Oráculo Corrompido drena essência e recupera ${boss.life - before} de Vida.`);
-    pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: boss.uid, amount: boss.life - before, source: "Transição" });
-    // 2. All heroes receive Veneno 2
-    session.players.forEach(p => {
-      if (p.life > 0) p.statusEffects.veneno = (p.statusEffects.veneno || 0) + 2;
-    });
-    // 3. Summons 2 Místicos (up to cap of 2)
-    const currentMisticos = session.enemies.filter(e => e.id === "mistico" && e.life > 0).length;
-    const toSpawn = Math.max(0, 2 - currentMisticos);
-    for (let i = 0; i < toSpawn; i++) {
-      spawnMinion(session, "mistico");
-    }
-    // 4. ATK goes to Phase 2 (11)
-    boss.attack = 11;
+  if (boss.id === "acougueiro_de_ossos") {
+    session.log.unshift("💥 [Transição] Açougueiro de Ossos enfurece! Na Fase 2, ele agora marca 2 heróis para receberem 20 de dano!");
+    updateAcougueiroTargets(session);
   }
 }
 
@@ -2787,7 +2619,24 @@ function drawIntention(session) {
 }
 
 function applyIntentionPresagio(session) {
-  // No-op
+  const card = session.activeIntention;
+  if (!card) return;
+
+  if (card.id === "BOSSACO-002") {
+    if (session.boss?.life > 0) {
+      session.boss.shield += 2;
+      session.log.unshift("[Preságio] Festa de Carne: Açougueiro de Ossos ganha 2 de Escudo.");
+    }
+  } else if (card.id === "BOSSACO-003") {
+    session.players.forEach(p => {
+      if (p.life > 0 && p.statusEffects?.marcado_acougueiro) {
+        p.energy = Math.max(1, p.energy - 1);
+        session.log.unshift(`[Preságio] Martelo de Ossos: ${p.name} perde 1 de Energia.`);
+      }
+    });
+  } else if (card.id === "BOSSACO-004") {
+    updateAcougueiroTargets(session);
+  }
 }
 
 function applyIntentionRepresalia(session) {
@@ -2797,153 +2646,41 @@ function applyIntentionRepresalia(session) {
   session.log.unshift(`💀 [Represália] Resolvendo Represália de ${card.name}: ${card.represaliaText}`);
 
   switch (card.id) {
-    case "BOSSINQ-001": {
-      const target = selectTarget(session.players, "maxShieldReceived");
-      if (target) {
-        session.log.unshift(`[Represália] Julgamento dos Escudos: Inquisidor realiza ataque adicional de 4 de dano fixo em ${target.name}.`);
-        applyDamageToHero(session, target, 4, "Julgamento dos Escudos (Represalia)", session.boss);
-      }
-      break;
-    }
-    case "BOSSINQ-002": {
-      const target = selectTarget(session.players, "minLife");
-      if (target && target.life > 0 && target.life < 8) {
-        session.log.unshift(`[Represália] Sentenca de Morte: ${target.name} sofre 3 de dano adicional.`);
-        applyDamageToHero(session, target, 3, "Sentenca de Morte (Represalia)", session.boss, { ignoreShield: true });
-      }
-      break;
-    }
-    case "BOSSINQ-003": {
-      if ((session.dano_total_causado_ao_boss || 0) < 12) {
-        session.log.unshift("[Represália] Absolvicao Perversa: Grupo causou menos de 12 de dano. Todos os herois sofrem 2 de dano.");
-        session.players.forEach(p => {
-          if (p.life > 0) applyDamageToHero(session, p, 2, "Absolvicao Perversa (Represalia)", session.boss);
-        });
-      }
-      break;
-    }
-    case "BOSSINQ-004": {
-      if (session.boss?.fase_atual === 2 && session.boss?.life > 0) {
-        session.bossNextAttackBonus = 4;
-        session.log.unshift("[Represália] Veredicto Final: Proximo ataque do Inquisidor causara +4 de dano.");
-      }
-      break;
-    }
-    case "BOSSBRT-001": {
-      if (session.maldicao_triggered_this_round) {
-        const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + 8);
-        const healed = session.boss.life - before;
-        if (healed > 0) {
-          session.log.unshift(`[Represália] Maldicao Acelerada: Bruxa curou ${healed} de Vida.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Maldicao Acelerada" });
-        }
-      }
-      break;
-    }
-    case "BOSSBRT-002": {
+    case "BOSSACO-001": {
       session.players.forEach(p => {
-        if (p.life > 0 && p.hand.length === 0) {
-          p.statusEffects.vacuo = true;
-          session.log.unshift(`[Represália] Distorcao: ${p.name} terminou sem cartas e recebe Vacuo.`);
+        if (p.life > 0 && p.shield === 0) {
+          session.log.unshift(`[Represália] Corte do Carrasco: ${p.name} está sem Escudo e sofre 3 de dano.`);
+          applyDamageToHero(session, p, 3, "Corte do Carrasco (Represalia)", session.boss);
         }
       });
       break;
     }
-    case "BOSSBRT-003": {
-      session.players.forEach(p => {
-        if (p.life > 0 && p.roundStats.cardsPlayed === 0) {
-          session.log.unshift(`[Represália] Inversao da Mare: ${p.name} nao jogou nenhuma carta e sofre 3 de dano.`);
-          applyDamageToHero(session, p, 3, "Inversao da Mare (Represalia)", session.boss);
-        }
-      });
-      break;
-    }
-    case "BOSSBRT-004": {
-      if (session.boss?.fase_atual === 2 && (session.dano_total_causado_ao_boss || 0) < 10) {
+    case "BOSSACO-002": {
+      let damagedCount = session.players.filter(p => p.roundStats?.damageTaken > 0).length;
+      if (damagedCount >= 2 && session.boss?.life > 0) {
         const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + 5);
+        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + 4);
         const healed = session.boss.life - before;
         if (healed > 0) {
-          session.log.unshift(`[Represália] Ecos do Amanha: Bruxa curou ${healed} de Vida.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Ecos do Amanha" });
+          session.log.unshift(`[Represália] Festa de Carne: Açougueiro curou ${healed} de Vida.`);
+          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Festa de Carne" });
         }
       }
       break;
     }
-    case "BOSSCOL-001": {
-      // Handled at end of dungeon turn
-      break;
-    }
-    case "BOSSCOL-002": {
-      // Handled in resolveEnemyAttack
-      break;
-    }
-    case "BOSSCOL-003": {
-      const anyDefeated = session.players.some(p => p.life <= 0);
-      if (!anyDefeated) {
-        const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + 5);
-        const healed = session.boss.life - before;
-        if (healed > 0) {
-          session.log.unshift(`[Represália] Pisoteio: Colosso recupera ${healed} de Vida.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Pisoteio" });
-        }
-      }
-      break;
-    }
-    case "BOSSCOL-004": {
-      if (session.boss?.fase_atual === 2 && session.boss.shield > 0 && session.doubleDevastationTarget) {
-        session.log.unshift(`[Represália] Muralha Eterna: Colosso causou +3 de dano da Dupla Devastacao em ${session.doubleDevastationTarget.name} por possuir Escudo.`);
-        applyDamageToHero(session, session.doubleDevastationTarget, 3, "Muralha Eterna (Represalia)", session.boss);
-      }
-      break;
-    }
-    case "BOSSORC-001": {
-      const anyHealed = session.players.some(p => p.life > 0 && p.roundStats.healingReceived > 0);
-      if (anyHealed && session.boss?.fase_atual === 2) {
-        const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + 5);
-        const healed = session.boss.life - before;
-        if (healed > 0) {
-          session.log.unshift(`[Represália] Drenagem Vital: Oraculo Corrompido recupera ${healed} de Vida.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Drenagem Vital" });
-        }
-      }
-      break;
-    }
-    case "BOSSORC-002": {
-      const poisonedCount = session.players.filter(p => p.life > 0 && p.statusEffects.veneno > 0).length;
-      if (poisonedCount > 0) {
-        const healAmt = poisonedCount * 2;
-        const before = session.boss.life;
-        session.boss.life = Math.min(session.boss.maxLife, session.boss.life + healAmt);
-        const healed = session.boss.life - before;
-        if (healed > 0) {
-          session.log.unshift(`[Represália] Contaminacao Sombria: Oraculo Corrompido recupera ${healed} de Vida.`);
-          pushVisualEvent(session, { type: "heal", targetType: "enemy", targetId: session.boss.uid, amount: healed, source: "Contaminacao Sombria" });
-        }
-      }
-      break;
-    }
-    case "BOSSORC-003": {
-      if (session.oracleMirrorHealedThisRound) {
-        const target = selectTarget(session.players, "minShield");
-        if (target) {
-          session.log.unshift(`[Represália] Espelho Sombrio: ${target.name} sofre 2 de dano adicional.`);
-          applyDamageToHero(session, target, 2, "Espelho Sombrio (Represalia)", session.boss);
-        }
-      }
-      break;
-    }
-    case "BOSSORC-004": {
-      if (session.boss?.fase_atual === 2 && session.boss?.life >= 25) {
+    case "BOSSACO-003": {
+      if (session.boss?.fase_atual === 2) {
+        session.log.unshift("[Represália] Martelo de Ossos: Açougueiro causa 2 de dano a todos na Fase 2.");
         session.players.forEach(p => {
-          if (p.life > 0) {
-            p.statusEffects.enfraquecido = (p.statusEffects.enfraquecido || 0) + 1;
-          }
+          if (p.life > 0) applyDamageToHero(session, p, 2, "Martelo de Ossos (Represalia)", session.boss);
         });
-        session.log.unshift("[Represália] Absorcao Total: Todos os herois receberam Enfraquecido 1.");
+      }
+      break;
+    }
+    case "BOSSACO-004": {
+      if (!session.heroDefeatedThisRound && session.boss?.life > 0) {
+        session.boss.attack += 1;
+        session.log.unshift("[Represália] Dança Macabra: Nenhum herói foi derrotado. Açougueiro ganha +1 de dano permanente.");
       }
       break;
     }
@@ -3456,12 +3193,8 @@ function startNextRound(session) {
     player.cartas_gratuitas_esta_rodada = false;
     player.bastiaoSupremoActive = false;
     player.salvaguardaActive = false;
-    if (player.pactoImortalidadeDuration > 0) {
-      player.pactoImortalidadeDuration -= 1;
-      player.pactoImortalidadeActive = player.pactoImortalidadeDuration > 0;
-    } else {
-      player.pactoImortalidadeActive = false;
-    }
+    player.pactoImortalidadeActive = false;
+    player.pactoImortalidadeDuration = 0;
     player.proximo_dano_dobrado = false;
     player.activeShields = [];
     player.turnEnded = player.life <= 0;
@@ -3471,6 +3204,12 @@ function startNextRound(session) {
       player.profecia_tokens.forEach(tok => {
         if (tok && typeof tok === 'object') {
           tok.duration -= 1;
+          if (tok.duration === 0 && tok.type === 'profecia_vital') {
+            if (player.life > 0) {
+              applyHealToHero(session, player, 5, "Profecia Vital");
+              session.log.unshift(`[Profecia Vital] ${player.name} não recebeu dano e curou 5 de Vida.`);
+            }
+          }
         }
       });
       player.profecia_tokens = player.profecia_tokens.filter(tok => tok && typeof tok === 'object' && tok.duration > 0);
@@ -3503,6 +3242,12 @@ function startNextRound(session) {
     if (player.statusEffects?.exposto) {
       player.statusEffects.exposto = false;
       session.log.unshift(`Exposto expirou para ${player.name}.`);
+    }
+
+    // Barreira de Mana expiration logic:
+    if (player.statusEffects?.barreiraDeMana) {
+      player.statusEffects.barreiraDeMana = false;
+      session.log.unshift(`Barreira de Mana expirou para ${player.name}.`);
     }
   });
   session.nextDrawReduction = 0;
@@ -3697,10 +3442,6 @@ function playCard(session, player, payload) {
   const isDefenseOrShield = card.type === "defense" || card.block > 0 || card.selfBlock > 0 || card.allBlock > 0 || card.concede_escudo || card.shareShields || card.moveShield;
   if (isDefenseOrShield) {
     player.roundStats.cardsDefensePlayed = (player.roundStats.cardsDefensePlayed || 0) + 1;
-    if (session.room?.effect === "bossRoom" && session.boss?.id === "inquisidor" && session.boss.fase_atual === 1 && session.boss.life > 0) {
-      session.log.unshift(`Punicao dos Escudos: ${player.name} sofre 2 de dano por conceder Escudo.`);
-      applyDamageToHero(session, player, 2, "Punicao dos Escudos", session.boss, { ignoreShield: true });
-    }
   }
 
   if (!card.isSpecialBonusCard) {
@@ -4117,11 +3858,12 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   // Oraculo Lunar custom cards
+  // Oraculo Lunar custom cards
   if (card.id === "cura-de-emergencia") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
     if (!target.profecia_tokens) target.profecia_tokens = [];
-    target.profecia_tokens.push({ value: 8, duration: 2, type: 'heal' });
-    session.log.unshift(`${player.name} usou Premonição Vital em ${target.name}: colocou Profecia Vital (valor: 8, duração: 2r).`);
+    target.profecia_tokens.push({ value: 5, duration: 2, type: 'profecia_vital' });
+    session.log.unshift(`${player.name} usou Premonição Vital em ${target.name}: colocou Profecia Vital (duração: 2r).`);
   }
 
   if (card.id === "bencao-protetora") {
@@ -4145,42 +3887,25 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "cura-em-ondas") {
+    session.log.unshift(`${player.name} usou Prece da Regeneração.`);
     session.players.forEach(p => {
       if (p.life > 0) {
+        applyHealToHero(session, p, 5, card.name);
         if (!p.statusEffects) p.statusEffects = makeStatusEffects();
         p.statusEffects.renovacao = { value: 5, duration: 3 };
-        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 5 por 3 rodadas com Prece da Regeneração.`);
+        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 5 por 3 rodadas e curou 5 de Vida.`);
       }
     });
   }
 
   if (card.id === "planejamento") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    // draw bypassing limit
-    const targetAmount = 2;
-    const drawn = [];
-    while (drawn.length < targetAmount) {
-      if (target.deck.length === 0) {
-        if (target.discard.length === 0) break;
-        target.deck = shuffle(target.discard);
-        target.discard = [];
+    session.players.forEach(p => {
+      if (p.life > 0) {
+        p.energy = Math.min(p.maxEnergy, p.energy + 2);
+        pushVisualEvent(session, { type: "energy", targetType: "hero", targetId: p.id, amount: 2, source: card.name });
       }
-      drawn.push(target.deck.shift());
-    }
-    target.hand.push(...drawn);
-    
-    let limit = target.maxHandSize || 5;
-    if (session.terreno_ativo === "TERRENO_COSMICO") {
-      limit += 1;
-    }
-    const normalHandCount = target.hand.filter(c => !c.isSpecialBonusCard).length;
-    const excess = normalHandCount - limit;
-    if (excess > 0) {
-      target.pendingDiscard = (target.pendingDiscard || 0) + excess;
-      session.log.unshift(`${target.name} comprou ${drawn.length} cartas com Planejamento. Mão excedeu o limite máximo (${limit}), deve descartar ${excess} carta(s).`);
-    } else {
-      session.log.unshift(`${target.name} comprou ${drawn.length} cartas com Planejamento.`);
-    }
+    });
+    session.log.unshift(`${player.name} usou Planejamento: todos os aliados ganharam 2 de energia.`);
   }
 
   if (card.id === "redistribuir-escudos") {
@@ -4209,11 +3934,35 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
+  if (card.id === "inspiracao") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    target.energy = Math.min(target.maxEnergy, target.energy + 2);
+    session.log.unshift(`${player.name} usou Inspiração em ${target.name}: recuperou 2 de Energia.`);
+  }
+
   if (card.id === "profecia-menor") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
     if (!target.profecia_tokens) target.profecia_tokens = [];
     target.profecia_tokens.push({ value: 6, duration: 2, type: 'heal' });
     session.log.unshift(`${player.name} colocou Profecia (valor: 6, duração: 2r) em ${target.name}.`);
+  }
+
+  if (card.id === "barreira-de-mana") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    if (!target.statusEffects) target.statusEffects = makeStatusEffects();
+    target.statusEffects.barreiraDeMana = true;
+    session.log.unshift(`${player.name} usou Barreira de Mana em ${target.name}.`);
+  }
+
+  if (card.id === "renovando-plus") {
+    session.players.forEach(p => {
+      if (p.life > 0) {
+        const hasRenovacao = p.statusEffects?.renovacao && p.statusEffects.renovacao.duration > 0;
+        const healAmt = hasRenovacao ? 6 : 3;
+        applyHealToHero(session, p, healAmt, card.name);
+        session.log.unshift(`${player.name} usou Renovando Plus em ${p.name}: curou ${healAmt} de Vida.`);
+      }
+    });
   }
 
   if (card.id === "pressagio") {
@@ -4288,21 +4037,29 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     }
   }
 
+  if (card.id === "bencao-arcana") {
+    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    target.proxima_carta_desconto_1 = true;
+    session.log.unshift(`${player.name} usou Bênção Arcana em ${target.name}.`);
+  }
+
+  if (card.id === "purificar") {
+    if (!session.activeTrap) throw new Error("Não há armadilha ativa para purificar.");
+    const trapName = session.activeTrap.name;
+    session.trapDiscard.push(session.activeTrap);
+    session.activeTrap = null;
+    
+    const handCount = player.hand.length;
+    if (handCount > 0) {
+      player.discard.push(...player.hand);
+      player.hand = [];
+    }
+    session.log.unshift(`${player.name} purificou a armadilha ${trapName} e descartou todas as ${handCount} cartas da mão.`);
+  }
+
   if (card.id === "luz-purificadora") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    if (target) {
-      target.life = Math.min(target.maxLife, target.life + 5);
-      target.roundStats.healingReceived = (target.roundStats.healingReceived || 0) + 5;
-      session.log.unshift(`${player.name} usou Ondas Regenerativas e curou 5 de Vida de ${target.name}.`);
-      pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: 5, source: card.name });
-    }
-    session.players.forEach(p => {
-      if (p.life > 0) {
-        if (!p.statusEffects) p.statusEffects = makeStatusEffects();
-        p.statusEffects.renovacao = { value: 3, duration: 2 };
-        session.log.unshift(`[Renovação] ${p.name} recebeu Renovação 3 por 2 rodadas com Ondas Regenerativas.`);
-      }
-    });
+    session.log.unshift(`${player.name} usou Ondas Regenerativas em ${target.name}.`);
   }
 
   if (card.id === "descanso-breve") {
@@ -4315,25 +4072,21 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   if (card.id === "renovacao") {
     const target = getCardPlayerTarget(session, player, payload.targetId, card);
-    let healedImmediately = false;
-    if (target.statusEffects?.renovacao && target.statusEffects.renovacao.duration > 0) {
-      applyHealToHero(session, target, 4, card.name);
-      healedImmediately = true;
-    }
     if (!target.statusEffects) target.statusEffects = makeStatusEffects();
-    target.statusEffects.renovacao = { value: 4, duration: 3 };
-    session.log.unshift(`${player.name} usou Renovação Contínua em ${target.name}: aplicou Renovação 4 por 3 rodadas.${healedImmediately ? " Curou 4 imediatamente por já ter Renovação ativa." : ""}`);
+    target.statusEffects.renovacao = { value: 6, duration: 3 };
+    session.log.unshift(`${player.name} usou Renovação Contínua em ${target.name}: aplicou Renovação 6 por 3 rodadas.`);
   }
 
   if (card.id === "julgamento-divino") {
-    const targets = session.enemies.filter((enemy) => enemy.life > 0 && enemy.category !== "mystic");
-    targets.forEach((enemy) =>
-      applyDamageToEnemy(session, enemy, getHeroAttackDamage(player, 4, attackBuff, getHeroAttackPenalty(session)), card.name, false, player)
-    );
-    session.players.filter(p => p.life > 0).forEach(p => {
-      addShieldToHero(session, p, 3, card);
-    });
-    session.log.unshift(`${player.name} usou Julgamento Divino: causou 4 de dano a todos os inimigos e concedeu 3 de Escudo a todos os aliados.`);
+    const target = session.enemies.find(e => e.uid === payload.targetId && e.life > 0) || session.enemies.find(e => e.life > 0);
+    if (target) {
+      const dmg = getHeroAttackDamage(player, 3, attackBuff, getHeroAttackPenalty(session));
+      applyDamageToEnemy(session, target, dmg, card.name, false, player);
+      session.players.filter(p => p.life > 0).forEach(p => {
+        applyHealToHero(session, p, 2, card.name);
+      });
+      session.log.unshift(`${player.name} usou Julgamento Divino em ${target.name}: causou ${dmg} de dano e todos os aliados curaram 2 de vida.`);
+    }
   }
 
   // Batedor (Archer) custom cards
@@ -4752,9 +4505,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
 
   // Warlock custom cards
   if (card.id === "pacto-de-imortalidade") {
-    player.pactoImortalidadeDuration = 2;
     player.pactoImortalidadeActive = true;
-    session.log.unshift(`${player.name} ativou Pacto de Imortalidade! Não pode morrer por 2 turnos e todo dano de monstro contra ele será devolvido.`);
+    session.log.unshift(`${player.name} ativou Pacto de Imortalidade! Não pode morrer nesta rodada (vida mín. 1) e todo dano de ataque recebido de monstros será devolvido.`);
   }
 
   if (card.id === "sopro-profano") {
@@ -5129,12 +4881,7 @@ function startDungeonTurn(session) {
   resolveEnvenenamentoTick(session);
   resolveBleedTick(session);
 
-  session.players.forEach(p => {
-    if (p.pactoImortalidadeDuration > 0) {
-      p.pactoImortalidadeDuration -= 1;
-      p.pactoImortalidadeActive = p.pactoImortalidadeDuration > 0;
-    }
-  });
+
 
   const continueTurn = () => {
     queueEnemyAttacks(session);
@@ -5716,6 +5463,10 @@ function computeEnemyAttack(session, enemy, target, commitFirstBonus) {
   if (forcedTarget) target = forcedTarget;
   
   let attack = enemy.attack;
+  if (enemy.id === "acougueiro_de_ossos") {
+    const isMarked = (session.acougueiro_target_ids || []).includes(target.id) || Boolean(target.statusEffects?.marcado_acougueiro);
+    attack = isMarked ? 20 : 15;
+  }
   
   // Arauto Cinza alive passive boost: +3 damage to other enemies
   const hasAliveArauto = session.enemies.some(e => e.id === "arauto" && e.life > 0);
@@ -6087,6 +5838,7 @@ function sanitizeSession(session, viewerId) {
       protectingId: player.protectingId || null,
       bastiaoSupremoActive: player.bastiaoSupremoActive || false,
       salvaguardaActive: player.salvaguardaActive || false,
+      pactoImortalidadeActive: player.pactoImortalidadeActive || false,
       roundStats: player.roundStats,
       deckCount: player.deck.length,
       handCount: player.hand.length,
@@ -6266,7 +6018,9 @@ async function handleApi(req, res) {
         } else if (body.type === "selectBoss") {
           if (session.status !== "boss_selection") throw new Error("Acao invalida neste momento.");
           const chosenBossTemplate = session.bossSelectOptions.find(b => b.id === body.bossId);
-          if (!chosenBossTemplate) throw new Error("Chefe escolhido nao e uma das opcoes.");
+          if (!chosenBossTemplate || chosenBossTemplate.disabled || body.bossId === "em_breve") {
+            throw new Error("Chefe escolhido nao e uma opcao valida ou ainda nao esta disponivel.");
+          }
 
           // 1. Instantiate the boss
           session.boss = {
@@ -6313,7 +6067,7 @@ async function handleApi(req, res) {
           session.activeTorment = shuffle(tormentCards)[0];
           session.log.unshift(`Tormento ativo sorteado: ${session.activeTorment.name} (${session.activeTorment.text})`);
 
-          // 4. Set special Room 4 card
+          // 4. Set special Room card
           session.room = {
             id: "SALA_BOSS",
             name: "Camara do Chefe: " + chosenBossTemplate.name,
@@ -6327,10 +6081,6 @@ async function handleApi(req, res) {
           };
 
           // 5. Initialize boss specific counters
-          if (body.bossId === "bruxa") {
-            session.maldicao_contador = 5;
-            session.witchPhase2Rounds = 0;
-          }
           session.doubleDevastationTarget = null;
           session.bossStunImmune = false;
           session.bossRedirectImmune = false;
@@ -6353,7 +6103,7 @@ async function handleApi(req, res) {
           session.espelhos_arcanos_ativos = 0;
           session.cartas_jogadas_esta_rodada = [];
 
-          // Clean old round state
+          // Clean old round state (hand is preserved, no discarding or drawing)
           session.players.forEach((player) => {
             player.discard.push(...player.played);
             player.played = [];
@@ -6370,8 +6120,6 @@ async function handleApi(req, res) {
             player.salvaguardaActive = false;
             player.turnEnded = player.life <= 0;
             player.roundStats = makeRoundStats();
-            player.hand = [];
-            drawCards(player, 5);
           });
 
           session.players.forEach((p) => { p.energyAtStartOfRound = p.energy; });
@@ -6521,6 +6269,8 @@ async function handleApi(req, res) {
             player.bastiaoSupremoActive = true;
             pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: player.id, amount: 8, source: sc.name });
             session.log.unshift(`${player.name} usou ${sc.name}! Recebeu 8 de Escudo, redirecionara todo o dano aliado a si mesmo e reduzira todo o dano sofrido pela metade ate a proxima rodada.`);
+          } else if (sc.id === "pacto-de-imortalidade") {
+            executeCardEffects(session, player, sc, body, 0);
           } else if (sc.id === "cataclismo-arcano") {
             executeCardEffects(session, player, sc, {}, 0);
           }

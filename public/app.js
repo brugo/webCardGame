@@ -66,6 +66,7 @@ function getHeroCardArt(heroId) {
 
 function getEnemyArt(enemy) {
   if (enemy) {
+    if (enemy.id === "acougueiro_de_ossos") return "/assets/acougueiro-de-ossos.jpg";
     if (enemy.id === "sentinela") return "/assets/sentinela-oco.jpg";
     if (enemy.id === "salteador") return "/assets/salteador-cinzento.jpg";
     if (enemy.id === "bruxa") return "/assets/bruxa-do-breu.jpg";
@@ -75,6 +76,7 @@ function getEnemyArt(enemy) {
     if (enemy.id === "colosso") return "/assets/colosso-cinzas.jpg";
     if (enemy.id === "executor") return "/assets/executor-sombrio.jpg";
     if (enemy.id === "basilisco") return "/assets/basilisco-azul.png";
+    if (enemy.category === "boss" || enemy.isBoss) return "/assets/acougueiro-de-ossos.jpg";
   }
   return enemyArt;
 }
@@ -2529,6 +2531,12 @@ function renderStatusEffects(statusEffects) {
   if (statusEffects.envenenamento > 0) {
     badges.push(`<span class="status-badge envenenamento" title="Envenenamento: sofre ${statusEffects.envenenamento} de dano (ignora Escudo) no início da Fase da Masmorra.">🧪 Envenenamento ${statusEffects.envenenamento}</span>`);
   }
+  if (statusEffects.barreiraDeMana) {
+    badges.push(`<span class="status-badge barreira-de-mana" style="background: linear-gradient(135deg, #06b6d4, #0891b2); color: white;" title="Barreira de Mana: Todo dano recebido reduzirá primeiro a Energia atual, e o excedente reduzirá a vida.">🛡️ Barreira de Mana</span>`);
+  }
+  if (statusEffects.marcado_acougueiro) {
+    badges.push(`<span class="status-badge marcado-acougueiro" title="Alvo do Açougueiro: receberá 20 de dano ao invés de 15 no próximo ataque do Açougueiro.">🥩 Alvo do Açougueiro (20 Dano)</span>`);
+  }
   // Renovação is now rendered as pip counter below the hero HUD via renderHeroBuffPips()
   if (badges.length === 0) return "";
   return `<div class="status-effects-list">${badges.join("")}</div>`;
@@ -2660,9 +2668,21 @@ function renderPlayerHud(player) {
     `;
   }
 
+  if (!provokeBadgeHtml && player.pactoImortalidadeActive) {
+    provokeClass = "is-immortal pacto-sombrio";
+    provokeBadgeHtml = `
+      <div class="provoke-badge immortal pacto-sombrio" title="Pacto de Imortalidade: Sua vida não pode ser reduzida a menos de 1 nesta rodada e todo dano de ataque de monstro é devolvido ao atacante!">
+        <span class="provoke-icon">💀</span>
+        <span class="provoke-text">IMORTAL</span>
+      </div>
+    `;
+  }
+
   const shieldVal = hasResources ? getVisualShield(player.id, player.shield || 0) : 0;
 
   const extraBadges = hasResources ? [
+    player.pactoImortalidadeActive
+      ? `<span class="hero-immortal-badge status-badge" style="background: linear-gradient(135deg, #7c3aed, #4c1d95); border: 1px solid #a855f7; color: white; box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);" title="Pacto de Imortalidade: Sua vida não pode ser reduzida a menos de 1 nesta rodada e todo dano de ataque de monstro é devolvido ao atacante!">💀 Imortal</span>` : "",
     player.proxima_carta_desconto_1 ? `<span class="hero-bencao-arcana discount-badge" title="Bênção Arcana activa: próxima carta jogada custa 1 a menos.">✨ Bênção</span>` : "",
     player.sobrecarga_pendente > 0
       ? `<span class="hero-sobrecarga charge-badge" style="background: linear-gradient(135deg, #ec4899, #db2777); color: white;" title="Sobrecarga activa: reduzirá a energia restaurada na próxima rodada.">⚡ Sobrecarga: ${player.sobrecarga_pendente}</span>` : ""
@@ -2716,8 +2736,11 @@ function renderPlayerHud(player) {
     `;
   }
 
+  const isAcougueiroTarget = player.statusEffects?.marcado_acougueiro || (local.state?.acougueiro_target_ids || []).includes(player.id);
+  const acougueiroClass = isAcougueiroTarget ? "is-acougueiro-target" : "";
+
   return `
-    <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${isMe ? "is-you" : "is-allie"} ${player.turnEnded ? "turn-ended" : ""} ${provokeClass}">
+    <article id="hud-player-${player.id}" class="player-hud hero-${player.heroId || "none"} ${isMe ? "is-you" : "is-allie"} ${player.turnEnded ? "turn-ended" : ""} ${provokeClass} ${acougueiroClass}">
       <div class="portrait-container">
         <img class="portrait-img" src="${getHeroCardArt(player.heroId)}" alt="" />
         ${provokeBadgeHtml}
@@ -2736,19 +2759,23 @@ function renderPlayerHud(player) {
 
 function getBuffCardData(buffKind, value, tokenType) {
   if (buffKind === 'renovacao') {
-    const nameMap = { 5: 'Prece da Regeneração', 4: 'Renovação Contínua', 3: 'Ondas Regenerativas', 2: 'Luz da Esperança' };
+    const nameMap = { 6: 'Renovação Contínua', 5: 'Prece da Regeneração', 4: 'Renovação Contínua', 3: 'Ondas Regenerativas', 2: 'Luz da Esperança' };
     const textMap = {
-      5: 'Todos os aliados recebem Renovação 5 por 3 rodadas (curam 5 de Vida no início da Fase dos Heróis de cada rodada).',
+      6: 'Cura 6 de Vida no início da Fase dos Heróis de cada rodada.',
+      5: 'Todos os aliados curam 5 de Vida imediatamente e recebem Renovação 5 por 3 rodadas (curam 5 de Vida no início da Fase dos Heróis de cada rodada).',
       4: 'Aplica Renovação 4 por 3 rodadas (cura 4 de Vida no início da Fase dos Heróis). Se o alvo já possuir Renovação ativa, cura 4 de Vida imediatamente.',
       3: 'Cure 5 de Vida de um aliado. Todos os aliados recebem Renovação 3 por 2 rodadas (curam 3 de Vida no início da Fase dos Heróis).',
       2: 'Cura 2 de Vida no início de cada turno dos heróis.'
     };
-    const costMap = { 5: 2, 4: 2, 3: 2, 2: 0 };
+    const costMap = { 6: 2, 5: 2, 4: 2, 3: 2, 2: 0 };
     return { id: 'renovacao', name: nameMap[value] || 'Renovação', type: 'heal', cost: costMap[value] ?? 2, text: textMap[value] || `Cura ${value} de Vida por rodada.` };
   }
   if (buffKind === 'profecia') {
     if (tokenType === 'shield') {
       return { id: 'bencao-protetora', name: 'Bênção Protetora', type: 'heal', cost: 1, text: `Profecia de Escudo ativa (${value}). Ao receber dano de ataque inimigo neste período, recebe ${value} de Escudo imediatamente após o dano resolver.` };
+    }
+    if (tokenType === 'profecia_vital') {
+      return { id: 'cura-de-emergencia', name: 'Premonição Vital', type: 'heal', cost: 1, text: 'Profecia Vital ativa. Reduz o próximo dano sofrido em 5 e consome a profecia. Se não receber dano neste período, cura 5.' };
     }
     const nameMap = { 8: 'Voz do Oráculo', 6: 'Profecia Menor', 5: 'Profecia Dupla' };
     const textMap = {
@@ -2769,7 +2796,7 @@ function renderHeroBuffPips(player) {
   // ── RENOVAÇÃO (verde) ──
   const ren = se?.renovacao;
   if (ren && ren.duration > 0) {
-    const maxByValue = { 4: 3, 3: 2, 2: 3 };
+    const maxByValue = { 6: 3, 5: 3, 4: 3, 3: 2, 2: 3 };
     const maxDur = maxByValue[ren.value] ?? 3;
     const cardData = escapeHtml(JSON.stringify(getBuffCardData('renovacao', ren.value, null)));
     html += `
@@ -4510,64 +4537,62 @@ function renderBossSelection() {
   app.innerHTML = `
     <section class="boss-selection-screen">
       <div class="boss-selection-container glass-panel">
-        <span class="eyebrow text-center">Fase Final - Sala 4</span>
+        <span class="eyebrow text-center">Fase Final - Sala 9</span>
         <h1 class="boss-select-title">Escolha o seu Destino</h1>
-        <p class="boss-select-subtitle">Vocês sobreviveram até aqui. Agora, escolham o Chefe que irão enfrentar na sala final.</p>
+        <p class="boss-select-subtitle">Vocês sobreviveram até aqui. Escolham o Chefe que irão enfrentar na sala final.</p>
 
         <div class="boss-cards-grid">
-          ${options.map(boss => `
-            <div class="boss-card-choice glass-panel" data-boss-id="${boss.id}">
-              <div class="boss-card-header">
-                <h2>${escapeHtml(boss.name)}</h2>
-                <span class="boss-title">${escapeHtml(boss.title || "")}</span>
+          ${options.map(boss => {
+            const isDisabled = boss.disabled || boss.id === "em_breve";
+            return `
+              <div class="boss-card-choice glass-panel ${isDisabled ? "disabled" : ""}" data-boss-id="${boss.id}">
+                <div class="boss-card-header">
+                  <h2>${escapeHtml(boss.name)}</h2>
+                  <span class="boss-title">${escapeHtml(boss.title || "")}</span>
+                </div>
+                ${!isDisabled ? `<img src="/assets/acougueiro-de-ossos.jpg" alt="${escapeHtml(boss.name)}" style="width: 100%; aspect-ratio: 3/2; object-fit: cover; border-radius: 8px; margin: 8px 0 12px 0; border: 1px solid rgba(255,215,133,0.4); box-shadow: 0 6px 18px rgba(0,0,0,0.6);" />` : ''}
+                <div class="boss-stats-row">
+                  <div class="boss-stat">
+                    <span class="stat-label">Vida</span>
+                    <span class="stat-value life">${boss.maxLife} ${typeof boss.maxLife === "number" ? "HP" : ""}</span>
+                  </div>
+                  <div class="boss-stat">
+                    <span class="stat-label">Escudo</span>
+                    <span class="stat-value shield">${boss.shield}</span>
+                  </div>
+                  <div class="boss-stat">
+                    <span class="stat-label">Ataque</span>
+                    <span class="stat-value attack">${boss.attack}</span>
+                  </div>
+                </div>
+                <div class="boss-description-box">
+                  <p class="boss-desc-text">${escapeHtml(boss.description || "")}</p>
+                  ${!isDisabled ? `
+                    <div class="boss-mechanics">
+                      <strong>Mecânica:</strong>
+                      <ul>
+                        <li><strong>Fase 1 (≥50% HP):</strong> Ataca todos os heróis (15 de dano) e marca 1 herói aleatório para receber 20 de dano.</li>
+                        <li><strong>Fase 2 (<50% HP):</strong> Ataca todos os heróis (15 de dano) e marca 2 heróis aleatórios para receberem 20 de dano.</li>
+                      </ul>
+                    </div>
+                  ` : `
+                    <div class="boss-mechanics" style="text-align: center; color: #94a3b8; padding: 16px 0;">
+                      <em>Disponível em breve em novas atualizações!</em>
+                    </div>
+                  `}
+                </div>
+                <button class="btn btn-primary select-boss-btn" data-boss="${boss.id}" ${isDisabled ? "disabled style='opacity: 0.5; cursor: not-allowed; background: #475569; border-color: #475569;'" : ""}>
+                  ${isDisabled ? "Em Breve" : "Confrontar"}
+                </button>
               </div>
-              <div class="boss-stats-row">
-                <div class="boss-stat">
-                  <span class="stat-label">Vida</span>
-                  <span class="stat-value life">${boss.maxLife} HP</span>
-                </div>
-                <div class="boss-stat">
-                  <span class="stat-label">Escudo</span>
-                  <span class="stat-value shield">${boss.shield}</span>
-                </div>
-                <div class="boss-stat">
-                  <span class="stat-label">Ataque</span>
-                  <span class="stat-value attack">${boss.attack}</span>
-                </div>
-              </div>
-              <div class="boss-description-box">
-                <p class="boss-desc-text">${escapeHtml(boss.description || "")}</p>
-                <div class="boss-mechanics">
-                  <strong>Mecânica:</strong>
-                  <ul>
-                    ${boss.id === "inquisidor" ? `
-                      <li><strong>Fase 1:</strong> Pune uso de cartas de Defesa com 2 de dano.</li>
-                      <li><strong>Fase 2 (50% HP):</strong> Destrói escudos dos heróis e todos os seus ataques passam a ignorar Escudo.</li>
-                    ` : ""}
-                    ${boss.id === "bruxa" ? `
-                      <li><strong>Maldição do Relógio:</strong> Relógio começa em 5 e decrementa a cada rodada. Chegando a 0, causa 7 de dano a todos.</li>
-                      <li><strong>Fase 2 (50% HP):</strong> Relógio cai para 1, invoca Bruxa do Breu e Místico Penumbra, e aplica Vácuo a todos.</li>
-                    ` : ""}
-                    ${boss.id === "colosso" ? `
-                      <li><strong>Fase 1:</strong> Regenera +3 de Escudo no início da fase da masmorra.</li>
-                      <li><strong>Fase 2 (50% HP):</strong> Causa 8 de dano a todos, entra em fúria (+15 ATK) e realiza um segundo ataque imediato de 5 de dano.</li>
-                    ` : ""}
-                    ${boss.id === "oraculo" ? `
-                      <li><strong>Fase 1:</strong> Regenera +4 de Vida no início do turno da masmorra.</li>
-                      <li><strong>Fase 2 (50% HP):</strong> Cura 20 HP de transição, envenena todos e rouba a cura recebida pelos heróis.</li>
-                    ` : ""}
-                  </ul>
-                </div>
-              </div>
-              <button class="btn btn-primary select-boss-btn" data-boss="${boss.id}">Confrontar</button>
-            </div>
-          `).join("")}
+            `;
+          }).join("")}
         </div>
       </div>
     </section>
   `;
 
-  document.querySelectorAll(".select-boss-btn").forEach(btn => {
+  document.querySelectorAll(".select-boss-btn:not([disabled])").forEach(btn => {
     btn.addEventListener("click", () => {
       action({ type: "selectBoss", bossId: btn.dataset.boss });
     });
