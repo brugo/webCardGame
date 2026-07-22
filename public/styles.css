@@ -389,7 +389,7 @@ p {
   position: relative;
   background:
     linear-gradient(160deg, rgba(18, 38, 34, 0.86), rgba(11, 12, 15, 0.94)),
-    url("/assets/background.jpg");
+    url("/assets/hero-card-example.png");
   background-size: cover;
   background-position: center;
 }
@@ -4681,7 +4681,7 @@ body.is-game-screen .monster-card .monster-target-badge {
   border: 1px solid rgba(255, 246, 223, 0.24);
   background:
     linear-gradient(160deg, rgba(18, 38, 34, 0.9), rgba(11, 12, 15, 0.96)),
-    url("/assets/background.jpg");
+    url("/assets/hero-card-example.png");
   background-size: cover;
   background-position: center;
   box-shadow: 0 0 48px rgba(255, 215, 133, 0.18), 0 24px 64px rgba(0, 0, 0, 0.64);
@@ -4965,7 +4965,7 @@ body.is-game-screen .battlefield {
   grid-template-rows: auto 1fr auto !important;
   background:
     linear-gradient(180deg, rgba(8, 12, 16, 0.4) 0%, rgba(8, 12, 16, 0.75) 100%),
-    url("/assets/background.jpg") no-repeat center !important;
+    url("/assets/hero-card-example.png") no-repeat center !important;
   background-size: cover !important;
   border: 1px solid rgba(255, 215, 133, 0.25) !important;
   border-radius: 12px !important;
