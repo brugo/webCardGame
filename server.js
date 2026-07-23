@@ -1571,6 +1571,27 @@ function makeRoundStats() {
   };
 }
 
+function makeMatchStats() {
+  return {
+    damageDealt: 0,
+    damageTaken: 0,
+    healingDone: 0,
+    healingReceived: 0,
+    shieldsApplied: 0,
+    trapsDisarmed: 0,
+    cardsPlayed: 0,
+    enemiesDefeated: 0
+  };
+}
+
+function ensureMatchStats(player) {
+  if (!player) return null;
+  if (!player.matchStats) {
+    player.matchStats = makeMatchStats();
+  }
+  return player.matchStats;
+}
+
 function makeDeck(heroId) {
   return shuffle(
     heroes[heroId].deck.flatMap(([cardId, amount]) =>
@@ -2190,7 +2211,7 @@ function adjustActiveShields(target) {
   }
 }
 
-function addShieldToHero(session, target, amount, sourceCard, properties = {}) {
+function addShieldToHero(session, target, amount, sourceCard, properties = {}, granter = null) {
   const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
   const hasTrapImmunity = target.trapImmunityRounds && target.trapImmunityRounds > 0;
   if (isTrapActive && session.activeTrap.effect === "noShield" && !hasTrapImmunity) {
@@ -2200,6 +2221,11 @@ function addShieldToHero(session, target, amount, sourceCard, properties = {}) {
 
   target.shield += amount;
   target.roundStats.shieldReceived = (target.roundStats.shieldReceived || 0) + amount;
+  
+  const actualGranter = granter || target;
+  if (actualGranter) {
+    ensureMatchStats(actualGranter).shieldsApplied += amount;
+  }
   
   if (!target.activeShields) {
     target.activeShields = [];
@@ -2379,7 +2405,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
   let newLife = target.life - damage;
   if (target.heroId === "warlock" && target.pactoImortalidadeActive) {
     newLife = Math.max(1, newLife);
-    if (oldLife > 1 && newLife === 1) {
+    if (oldLife >= 1 && (oldLife - damage) < 1) {
       session.log.unshift(`[Pacto de Imortalidade] A vida de ${target.name} foi mantida em 1 PV (Imortalidade ativa)!`);
     }
   } else {
@@ -2395,6 +2421,7 @@ function applyDamageToHero(session, target, amount, source, sourceEnemy = null, 
     }
   }
   target.roundStats.damageTaken += damage;
+  ensureMatchStats(target).damageTaken += damage;
   if (amount > 0) {
     pushVisualEvent(session, {
       type: "damage",
@@ -2515,12 +2542,16 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   target.shield -= shieldDamage;
   const lifeDamage = amount - shieldDamage;
   target.life = Math.max(0, target.life - lifeDamage);
-  if (player) player.roundStats.damageDealt += lifeDamage;
+  const totalDmgDealt = shieldDamage + lifeDamage;
+  if (player) {
+    player.roundStats.damageDealt += lifeDamage;
+    ensureMatchStats(player).damageDealt += totalDmgDealt;
+  }
 
   if (target.warlockMark === "drain" && (shieldDamage + lifeDamage) > 0) {
     const warlock = session.players.find(p => p.heroId === "warlock" && p.life > 0);
     if (warlock) {
-      applyHealToHero(session, warlock, 2, "Marca da Drenagem");
+      applyHealToHero(session, warlock, 2, "Marca da Drenagem", warlock);
       session.log.unshift(`[Marca da Drenagem] Warlock ${warlock.name} recuperou 2 de Vida porque ${player ? player.name : "alguém"} causou dano em ${target.name}.`);
     }
   }
@@ -2528,7 +2559,7 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   if (session.terreno_ativo === "TERRENO_COSMICO" && player && player.life > 0 && (shieldDamage + lifeDamage) > 0) {
     const healAmt = Math.floor((shieldDamage + lifeDamage) / 2);
     if (healAmt > 0) {
-      applyHealToHero(session, player, healAmt, "Terreno Cósmico");
+      applyHealToHero(session, player, healAmt, "Terreno Cósmico", player);
       session.log.unshift(`[Terreno Cósmico] ${player.name} curou ${healAmt} de Vida ao causar ${shieldDamage + lifeDamage} de dano em ${target.name}.`);
     }
   }
@@ -2568,7 +2599,10 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
   }
 
   if (target.life === 0) {
-    if (player) player.roundStats.enemiesDefeated += 1;
+    if (player) {
+      player.roundStats.enemiesDefeated += 1;
+      ensureMatchStats(player).enemiesDefeated += 1;
+    }
     session.log.unshift(`${target.name} foi derrotado.`);
     
     if (session.turn === "players" && isRoomComplete(session)) {
@@ -2592,6 +2626,7 @@ function applyDamageToEnemy(session, target, amount, source, ignoreShield = fals
       session.players.forEach(p => {
         if (p.life > 0) {
           p.roundStats.enemiesDefeated = (p.roundStats.enemiesDefeated || 0) + 1;
+          ensureMatchStats(p).enemiesDefeated += 1;
         }
       });
     }
@@ -2870,6 +2905,7 @@ function addPlayer(session, name) {
     trapImmunityRounds: 0,
     sobrecarga_pendente: 0,
     roundStats: makeRoundStats(),
+    matchStats: makeMatchStats(),
     deck: [],
     hand: [],
     played: [],
@@ -2991,6 +3027,7 @@ function startGame(session) {
     player.pactoImortalidadeActive = false;
     player.turnEnded = false;
     player.roundStats = makeRoundStats();
+    player.matchStats = makeMatchStats();
     player.deck = makeDeck(player.heroId);
     player.hand = [];
     player.played = [];
@@ -3421,17 +3458,11 @@ function playCard(session, player, payload) {
     player.proxima_carta_desconto_1 = false;
   }
   if (card.lifeCost) {
-    player.life -= card.lifeCost;
+    applyDamageToHero(session, player, card.lifeCost, card.name, null, { isSelfDamage: true, ignoreShield: true });
     session.log.unshift(`${player.name} pagou o custo de ${card.lifeCost} de Vida para usar ${card.name}.`);
-    pushVisualEvent(session, {
-      type: "damage",
-      targetType: "hero",
-      targetId: player.id,
-      amount: card.lifeCost,
-      source: card.name
-    });
   }
   player.roundStats.cardsPlayed += 1;
+  ensureMatchStats(player).cardsPlayed += 1;
   if (card.type === "attack") {
     player.roundStats.attackCardsPlayed += 1;
     player.ataques_jogados_esta_rodada = (player.ataques_jogados_esta_rodada || 0) + 1;
@@ -3596,7 +3627,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     const target = session.players.find((p) => p.id === payload.targetId && p.life <= 0)
       || session.players.find((p) => p.life <= 0);
     if (!target) throw new Error("Nao ha aliados derrotados para reanimar.");
-    target.life = 6;
+    const reviveHp = card.revive || 8;
+    target.life = reviveHp;
     target.turnEnded = false;
     if (target.statusEffects) {
       target.statusEffects.veneno = 0;
@@ -3605,8 +3637,8 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       target.statusEffects.enfraquecido = 0;
       target.statusEffects.exposto = false;
     }
-    pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: 6, source: card.name });
-    session.log.unshift(`${target.name} foi reanimado com 6 de Vida e livre de status!`);
+    pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: reviveHp, source: card.name });
+    session.log.unshift(`${target.name} foi reanimado com ${reviveHp} de Vida e livre de status!`);
   }
 
   // redistribuir-escudos: move shield from one ally to another
@@ -3639,6 +3671,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     const trapName = session.activeTrap.name;
     session.trapDiscard.push(session.activeTrap);
     session.activeTrap = null;
+    ensureMatchStats(player).trapsDisarmed += 1;
     
     // Each active player must discard 1 card
     session.players.forEach((p) => {
@@ -3653,19 +3686,11 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   // suprema: luz-da-esperanca
   if (card.supremeEffects) {
     session.players.filter((ally) => ally.life > 0).forEach((ally) => {
-      applyHealToHero(session, ally, 8, card.name);
-      addShieldToHero(session, ally, 5, card);
-      if (ally.statusEffects) {
-        ally.statusEffects.veneno = 0;
-        ally.statusEffects.queimadura = { value: 0, duration: 0 };
-        ally.statusEffects.vacuo = false;
-        ally.statusEffects.enfraquecido = 0;
-        ally.statusEffects.exposto = false;
-      }
-      ally.energy = Math.min(ally.maxEnergy, ally.energy + 2);
-      drawCards(ally, 1);
+      applyHealToHero(session, ally, 10, card.name);
+      if (!ally.statusEffects) ally.statusEffects = makeStatusEffects();
+      ally.statusEffects.renovacao = { value: 5, duration: 3 };
     });
-    session.log.unshift(`${player.name} usou ${card.name}! Todos os aliados receberam Cura 8, Escudo 5, remoção de status, Energia +2 e compraram 1 carta.`);
+    session.log.unshift(`${player.name} usou ${card.name}! Todos os aliados curaram 10 de Vida e receberam Renovação 5 por 3 turnos.`);
   }
 
   if (card.provoke) {
@@ -3709,7 +3734,10 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 
   if (card.id === "provocar") {
-    const target = getCardPlayerTarget(session, player, payload.targetId, card);
+    const target = session.players.find((candidate) => candidate.id === payload.targetId && candidate.id !== player.id && candidate.life > 0) || session.players.find((candidate) => candidate.id !== player.id && candidate.life > 0);
+    if (!target) {
+      throw new Error("Nenhum aliado válido para Provocar.");
+    }
     player.protectingId = target.id;
     if (player.heroId === "guardiao") {
       player.carga_de_batalha = (player.carga_de_batalha || 0) + 1;
@@ -3830,6 +3858,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       const trapName = session.activeTrap.name;
       session.trapDiscard.push(session.activeTrap);
       session.activeTrap = null;
+      ensureMatchStats(player).trapsDisarmed += 1;
       session.log.unshift(`${player.name} usou Destruir Armadilha. A armadilha ${trapName} foi destruída.`);
     } else {
       session.log.unshift(`${player.name} usou Destruir Armadilha, mas não havia armadilha ativa.`);
@@ -4048,6 +4077,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
     const trapName = session.activeTrap.name;
     session.trapDiscard.push(session.activeTrap);
     session.activeTrap = null;
+    ensureMatchStats(player).trapsDisarmed += 1;
     
     const handCount = player.hand.length;
     if (handCount > 0) {
@@ -4206,6 +4236,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       const trapName = session.activeTrap.name;
       session.trapDiscard.push(session.activeTrap);
       session.activeTrap = null;
+      ensureMatchStats(player).trapsDisarmed += 1;
       session.log.unshift(`${player.name} usou Desabilitador e desarmou a armadilha ${trapName}!`);
     } else {
       session.log.unshift(`${player.name} usou Desabilitador, mas não havia nenhuma armadilha ativa.`);
@@ -4399,6 +4430,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       const trapName = session.activeTrap.name;
       session.trapDiscard.push(session.activeTrap);
       session.activeTrap = null;
+      ensureMatchStats(player).trapsDisarmed += 1;
       session.log.unshift(`${player.name} usou Absorção Arcana e desativou a armadilha ${trapName}!`);
     } else {
       session.log.unshift(`${player.name} usou Absorção Arcana, mas não havia armadilha ativa.`);
@@ -4669,6 +4701,7 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
       const trapName = session.activeTrap.name;
       session.trapDiscard.push(session.activeTrap);
       session.activeTrap = null;
+      ensureMatchStats(player).trapsDisarmed += 1;
       applyDamageToHero(session, player, 4, "Quebrar Maldição (Auto-Dano)", null, { isSelfDamage: true, ignoreShield: true });
       session.log.unshift(`${player.name} usou Quebrar Maldição: desarmou a armadilha ${trapName} pagando 4 de Vida.`);
     } else {
@@ -4712,10 +4745,14 @@ function executeCardEffects(session, player, card, payload, attackBuff, isCopied
   }
 }
 
-function applyHealToHero(session, target, amount, source) {
+function applyHealToHero(session, target, amount, source, healer = null) {
   const isTrapActive = session.activeTrap && !(session.activeTrapDisabledRounds && session.activeTrapDisabledRounds > 0);
   const hasTrapImmunity = target.trapImmunityRounds && target.trapImmunityRounds > 0;
   if (isTrapActive && session.activeTrap.effect === "noHealing" && !hasTrapImmunity) return;
+
+  if (target.life < 0) {
+    target.life = 0;
+  }
 
   const before = target.life;
   target.life = Math.min(target.maxLife, target.life + amount);
@@ -4723,6 +4760,12 @@ function applyHealToHero(session, target, amount, source) {
   if (healed > 0) {
     target.roundStats.healingReceived += healed;
     target.cura_total_recebida_na_partida = (target.cura_total_recebida_na_partida || 0) + healed;
+    ensureMatchStats(target).healingReceived += healed;
+
+    const actualHealer = healer || target;
+    if (actualHealer) {
+      ensureMatchStats(actualHealer).healingDone += healed;
+    }
     pushVisualEvent(session, { type: "heal", targetType: "hero", targetId: target.id, amount: healed, source });
 
     if (session.room?.effect === "bossRoom" && session.boss?.id === "oraculo" && session.boss.fase_atual === 2 && session.boss.life > 0) {
@@ -5289,6 +5332,7 @@ function playReaction(session, player, payload) {
   player.energy -= finalCost;
   player.roundStats.energySpent += finalCost;
   player.roundStats.cardsPlayed += 1;
+  ensureMatchStats(player).cardsPlayed += 1;
   player.played.push(card);
   session.arena.unshift({
     uid: card.uid,
@@ -5840,6 +5884,7 @@ function sanitizeSession(session, viewerId) {
       salvaguardaActive: player.salvaguardaActive || false,
       pactoImortalidadeActive: player.pactoImortalidadeActive || false,
       roundStats: player.roundStats,
+      matchStats: player.matchStats || makeMatchStats(),
       deckCount: player.deck.length,
       handCount: player.hand.length,
       discardCount: player.discard.length,
@@ -6154,6 +6199,7 @@ async function handleApi(req, res) {
             p.played = [];
             p.discard = [];
             p.roundStats = makeRoundStats();
+            p.matchStats = makeMatchStats();
             p.chosenRewards = [];
             p.hasClaimedRoomReward = false;
             p.hasRedrawAvailable = false;
@@ -6222,25 +6268,16 @@ async function handleApi(req, res) {
             player.supremeUsed = true;
           }
           player.roundStats.cardsPlayed += 1;
+          ensureMatchStats(player).cardsPlayed += 1;
           session.arena.unshift({ uid: sc.uid, heroId: player.heroId, name: sc.name, type: sc.type, cost: sc.cost, text: sc.text, playedBy: player.name + " (Suprema)" });
           // Execute supreme effects directly
           if (sc.supremeEffects) {
             session.players.filter((ally) => ally.life > 0).forEach((ally) => {
-              applyHealToHero(session, ally, 8, sc.name);
-              ally.shield += 5;
-              ally.roundStats.shieldReceived = (ally.roundStats.shieldReceived || 0) + 5;
-              if (ally.statusEffects) {
-                ally.statusEffects.veneno = 0;
-                ally.statusEffects.queimadura = { value: 0, duration: 0 };
-                ally.statusEffects.vacuo = false;
-                ally.statusEffects.enfraquecido = 0;
-                ally.statusEffects.exposto = false;
-              }
-              ally.energy = Math.min(ally.maxEnergy, ally.energy + 2);
-              pushVisualEvent(session, { type: "shield", targetType: "hero", targetId: ally.id, amount: 5, source: sc.name });
-              drawCards(ally, 1);
+              applyHealToHero(session, ally, 10, sc.name);
+              if (!ally.statusEffects) ally.statusEffects = makeStatusEffects();
+              ally.statusEffects.renovacao = { value: 5, duration: 3 };
             });
-            session.log.unshift(`${player.name} usou ${sc.name}! Todos os aliados receberam Cura 8, Escudo 5, remoção de status, Energia +2 e compraram 1 carta.`);
+            session.log.unshift(`${player.name} usou ${sc.name}! Todos os aliados curaram 10 de Vida e receberam Renovação 5 por 3 turnos.`);
           } else if (sc.id === "tempestade-de-flechas") {
             const selectedTargetId = body.targetId;
             const singleTarget = getValidEnemyTarget(session, selectedTargetId);

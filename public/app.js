@@ -349,9 +349,13 @@ function applyEventToVisualState(event, state) {
       const blocked = event.ignoreShield ? 0 : Math.min(currentShield, dmg);
       local.visualShield[targetId] = currentShield - blocked;
       dmg -= blocked;
-      local.visualLife[targetId] = Math.max(0, (local.visualLife[targetId] || 0) - dmg);
+      const isWarlockImmortal = player.heroId === "warlock" && player.pactoImortalidadeActive;
+      const minLife = isWarlockImmortal ? 1 : 0;
+      local.visualLife[targetId] = Math.max(minLife, (local.visualLife[targetId] || 0) - dmg);
     } else if (event.type === "heal") {
-      local.visualLife[targetId] = Math.min(player.maxLife, (local.visualLife[targetId] || 0) + amount);
+      const currentVisual = local.visualLife[targetId] !== undefined ? local.visualLife[targetId] : player.life;
+      const baseVisual = Math.max(0, currentVisual);
+      local.visualLife[targetId] = Math.min(player.maxLife, baseVisual + amount);
     } else if (event.type === "shield") {
       local.visualShield[targetId] = (local.visualShield[targetId] || 0) + amount;
     }
@@ -535,14 +539,16 @@ function setState(nextState) {
     });
   }
 
-  // If not cinematic and not running animation, keep visual values in sync (except for targets currently animating)
+  // Keep visual values in sync (and force sync any freshly revived heroes)
+  (nextState.players || []).forEach(p => {
+    const prevP = prevState?.players?.find(prev => prev.id === p.id);
+    const freshlyRevived = prevP && prevP.life <= 0 && p.life > 0;
+    if (freshlyRevived || (!isCinematic && !local.animRunning && !isTargetAnimating(p.id, "hero", nextState))) {
+      local.visualLife[p.id] = p.life;
+      local.visualShield[p.id] = p.shield;
+    }
+  });
   if (!isCinematic && !local.animRunning) {
-    (nextState.players || []).forEach(p => {
-      if (!isTargetAnimating(p.id, "hero", nextState)) {
-        local.visualLife[p.id] = p.life;
-        local.visualShield[p.id] = p.shield;
-      }
-    });
     (nextState.enemies || []).forEach(e => {
       if (!isTargetAnimating(e.uid, "enemy", nextState)) {
         local.visualLife[e.uid] = e.life;
@@ -640,9 +646,10 @@ function ingestVisualEvents(state) {
       if (mergedEvent.type === "damage") className = "effect-hit";
       else if (mergedEvent.type === "heal") className = "effect-heal";
       else if (mergedEvent.type === "shield") className = "effect-shield";
+      else if (mergedEvent.type === "energy") className = "effect-energy";
 
       if (className) {
-        el.classList.remove("effect-hit", "effect-heal", "effect-shield");
+        el.classList.remove("effect-hit", "effect-heal", "effect-shield", "effect-energy");
         void el.offsetWidth; // force reflow to restart animation cleanly
         el.classList.add(className);
         window.setTimeout(() => {
@@ -653,8 +660,8 @@ function ingestVisualEvents(state) {
       // Spawn floating number
       const span = document.createElement("span");
       span.className = `impact-number ${mergedEvent.type} ${mergedEvent.targetType}`;
-      const sign = mergedEvent.type === "heal" ? "+" : mergedEvent.type === "shield" ? "+" : "-";
-      const suffix = mergedEvent.type === "shield" ? " 🛡️" : "";
+      const sign = (mergedEvent.type === "heal" || mergedEvent.type === "shield" || mergedEvent.type === "energy") ? "+" : "-";
+      const suffix = mergedEvent.type === "shield" ? " 🛡️" : mergedEvent.type === "energy" ? " ⚡" : "";
       span.innerText = `${sign}${mergedEvent.amount}${suffix}`;
 
       // Calculate position relative to viewport coordinates (fixed position overlay)
@@ -890,15 +897,16 @@ function fireVisualEffect(event) {
   if (event.type === "damage") className = "effect-hit";
   else if (event.type === "heal") className = "effect-heal";
   else if (event.type === "shield") className = "effect-shield";
+  else if (event.type === "energy") className = "effect-energy";
   if (className) {
-    el.classList.remove("effect-hit", "effect-heal", "effect-shield");
+    el.classList.remove("effect-hit", "effect-heal", "effect-shield", "effect-energy");
     void el.offsetWidth;
     el.classList.add(className);
     window.setTimeout(function() { el.classList.remove(className); }, event.type === "shield" ? 2500 : 1000);
   }
   const span = document.createElement("span");
-  const sign = event.type === "heal" ? "+" : event.type === "shield" ? "+" : "-";
-  const suffix = event.type === "shield" ? " \uD83D\uDEE1\uFE0F" : "";
+  const sign = (event.type === "heal" || event.type === "shield" || event.type === "energy") ? "+" : "-";
+  const suffix = event.type === "shield" ? " 🛡️" : event.type === "energy" ? " ⚡" : "";
   span.className = "impact-number " + event.type + " " + event.targetType;
   span.innerText = sign + event.amount + suffix;
   const rect = el.getBoundingClientRect();
@@ -1160,7 +1168,6 @@ async function showIntentionReveal(intention) {
 
 async function queueCinematicHeroTurn(state) {
   const round = state.round || 1;
-  ingestVisualEvents(state);
   render();
   await sleep(300);
   // Banner: hero turn
@@ -1169,6 +1176,52 @@ async function queueCinematicHeroTurn(state) {
   if (state.activeIntention) {
     await showIntentionReveal(state.activeIntention);
   }
+
+  // Wait until presentation overlay is fully closed and screen color returns to normal before animating start-of-turn visual events (Renovação, shield, etc.)
+  const newEvents = (state.visualEvents || []).filter(function(ev) {
+    return ev.id && !local.seenVisualEventIds.has(ev.id);
+  });
+
+  if (newEvents.length > 0) {
+    await sleep(200);
+
+    // Mark all events as seen and group by (type, targetType, targetId)
+    const grouped = {};
+    newEvents.forEach(function(ev) {
+      local.seenVisualEventIds.add(ev.id);
+      const key = ev.type + "_" + ev.targetType + "_" + ev.targetId;
+      if (!grouped[key]) {
+        grouped[key] = {
+          ...ev,
+          originalIds: [ev.id]
+        };
+      } else {
+        grouped[key].amount = (grouped[key].amount || 0) + (ev.amount || 0);
+        grouped[key].originalIds.push(ev.id);
+      }
+    });
+
+    const mergedList = Object.values(grouped);
+    for (let i = 0; i < mergedList.length; i++) {
+      const mergedEv = mergedList[i];
+
+      // Apply changes to visual state for all original events in this group
+      mergedEv.originalIds.forEach(function(origId) {
+        const origEvent = newEvents.find(function(x) { return x.id === origId; });
+        if (origEvent) {
+          applyEventToVisualState(origEvent, state);
+          local.completedVisualEventIds.add(origId);
+        }
+      });
+
+      render();
+      await sleep(50);
+
+      fireVisualEffect(mergedEv);
+      await sleep(650);
+    }
+  }
+
   render();
 }
 
@@ -1998,8 +2051,8 @@ function renderSelectedCardModal(state, me) {
         ${state.players.filter((p) => p.life <= 0).map((p) => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join("")}
       </select></label>`;
   } else if (canTargetPlayer) {
-    const isFluxoArcano = card.id === "fluxo-arcano";
-    const filteredPlayers = isFluxoArcano
+    const isOnlyOtherAlly = card.id === "fluxo-arcano" || card.id === "provocar";
+    const filteredPlayers = isOnlyOtherAlly
       ? state.players.filter((p) => p.life > 0 && p.id !== me.id)
       : state.players.filter((p) => p.life > 0);
     targetSelect = `<label>Alvo
@@ -2882,7 +2935,7 @@ function renderMonsterCard(enemy) {
   const metaText = metaParts.filter(Boolean).join(" • ");
 
   let targetBadgeHtml = "";
-  if (enemy.currentTargetName && !defeated) {
+  if (enemy.currentTargetName && enemy.currentTargetName !== "Área" && enemy.currentTargetName !== "Area" && !defeated) {
     targetBadgeHtml = `
       <div class="monster-target-badge" title="Alvo atual do monstro para esta rodada">
         Alvo: <span>${escapeHtml(enemy.currentTargetName)}</span>
@@ -2974,7 +3027,7 @@ function isCardBlocked(card, state, me) {
   }
 
   const alivePlayers = state.players.filter((p) => p.life > 0);
-  if (card.id === "golpe-cruel") {
+  if (card.id === "golpe-cruel" || card.id === "provocar" || card.id === "fluxo-arcano") {
     const aliveAllies = state.players.filter((p) => p.life > 0 && p.id !== me.id);
     if (aliveAllies.length === 0) return true;
   }
@@ -4380,10 +4433,14 @@ function bindGlobalControls() {
             </select>
           `;
         } else if (needsAlly) {
+          const isOnlyOtherAlly = card.id === "fluxo-arcano" || card.id === "provocar";
+          const filteredAllies = isOnlyOtherAlly
+            ? local.state.players.filter(p => p.life > 0 && p.id !== (me ? me.id : ""))
+            : local.state.players.filter(p => p.life > 0);
           targetContainer.innerHTML = `
             <strong>Alvo da magia:</strong>
             <select id="ecoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
-              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+              ${filteredAllies.map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
             </select>
           `;
         } else {
@@ -4467,10 +4524,14 @@ function bindGlobalControls() {
             </select>
           `;
         } else if (needsAlly) {
+          const isOnlyOtherAlly = card.id === "fluxo-arcano" || card.id === "provocar";
+          const filteredAllies = isOnlyOtherAlly
+            ? local.state.players.filter(p => p.life > 0 && p.id !== (me ? me.id : ""))
+            : local.state.players.filter(p => p.life > 0);
           targetContainer.innerHTML = `
             <strong>Alvo da magia:</strong>
             <select id="distorcaoTargetSelect" style="padding: 8px; border-radius: 4px; background: rgba(0,0,0,0.5); color:#fff; border: 1px solid rgba(255,255,255,0.2);">
-              ${local.state.players.filter(p => p.life > 0).map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
+              ${filteredAllies.map(p => `<option value="${p.id}">Aliado: ${escapeHtml(p.name)}</option>`).join("")}
             </select>
           `;
         } else {
@@ -4609,10 +4670,11 @@ function renderEndGame() {
   let totalCards = 0;
 
   state.players.forEach(p => {
-    totalDmgDealt += p.roundStats?.damageDealt || 0;
-    totalDmgTaken += p.roundStats?.damageTaken || 0;
-    totalHeal += p.roundStats?.healingReceived || 0;
-    totalCards += p.roundStats?.cardsPlayed || 0;
+    const stats = p.matchStats || p.roundStats || {};
+    totalDmgDealt += stats.damageDealt || 0;
+    totalDmgTaken += stats.damageTaken || 0;
+    totalHeal += stats.healingReceived || 0;
+    totalCards += stats.cardsPlayed || 0;
   });
 
   app.innerHTML = `
@@ -4653,7 +4715,9 @@ function renderEndGame() {
           <div class="heroes-summary-list">
             <h4>Estatísticas dos Heróis</h4>
             <div class="heroes-stats-grid">
-              ${state.players.map(p => `
+              ${state.players.map(p => {
+                const m = p.matchStats || p.roundStats || {};
+                return `
                 <div class="hero-stat-card glass-panel">
                   <div class="hcard-header">
                     <h5>${escapeHtml(p.name)}</h5>
@@ -4662,27 +4726,40 @@ function renderEndGame() {
                   <div class="hcard-body">
                     <div class="hcard-row">
                       <span>Dano causado:</span>
-                      <strong>${p.roundStats?.damageDealt || 0}</strong>
+                      <strong>${m.damageDealt || 0}</strong>
                     </div>
                     <div class="hcard-row">
                       <span>Dano recebido:</span>
-                      <strong>${p.roundStats?.damageTaken || 0}</strong>
+                      <strong>${m.damageTaken || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Cura causada:</span>
+                      <strong>${m.healingDone || 0}</strong>
                     </div>
                     <div class="hcard-row">
                       <span>Cura recebida:</span>
-                      <strong>${p.roundStats?.healingReceived || 0}</strong>
+                      <strong>${m.healingReceived || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Escudos aplicados:</span>
+                      <strong>${m.shieldsApplied || 0}</strong>
+                    </div>
+                    <div class="hcard-row">
+                      <span>Armadilhas removidas:</span>
+                      <strong>${m.trapsDisarmed || 0}</strong>
                     </div>
                     <div class="hcard-row">
                       <span>Cartas jogadas:</span>
-                      <strong>${p.roundStats?.cardsPlayed || 0}</strong>
+                      <strong>${m.cardsPlayed || 0}</strong>
                     </div>
                     <div class="hcard-row">
                       <span>Inimigos derrotados:</span>
-                      <strong>${p.roundStats?.enemiesDefeated || 0}</strong>
+                      <strong>${m.enemiesDefeated || 0}</strong>
                     </div>
                   </div>
                 </div>
-              `).join("")}
+              `;
+              }).join("")}
             </div>
           </div>
         </div>

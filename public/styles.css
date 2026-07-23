@@ -1428,6 +1428,14 @@ p {
     0 0 35px rgba(0, 0, 0, 0.7);
 }
 
+.impact-number.energy {
+  color: #4db8ff; /* azul da energia */
+  text-shadow:
+    0 4px 0 rgba(7, 30, 55, 0.95),
+    0 0 20px rgba(56, 175, 255, 0.95),
+    0 0 35px rgba(0, 0, 0, 0.7);
+}
+
 .player-hud.effect-shield::after {
   content: "";
   position: absolute;
@@ -1447,6 +1455,10 @@ p {
 
 .effect-heal {
   animation: healPulse 940ms ease-out;
+}
+
+.effect-energy {
+  animation: energyPulse 940ms ease-out;
 }
 
 .arena-zone {
@@ -2769,6 +2781,30 @@ body.is-game-screen .hand-fan .play-card.reaction-ready {
   }
   100% {
     filter: brightness(1);
+  }
+}
+
+@keyframes energyPulse {
+  0% {
+    filter: brightness(1);
+  }
+  20% {
+    filter: brightness(1.35) contrast(1.1);
+    box-shadow: 0 0 35px #3b82f6, inset 0 0 25px rgba(59, 130, 246, 0.85);
+    border-color: #3b82f6;
+  }
+  40% {
+    filter: brightness(1.2) contrast(1.05);
+    box-shadow: 0 0 25px #3b82f6, inset 0 0 15px rgba(59, 130, 246, 0.6);
+  }
+  60% {
+    filter: brightness(1.1);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: none;
   }
 }
 
